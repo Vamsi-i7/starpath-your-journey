@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Sparkles, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
@@ -27,8 +28,19 @@ const ForgotPasswordPage = () => {
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    
+    if (error) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
     
     setIsSubmitted(true);
     setIsLoading(false);

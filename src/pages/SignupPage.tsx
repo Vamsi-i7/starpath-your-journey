@@ -7,6 +7,7 @@ import { Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { validatePassword } from '@/lib/passwordValidation';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -40,10 +41,11 @@ const SignupPage = () => {
       return;
     }
 
-    if (password.length < 6) {
+    const { valid, message } = validatePassword(password);
+    if (!valid) {
       toast({
-        title: 'Password too short',
-        description: 'Password must be at least 6 characters',
+        title: 'Weak password',
+        description: message,
         variant: 'destructive',
       });
       return;

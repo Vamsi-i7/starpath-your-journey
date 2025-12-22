@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { logError } from '@/lib/errorLogger';
 
 export interface Habit {
   id: string;
@@ -42,7 +43,7 @@ export function useHabits() {
       .order('created_at', { ascending: false });
 
     if (habitsError) {
-      console.error('Error fetching habits:', habitsError);
+      logError('Habits Fetch', habitsError);
       setIsLoading(false);
       return;
     }
@@ -54,7 +55,7 @@ export function useHabits() {
       .eq('user_id', user.id);
 
     if (completionsError) {
-      console.error('Error fetching completions:', completionsError);
+      logError('Completions Fetch', completionsError);
     }
 
     // Map completions to habits
