@@ -251,7 +251,7 @@ const SettingsPage = () => {
           <h3 className="font-semibold text-foreground mb-4">Profile</h3>
           <div className="space-y-4">
             <div>
-              <Label>Username</Label>
+              <Label>Name</Label>
               <Input 
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)}
