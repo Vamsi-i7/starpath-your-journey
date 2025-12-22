@@ -1,11 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Menu, X, Moon, Sun } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Sparkles, Menu, X, Moon, Sun, Palette, Check } from 'lucide-react';
+import { useAuth, AccentColor } from '@/contexts/AuthContext';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+
+const ACCENT_COLORS: { id: AccentColor; name: string; color: string }[] = [
+  { id: 'default', name: 'Purple', color: 'hsl(250 85% 60%)' },
+  { id: 'blue', name: 'Blue', color: 'hsl(220 90% 56%)' },
+  { id: 'violet', name: 'Violet', color: 'hsl(270 80% 60%)' },
+  { id: 'emerald', name: 'Emerald', color: 'hsl(160 84% 39%)' },
+  { id: 'rose', name: 'Rose', color: 'hsl(350 89% 60%)' },
+  { id: 'amber', name: 'Amber', color: 'hsl(38 92% 50%)' },
+];
 
 export function LandingNavbar() {
-  const { theme, toggleTheme } = useAuth();
+  const { theme, toggleTheme, accent, setAccent } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -48,6 +63,42 @@ export function LandingNavbar() {
           <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
             How it Works
           </a>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="text-muted-foreground hover:text-foreground hover:bg-card/30"
+              >
+                <Palette className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-3 bg-popover border-border" align="center">
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Accent Color</p>
+                <div className="flex gap-2">
+                  {ACCENT_COLORS.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => setAccent(color.id)}
+                      className={cn(
+                        "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 border-2",
+                        accent === color.id 
+                          ? "border-foreground scale-110" 
+                          : "border-transparent hover:scale-105"
+                      )}
+                      style={{ backgroundColor: color.color }}
+                      title={color.name}
+                    >
+                      {accent === color.id && (
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button 
             variant="ghost" 
             size="icon"
@@ -95,6 +146,30 @@ export function LandingNavbar() {
             How it Works
           </a>
           <div className="flex flex-col gap-3 pt-4">
+            {/* Accent Color Picker for Mobile */}
+            <div className="p-3 rounded-xl bg-card/30 border border-border/30">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Accent Color</p>
+              <div className="flex gap-2 justify-center">
+                {ACCENT_COLORS.map((color) => (
+                  <button
+                    key={color.id}
+                    onClick={() => setAccent(color.id)}
+                    className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 border-2",
+                      accent === color.id 
+                        ? "border-foreground scale-110" 
+                        : "border-transparent hover:scale-105"
+                    )}
+                    style={{ backgroundColor: color.color }}
+                    title={color.name}
+                  >
+                    {accent === color.id && (
+                      <Check className="w-4 h-4 text-white" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Button 
               variant="outline" 
               onClick={() => {
