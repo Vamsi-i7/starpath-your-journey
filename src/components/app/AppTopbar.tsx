@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Link, useNavigate } from 'react-router-dom';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface AppTopbarProps {
   title: string;
@@ -58,9 +59,15 @@ export function AppTopbar({ title }: AppTopbarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 p-2 rounded-xl hover:bg-card/50 transition-colors">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm">
-                {profile?.username.charAt(0) || 'U'}
-              </div>
+              <Avatar className="w-9 h-9 border-2 border-primary/30">
+                <AvatarImage 
+                  src={profile?.avatar_url || undefined} 
+                  alt={profile?.username || 'User'} 
+                />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-bold text-sm">
+                  {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
