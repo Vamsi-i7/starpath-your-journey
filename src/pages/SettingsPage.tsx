@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { Moon, Sun, Bell, Lock, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { validatePassword } from '@/lib/passwordValidation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -118,10 +119,11 @@ const SettingsPage = () => {
       return;
     }
 
-    if (newPassword.length < 8) {
+    const { valid, message } = validatePassword(newPassword);
+    if (!valid) {
       toast({
-        title: 'Password too short',
-        description: 'Password must be at least 8 characters.',
+        title: 'Weak password',
+        description: message,
         variant: 'destructive',
       });
       return;
