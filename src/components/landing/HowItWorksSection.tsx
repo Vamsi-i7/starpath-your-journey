@@ -78,24 +78,24 @@ export function HowItWorksSection() {
                 style={{ transitionDelay: `${index * 200}ms` }}
               >
                 {/* Number Badge (center on desktop) */}
-                <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent items-center justify-center text-primary-foreground font-bold text-xl z-10 glow">
+                <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent items-center justify-center text-primary-foreground font-bold text-xl z-10 glow transition-transform duration-300 hover:scale-110">
                   {step.number}
                 </div>
 
                 {/* Content Card */}
                 <div className={`flex-1 ${index % 2 === 1 ? 'lg:pr-24' : 'lg:pl-24'}`}>
-                  <div className="p-6 sm:p-8 rounded-2xl glass-dark border border-border/20">
+                  <div className="group p-6 sm:p-8 rounded-2xl glass-dark border border-border/20 transition-all duration-300 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 cursor-default">
                     {/* Mobile: Number + Icon row */}
                     <div className="flex items-center gap-4 mb-4 lg:hidden">
-                      <div className="w-12 h-12 shrink-0 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold glow">
+                      <div className="w-12 h-12 shrink-0 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold glow transition-transform duration-300 group-hover:scale-110">
                         {step.number}
                       </div>
-                      <step.icon className="w-8 h-8 shrink-0 text-primary" />
+                      <step.icon className="w-8 h-8 shrink-0 text-primary transition-all duration-300 group-hover:text-accent group-hover:scale-110" />
                     </div>
                     
                     {/* Desktop: Just icon */}
                     <div className="hidden lg:block mb-4">
-                      <step.icon className="w-8 h-8 text-primary" />
+                      <step.icon className="w-8 h-8 text-primary transition-all duration-300 group-hover:text-accent group-hover:scale-110" />
                     </div>
                     
                     <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-2 sm:mb-3">
