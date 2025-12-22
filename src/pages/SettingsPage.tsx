@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
 import { Moon, Sun, Bell, Lock, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/safeClient';
 import { validatePassword } from '@/lib/passwordValidation';
 import {
   AlertDialog,
