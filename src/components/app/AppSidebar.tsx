@@ -11,7 +11,8 @@ import {
   LogOut,
   Sparkles,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,7 +84,20 @@ export function AppSidebar() {
         })}
       </nav>
 
-      <div className="p-3 border-t border-border/30">
+      <div className="p-3 border-t border-border/30 space-y-1">
+        <NavLink
+          to="/app/profile"
+          className={cn(
+            "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200",
+            location.pathname === '/app/profile'
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+          )}
+        >
+          <User className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="font-medium">Profile</span>}
+        </NavLink>
+
         <NavLink
           to="/app/settings"
           className={cn(

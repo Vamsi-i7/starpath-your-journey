@@ -3,24 +3,24 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft, User } from 'lucide-react';
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signIn, theme } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!identifier || !password) {
       toast({
         title: 'Missing fields',
         description: 'Please fill in all fields',
@@ -31,7 +31,7 @@ const LoginPage = () => {
 
     setIsLoading(true);
     
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(identifier, password);
     
     if (error) {
       toast({
@@ -52,8 +52,12 @@ const LoginPage = () => {
     setIsLoading(false);
   };
 
+  // Check if input looks like an email or user code
+  const isEmail = identifier.includes('@');
+  const InputIcon = isEmail ? Mail : User;
+
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-6 dark">
+    <div className={`relative min-h-screen flex items-center justify-center p-6 ${theme}`}>
       <ParallaxBackground />
       
       <div className="relative z-10 w-full max-w-md">
@@ -80,18 +84,21 @@ const LoginPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">Email</Label>
+              <Label htmlFor="identifier" className="text-foreground">Email or User ID</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <InputIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="identifier"
+                  type="text"
+                  placeholder="you@example.com or SPXXXXXX"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   className="pl-10 bg-card/50 border-border/50 focus:border-primary"
                 />
               </div>
+              <p className="text-xs text-muted-foreground">
+                You can log in with your email or your unique User ID
+              </p>
             </div>
 
             <div className="space-y-2">

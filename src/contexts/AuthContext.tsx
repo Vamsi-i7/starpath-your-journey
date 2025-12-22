@@ -16,6 +16,7 @@ export interface UserProfile {
   max_hearts: number;
   total_habits_completed: number;
   longest_streak: number;
+  user_code: string | null;
 }
 
 export interface Habit {
@@ -66,7 +67,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   isLoading: boolean;
   signUp: (email: string, password: string, username: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (emailOrUserCode: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -76,17 +77,67 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Theme utilities
+const getSystemTheme = (): 'light' | 'dark' => {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return 'dark';
+};
+
+const getStoredTheme = (): 'light' | 'dark' | null => {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('starpath-theme');
+    if (stored === 'light' || stored === 'dark') {
+      return stored;
+    }
+  }
+  return null;
+};
+
+const setStoredTheme = (theme: 'light' | 'dark') => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('starpath-theme', theme);
+  }
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  
+  // Initialize theme from localStorage or system preference
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const stored = getStoredTheme();
+    return stored ?? getSystemTheme();
+  });
+  
   const { toast } = useToast();
 
+  // Apply theme to document and persist
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    setStoredTheme(theme);
   }, [theme]);
+
+  // Listen for system theme changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Only auto-switch if user hasn't explicitly set a preference
+      const stored = getStoredTheme();
+      if (!stored) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -161,7 +212,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (emailOrUserCode: string, password: string) => {
+    // Check if input looks like an email or user code
+    const isEmail = emailOrUserCode.includes('@');
+    
+    let email = emailOrUserCode;
+    
+    if (!isEmail) {
+      // It's a user code, look up the email
+      const { data: profileData, error: lookupError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('user_code', emailOrUserCode.toUpperCase())
+        .maybeSingle();
+      
+      if (lookupError || !profileData?.email) {
+        return { error: new Error('Invalid User ID or password') };
+      }
+      
+      email = profileData.email;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,

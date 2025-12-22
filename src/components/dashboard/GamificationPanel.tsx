@@ -1,6 +1,11 @@
-import { Heart, Zap, Star, TrendingUp } from 'lucide-react';
+import { Heart, Zap, Star, TrendingUp, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export function GamificationPanel() {
   const { profile } = useAuth();
@@ -9,6 +14,11 @@ export function GamificationPanel() {
 
   const xpProgress = (profile.xp / 500) * 100;
   const heartsArray = Array.from({ length: profile.max_hearts }, (_, i) => i < profile.hearts);
+
+  // Calculate hearts earned info
+  const heartsToNext = profile.hearts < profile.max_hearts 
+    ? `Complete 5-day streaks to earn hearts` 
+    : 'Maximum hearts reached!';
 
   return (
     <div className="space-y-4">
@@ -42,8 +52,21 @@ export function GamificationPanel() {
           <div className="w-12 h-12 rounded-xl bg-heart/10 flex items-center justify-center">
             <Heart className="w-6 h-6 text-heart fill-heart" />
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Lives Remaining</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-muted-foreground">Lives</p>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-sm">
+                    Hearts start at 0 and are earned by maintaining streaks. 
+                    Every 5 consecutive streak days earns you 1 heart!
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <p className="text-2xl font-bold text-foreground">{profile.hearts} / {profile.max_hearts}</p>
           </div>
         </div>
@@ -54,14 +77,14 @@ export function GamificationPanel() {
               key={index} 
               className={`w-8 h-8 transition-all duration-300 ${
                 filled 
-                  ? 'text-heart fill-heart animate-pulse-glow' 
+                  ? 'text-heart fill-heart' 
                   : 'text-muted-foreground/30'
               }`} 
             />
           ))}
         </div>
         <p className="text-xs text-muted-foreground mt-3">
-          Complete 7-day streaks to earn more hearts
+          {heartsToNext}
         </p>
       </div>
 
@@ -78,7 +101,12 @@ export function GamificationPanel() {
             </p>
             <div className="flex items-center gap-1 mt-1 text-xp">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-sm font-medium">Rising Star</span>
+              <span className="text-sm font-medium">
+                {profile.level >= 10 ? 'Galaxy Master' : 
+                 profile.level >= 5 ? 'Star Explorer' : 
+                 profile.level >= 2 ? 'Rising Star' : 
+                 'Stargazer'}
+              </span>
             </div>
           </div>
         </div>
