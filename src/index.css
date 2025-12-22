@@ -140,81 +140,93 @@
     --chart-5: 350 80% 65%;
   }
 
-  /* Accent Color Presets */
-  .accent-blue {
-    --primary: 220 90% 56%;
-    --primary-foreground: 0 0% 100%;
-    --ring: 220 90% 56%;
-    --sidebar-primary: 220 90% 56%;
-    --chart-1: 220 90% 56%;
-  }
-  .dark.accent-blue {
-    --primary: 220 90% 60%;
-    --primary-foreground: 220 30% 8%;
-    --ring: 220 90% 60%;
-    --sidebar-primary: 220 90% 60%;
-    --chart-1: 220 90% 60%;
-  }
+}
 
-  .accent-violet {
-    --primary: 270 80% 60%;
-    --primary-foreground: 0 0% 100%;
-    --ring: 270 80% 60%;
-    --sidebar-primary: 270 80% 60%;
-    --chart-1: 270 80% 60%;
-  }
-  .dark.accent-violet {
-    --primary: 270 80% 65%;
-    --primary-foreground: 270 30% 8%;
-    --ring: 270 80% 65%;
-    --sidebar-primary: 270 80% 65%;
-    --chart-1: 270 80% 65%;
-  }
+/* Accent Color Presets - Light Mode */
+.accent-blue {
+  --primary: 220 90% 56%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 220 90% 56%;
+  --sidebar-primary: 220 90% 56%;
+  --chart-1: 220 90% 56%;
+}
 
-  .accent-emerald {
-    --primary: 160 84% 39%;
-    --primary-foreground: 0 0% 100%;
-    --ring: 160 84% 39%;
-    --sidebar-primary: 160 84% 39%;
-    --chart-1: 160 84% 39%;
-  }
-  .dark.accent-emerald {
-    --primary: 160 84% 45%;
-    --primary-foreground: 160 30% 8%;
-    --ring: 160 84% 45%;
-    --sidebar-primary: 160 84% 45%;
-    --chart-1: 160 84% 45%;
-  }
+.accent-violet {
+  --primary: 270 80% 60%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 270 80% 60%;
+  --sidebar-primary: 270 80% 60%;
+  --chart-1: 270 80% 60%;
+}
 
-  .accent-rose {
-    --primary: 350 89% 60%;
-    --primary-foreground: 0 0% 100%;
-    --ring: 350 89% 60%;
-    --sidebar-primary: 350 89% 60%;
-    --chart-1: 350 89% 60%;
-  }
-  .dark.accent-rose {
-    --primary: 350 89% 65%;
-    --primary-foreground: 350 30% 8%;
-    --ring: 350 89% 65%;
-    --sidebar-primary: 350 89% 65%;
-    --chart-1: 350 89% 65%;
-  }
+.accent-emerald {
+  --primary: 160 84% 39%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 160 84% 39%;
+  --sidebar-primary: 160 84% 39%;
+  --chart-1: 160 84% 39%;
+}
 
-  .accent-amber {
-    --primary: 38 92% 50%;
-    --primary-foreground: 0 0% 100%;
-    --ring: 38 92% 50%;
-    --sidebar-primary: 38 92% 50%;
-    --chart-1: 38 92% 50%;
-  }
-  .dark.accent-amber {
-    --primary: 38 92% 55%;
-    --primary-foreground: 38 30% 8%;
-    --ring: 38 92% 55%;
-    --sidebar-primary: 38 92% 55%;
-    --chart-1: 38 92% 55%;
-  }
+.accent-rose {
+  --primary: 350 89% 60%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 350 89% 60%;
+  --sidebar-primary: 350 89% 60%;
+  --chart-1: 350 89% 60%;
+}
+
+.accent-amber {
+  --primary: 38 92% 50%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 38 92% 50%;
+  --sidebar-primary: 38 92% 50%;
+  --chart-1: 38 92% 50%;
+}
+
+/* Accent Color Presets - Dark Mode */
+.dark.accent-blue,
+.dark .accent-blue {
+  --primary: 220 90% 60%;
+  --primary-foreground: 220 30% 8%;
+  --ring: 220 90% 60%;
+  --sidebar-primary: 220 90% 60%;
+  --chart-1: 220 90% 60%;
+}
+
+.dark.accent-violet,
+.dark .accent-violet {
+  --primary: 270 80% 65%;
+  --primary-foreground: 270 30% 8%;
+  --ring: 270 80% 65%;
+  --sidebar-primary: 270 80% 65%;
+  --chart-1: 270 80% 65%;
+}
+
+.dark.accent-emerald,
+.dark .accent-emerald {
+  --primary: 160 84% 45%;
+  --primary-foreground: 160 30% 8%;
+  --ring: 160 84% 45%;
+  --sidebar-primary: 160 84% 45%;
+  --chart-1: 160 84% 45%;
+}
+
+.dark.accent-rose,
+.dark .accent-rose {
+  --primary: 350 89% 65%;
+  --primary-foreground: 350 30% 8%;
+  --ring: 350 89% 65%;
+  --sidebar-primary: 350 89% 65%;
+  --chart-1: 350 89% 65%;
+}
+
+.dark.accent-amber,
+.dark .accent-amber {
+  --primary: 38 92% 55%;
+  --primary-foreground: 38 30% 8%;
+  --ring: 38 92% 55%;
+  --sidebar-primary: 38 92% 55%;
+  --chart-1: 38 92% 55%;
 }
 
 @layer base {
