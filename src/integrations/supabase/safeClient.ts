@@ -1,23 +1,17 @@
-// Safe Supabase client wrapper.
-// Some environments may temporarily fail to inject VITE_SUPABASE_URL; in that case
-// we derive the URL from the project id.
+// Supabase client with hardcoded fallback values
+// This ensures the app works even if environment variables fail to load
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string | undefined;
-const urlFromProjectId = projectId ? `https://${projectId}.supabase.co` : undefined;
+// Hardcoded fallback values (these are public/publishable, safe to include)
+const FALLBACK_PROJECT_ID = 'lfewszmkscodyyrhrlpf';
+const FALLBACK_URL = `https://${FALLBACK_PROJECT_ID}.supabase.co`;
+const FALLBACK_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmZXdzem1rc2NvZHl5cmhybHBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjM4NjYsImV4cCI6MjA4MTk5OTg2Nn0.GREbPk1W_KTf-JOdbKr0cKrOdBwR8gazP416vKW7LBY';
 
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) || urlFromProjectId;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  // Throwing is still better than creating a half-broken client, but we make the
-  // message actionable.
-  throw new Error(
-    'Backend connection is not configured. Missing VITE_SUPABASE_URL (or VITE_SUPABASE_PROJECT_ID) or VITE_SUPABASE_PUBLISHABLE_KEY.'
-  );
-}
+// Try to get from environment, fall back to hardcoded values
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || FALLBACK_ANON_KEY;
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
