@@ -52,15 +52,15 @@ export function AppSidebar() {
       <div className="flex items-center gap-3 p-5 border-b border-border/30">
         <img 
           src={clawzerLogo} 
-          alt="Clawzer" 
-          className="h-10 w-auto flex-shrink-0"
+          alt="StarPath" 
+          className="h-10 w-auto flex-shrink-0 rounded-xl"
         />
         {!isCollapsed && (
           <span 
             className="text-xl font-bold text-foreground"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            Clawzer
+            StarPath
           </span>
         )}
       </div>
