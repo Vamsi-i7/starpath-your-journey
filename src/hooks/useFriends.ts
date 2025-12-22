@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -147,7 +147,7 @@ export const useFriends = () => {
         .from('profiles')
         .select('id, username, avatar_url, level, xp, user_code, bio')
         .eq('user_code', userCode.toUpperCase().trim())
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         toast.error('User not found');
@@ -175,7 +175,7 @@ export const useFriends = () => {
         .from('friendships')
         .select('*')
         .or(`and(user_id.eq.${user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${user.id})`)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         if (existing.status === 'accepted') {
