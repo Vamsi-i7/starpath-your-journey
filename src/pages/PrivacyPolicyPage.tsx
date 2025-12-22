@@ -129,7 +129,7 @@ const PrivacyPolicyPage = () => {
             <p>
               If you have any questions about this Privacy Policy, please contact us at:
             </p>
-            <p className="text-foreground font-medium">support@starpath.app</p>
+            <p className="text-foreground font-medium">clawzer96@gmail.com</p>
           </section>
         </div>
       </div>
