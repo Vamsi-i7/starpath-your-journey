@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Sparkles, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/safeClient';
 import { validatePassword } from '@/lib/passwordValidation';
 
 const ResetPasswordPage = () => {
