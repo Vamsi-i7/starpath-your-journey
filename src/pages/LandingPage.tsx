@@ -4,6 +4,7 @@ import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
+import { DashboardPreview } from '@/components/landing/DashboardPreview';
 import { CTASection } from '@/components/landing/CTASection';
 import { Sparkles } from 'lucide-react';
 
@@ -23,6 +24,10 @@ const LandingPage = () => {
         
         <div id="how-it-works">
           <HowItWorksSection />
+        </div>
+
+        <div id="preview">
+          <DashboardPreview />
         </div>
         
         <CTASection />
