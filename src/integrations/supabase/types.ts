@@ -244,6 +244,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          related_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -255,6 +288,7 @@ export type Database = {
           level: number
           longest_streak: number
           max_hearts: number
+          notifications_enabled: boolean
           total_habits_completed: number
           updated_at: string
           user_code: string | null
@@ -271,6 +305,7 @@ export type Database = {
           level?: number
           longest_streak?: number
           max_hearts?: number
+          notifications_enabled?: boolean
           total_habits_completed?: number
           updated_at?: string
           user_code?: string | null
@@ -287,6 +322,7 @@ export type Database = {
           level?: number
           longest_streak?: number
           max_hearts?: number
+          notifications_enabled?: boolean
           total_habits_completed?: number
           updated_at?: string
           user_code?: string | null
