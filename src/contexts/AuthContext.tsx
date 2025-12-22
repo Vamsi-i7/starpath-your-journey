@@ -17,6 +17,7 @@ export interface UserProfile {
   total_habits_completed: number;
   longest_streak: number;
   user_code: string | null;
+  notifications_enabled: boolean;
 }
 
 export interface Habit {

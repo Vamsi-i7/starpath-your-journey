@@ -45,7 +45,8 @@ const SettingsPage = () => {
   const { profile, theme, toggleTheme, accent, setAccent, updateProfile, signOut } = useAuth();
   const { toast } = useToast();
   const { resetTutorial } = useTutorial();
-  const [notifications, setNotifications] = useState(true);
+  const [notifications, setNotifications] = useState(profile?.notifications_enabled ?? true);
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
   
   // Profile form state
   const [username, setUsername] = useState('');
@@ -73,8 +74,30 @@ const SettingsPage = () => {
       setUsername(profile.username || '');
       setEmail(profile.email || '');
       setBio(profile.bio || '');
+      setNotifications(profile.notifications_enabled ?? true);
     }
   }, [profile]);
+
+  const handleNotificationsChange = async (enabled: boolean) => {
+    setNotifications(enabled);
+    setIsSavingNotifications(true);
+    try {
+      await updateProfile({ notifications_enabled: enabled } as any);
+      toast({
+        title: enabled ? 'Notifications enabled' : 'Notifications disabled',
+        description: enabled ? 'You will receive notifications.' : 'You will not receive notifications.',
+      });
+    } catch (error) {
+      setNotifications(!enabled); // Revert on error
+      toast({
+        title: 'Error',
+        description: 'Failed to update notification preference.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingNotifications(false);
+    }
+  };
 
   const handleSaveChanges = async () => {
     if (!username.trim()) {
@@ -355,9 +378,16 @@ const SettingsPage = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-primary" />
-              <span className="text-foreground">Push Notifications</span>
+              <div>
+                <span className="text-foreground font-medium">In-App Notifications</span>
+                <p className="text-xs text-muted-foreground">Receive notifications for achievements, messages, and friend requests</p>
+              </div>
             </div>
-            <Switch checked={notifications} onCheckedChange={setNotifications} />
+            <Switch 
+              checked={notifications} 
+              onCheckedChange={handleNotificationsChange}
+              disabled={isSavingNotifications}
+            />
           </div>
         </div>
 
