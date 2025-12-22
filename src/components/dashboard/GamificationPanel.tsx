@@ -1,14 +1,14 @@
 import { Heart, Zap, Star, TrendingUp } from 'lucide-react';
-import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from '@/components/ui/progress';
 
 export function GamificationPanel() {
-  const { user } = useApp();
+  const { profile } = useAuth();
 
-  if (!user) return null;
+  if (!profile) return null;
 
-  const xpProgress = (user.xp / 500) * 100;
-  const heartsArray = Array.from({ length: user.maxHearts }, (_, i) => i < user.hearts);
+  const xpProgress = (profile.xp / 500) * 100;
+  const heartsArray = Array.from({ length: profile.max_hearts }, (_, i) => i < profile.hearts);
 
   return (
     <div className="space-y-4">
@@ -20,18 +20,18 @@ export function GamificationPanel() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Experience Points</p>
-            <p className="text-2xl font-bold text-foreground">{user.xp} XP</p>
+            <p className="text-2xl font-bold text-foreground">{profile.xp} XP</p>
           </div>
         </div>
         
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Level {user.level}</span>
-            <span className="text-muted-foreground">Level {user.level + 1}</span>
+            <span className="text-muted-foreground">Level {profile.level}</span>
+            <span className="text-muted-foreground">Level {profile.level + 1}</span>
           </div>
           <Progress value={xpProgress} className="h-3" />
           <p className="text-xs text-muted-foreground text-center">
-            {500 - user.xp} XP to next level
+            {500 - profile.xp} XP to next level
           </p>
         </div>
       </div>
@@ -44,7 +44,7 @@ export function GamificationPanel() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Lives Remaining</p>
-            <p className="text-2xl font-bold text-foreground">{user.hearts} / {user.maxHearts}</p>
+            <p className="text-2xl font-bold text-foreground">{profile.hearts} / {profile.max_hearts}</p>
           </div>
         </div>
         
@@ -74,7 +74,7 @@ export function GamificationPanel() {
           <div>
             <p className="text-sm text-muted-foreground">Current Level</p>
             <p className="text-3xl font-bold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-              Level {user.level}
+              Level {profile.level}
             </p>
             <div className="flex items-center gap-1 mt-1 text-xp">
               <TrendingUp className="w-4 h-4" />
@@ -90,11 +90,11 @@ export function GamificationPanel() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Total Completed</span>
-            <span className="font-medium text-foreground">{user.totalHabitsCompleted}</span>
+            <span className="font-medium text-foreground">{profile.total_habits_completed}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Longest Streak</span>
-            <span className="font-medium text-streak">{user.longestStreak} days</span>
+            <span className="font-medium text-streak">{profile.longest_streak} days</span>
           </div>
         </div>
       </div>

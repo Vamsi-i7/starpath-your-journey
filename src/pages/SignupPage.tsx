@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -16,6 +17,7 @@ const SignupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +40,10 @@ const SignupPage = () => {
       return;
     }
 
-    if (password.length < 8) {
+    if (password.length < 6) {
       toast({
         title: 'Password too short',
-        description: 'Password must be at least 8 characters',
+        description: 'Password must be at least 6 characters',
         variant: 'destructive',
       });
       return;
@@ -49,9 +51,18 @@ const SignupPage = () => {
 
     setIsLoading(true);
     
-    // Simulate signup
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { error } = await signUp(email, password, username);
     
+    if (error) {
+      toast({
+        title: 'Signup failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
+
     toast({
       title: 'Account created!',
       description: 'Welcome to StarPath',
@@ -66,7 +77,6 @@ const SignupPage = () => {
       <ParallaxBackground />
       
       <div className="relative z-10 w-full max-w-md">
-        {/* Back to home */}
         <Link 
           to="/" 
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
@@ -75,9 +85,7 @@ const SignupPage = () => {
           Back to home
         </Link>
 
-        {/* Card */}
         <div className="p-8 rounded-2xl glass-dark border border-border/20">
-          {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow">
               <Sparkles className="w-6 h-6 text-primary-foreground" />

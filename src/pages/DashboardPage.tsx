@@ -1,31 +1,41 @@
-import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { AppTopbar } from '@/components/app/AppTopbar';
 import { HabitCard } from '@/components/habits/HabitCard';
 import { GamificationPanel } from '@/components/dashboard/GamificationPanel';
 import { StatsCards } from '@/components/dashboard/StatsCards';
 import { TodayProgress } from '@/components/dashboard/TodayProgress';
+import { useHabits } from '@/hooks/useHabits';
+import { Loader2 } from 'lucide-react';
 
 const DashboardPage = () => {
-  const { habits, getTodayString } = useApp();
+  const { habits, isLoading, getTodayString, toggleHabitCompletion, deleteHabit } = useHabits();
+  const { profile } = useAuth();
   const today = getTodayString();
 
   const completedToday = habits.filter(h => h.completedDates.includes(today)).length;
   const totalStreak = habits.reduce((sum, h) => sum + h.streak, 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       <AppTopbar title="Dashboard" />
       
       <div className="p-6 space-y-6">
-        {/* Stats Overview */}
         <StatsCards 
           totalHabits={habits.length}
           completedToday={completedToday}
           totalStreak={totalStreak}
+          totalXp={profile ? profile.level * 500 + profile.xp : 0}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Today's Habits */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
@@ -36,7 +46,13 @@ const DashboardPage = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {habits.map((habit) => (
-                <HabitCard key={habit.id} habit={habit} />
+                <HabitCard 
+                  key={habit.id} 
+                  habit={habit} 
+                  onToggle={() => toggleHabitCompletion(habit.id)}
+                  onDelete={() => deleteHabit(habit.id)}
+                  today={today}
+                />
               ))}
             </div>
 
@@ -47,7 +63,6 @@ const DashboardPage = () => {
             )}
           </div>
 
-          {/* Gamification Panel */}
           <div className="lg:col-span-1">
             <GamificationPanel />
           </div>

@@ -1,11 +1,19 @@
 import { AppTopbar } from '@/components/app/AppTopbar';
-import { useApp } from '@/contexts/AppContext';
-import { Plus, CheckCircle2, Circle, Target } from 'lucide-react';
+import { useGoals } from '@/hooks/useGoals';
+import { Plus, CheckCircle2, Circle, Target, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 
 const GoalsPage = () => {
-  const { goals, toggleTask } = useApp();
+  const { goals, isLoading, toggleTask } = useGoals();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -60,6 +68,12 @@ const GoalsPage = () => {
             </div>
           ))}
         </div>
+
+        {goals.length === 0 && (
+          <div className="text-center py-12 rounded-2xl border border-dashed border-border/50">
+            <p className="text-muted-foreground">No goals yet. Create your first goal!</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useHabits } from '@/hooks/useHabits';
 
 interface CreateHabitModalProps {
   open: boolean;
@@ -27,10 +27,9 @@ interface CreateHabitModalProps {
 }
 
 const habitIcons = ['🧘', '📚', '💪', '💻', '✍️', '🎯', '🌅', '💧', '🥗', '😴', '🎨', '🎵'];
-const habitColors = ['primary', 'accent', 'xp', 'streak'];
 
 export function CreateHabitModal({ open, onOpenChange }: CreateHabitModalProps) {
-  const { addHabit } = useApp();
+  const { addHabit } = useHabits();
   const { toast } = useToast();
   
   const [name, setName] = useState('');
@@ -39,8 +38,9 @@ export function CreateHabitModal({ open, onOpenChange }: CreateHabitModalProps) 
   const [color, setColor] = useState('primary');
   const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
   const [xpReward, setXpReward] = useState(50);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name.trim()) {
@@ -52,18 +52,15 @@ export function CreateHabitModal({ open, onOpenChange }: CreateHabitModalProps) 
       return;
     }
 
-    addHabit({
+    setIsLoading(true);
+
+    await addHabit({
       name: name.trim(),
       description: description.trim(),
       icon,
       color,
       frequency,
-      xpReward,
-    });
-
-    toast({
-      title: 'Habit created!',
-      description: `"${name}" has been added to your habits`,
+      xp_reward: xpReward,
     });
 
     // Reset form
@@ -73,6 +70,7 @@ export function CreateHabitModal({ open, onOpenChange }: CreateHabitModalProps) 
     setColor('primary');
     setFrequency('daily');
     setXpReward(50);
+    setIsLoading(false);
     onOpenChange(false);
   };
 
@@ -164,8 +162,12 @@ export function CreateHabitModal({ open, onOpenChange }: CreateHabitModalProps) 
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              Create Habit
+            <Button 
+              type="submit" 
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating...' : 'Create Habit'}
             </Button>
           </DialogFooter>
         </form>

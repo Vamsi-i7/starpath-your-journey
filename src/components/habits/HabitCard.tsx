@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Habit, useApp } from '@/contexts/AppContext';
 import { CheckCircle2, Circle, Flame, Zap, MoreHorizontal, Trash2, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -18,37 +17,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
 
 interface HabitCardProps {
-  habit: Habit;
+  habit: {
+    id: string;
+    name: string;
+    description: string | null;
+    icon: string;
+    color: string;
+    streak: number;
+    xp_reward: number;
+    completedDates: string[];
+  };
+  onToggle: () => void;
+  onDelete: () => void;
+  today: string;
 }
 
-export function HabitCard({ habit }: HabitCardProps) {
-  const { toggleHabitCompletion, deleteHabit, getTodayString } = useApp();
+export function HabitCard({ habit, onToggle, onDelete, today }: HabitCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const { toast } = useToast();
-
-  const today = getTodayString();
+  
   const isCompletedToday = habit.completedDates.includes(today);
 
-  const handleToggle = () => {
-    toggleHabitCompletion(habit.id);
-    
-    if (!isCompletedToday) {
-      toast({
-        title: '🎉 Habit completed!',
-        description: `+${habit.xpReward} XP earned`,
-      });
-    }
-  };
-
   const handleDelete = () => {
-    deleteHabit(habit.id);
-    toast({
-      title: 'Habit deleted',
-      description: 'The habit has been removed',
-    });
+    onDelete();
     setShowDeleteDialog(false);
   };
 
@@ -68,7 +60,7 @@ export function HabitCard({ habit }: HabitCardProps) {
             ? "bg-gradient-to-br from-xp/20 to-xp/5 border-xp/30" 
             : `bg-gradient-to-br ${colorClasses[habit.color] || colorClasses.primary}`
         )}
-        onClick={handleToggle}
+        onClick={onToggle}
       >
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
@@ -111,7 +103,7 @@ export function HabitCard({ habit }: HabitCardProps) {
             </div>
             <div className="flex items-center gap-1.5 text-level">
               <Zap className="w-4 h-4" />
-              <span className="text-sm font-medium">+{habit.xpReward} XP</span>
+              <span className="text-sm font-medium">+{habit.xp_reward} XP</span>
             </div>
           </div>
 
