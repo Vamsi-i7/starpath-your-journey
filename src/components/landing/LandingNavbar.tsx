@@ -47,14 +47,14 @@ export function LandingNavbar() {
         <Link to="/" className="flex items-center gap-2 group">
           <img 
             src={clawzerLogo} 
-            alt="Clawzer" 
-            className="h-10 w-auto group-hover:scale-105 transition-transform"
+            alt="StarPath" 
+            className="h-10 w-auto rounded-xl group-hover:scale-105 transition-transform"
           />
           <span 
             className="text-xl font-bold text-foreground"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            Clawzer
+            StarPath
           </span>
         </Link>
 
