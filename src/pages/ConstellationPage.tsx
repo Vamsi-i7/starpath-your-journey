@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { AppTopbar } from '@/components/app/AppTopbar';
-import { useApp } from '@/contexts/AppContext';
+import { useHabits } from '@/hooks/useHabits';
 
 interface StarNode {
   id: string;
@@ -13,13 +13,13 @@ interface StarNode {
 }
 
 const ConstellationPage = () => {
-  const { habits, getTodayString } = useApp();
+  const { habits, getTodayString } = useHabits();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredStar, setHoveredStar] = useState<StarNode | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const stars: StarNode[] = habits.map((habit, index) => {
-    const angle = (index / habits.length) * Math.PI * 2;
+    const angle = (index / Math.max(habits.length, 1)) * Math.PI * 2;
     const radius = 150 + Math.random() * 100;
     const today = getTodayString();
     const isCompleted = habit.completedDates.includes(today);
@@ -44,7 +44,6 @@ const ConstellationPage = () => {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Draw connections
       ctx.strokeStyle = 'rgba(139, 92, 246, 0.3)';
       ctx.lineWidth = 1;
       for (let i = 0; i < stars.length; i++) {
@@ -59,7 +58,6 @@ const ConstellationPage = () => {
         }
       }
 
-      // Draw stars
       stars.forEach(star => {
         const gradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.size * 2);
         gradient.addColorStop(0, `rgba(250, 204, 21, ${star.brightness})`);

@@ -1,24 +1,32 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppTopbar } from '@/components/app/AppTopbar';
 import { HabitCard } from '@/components/habits/HabitCard';
 import { CreateHabitModal } from '@/components/habits/CreateHabitModal';
-import { useApp } from '@/contexts/AppContext';
+import { useHabits } from '@/hooks/useHabits';
 
 const HabitsPage = () => {
-  const { habits } = useApp();
+  const { habits, isLoading, toggleHabitCompletion, deleteHabit, getTodayString } = useHabits();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const today = getTodayString();
 
   const dailyHabits = habits.filter(h => h.frequency === 'daily');
   const weeklyHabits = habits.filter(h => h.frequency === 'weekly');
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       <AppTopbar title="Habits" />
       
       <div className="p-6 space-y-8">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
@@ -36,12 +44,17 @@ const HabitsPage = () => {
           </Button>
         </div>
 
-        {/* Daily Habits */}
         <section>
           <h3 className="text-lg font-medium text-foreground mb-4">Daily Habits</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {dailyHabits.map((habit) => (
-              <HabitCard key={habit.id} habit={habit} />
+              <HabitCard 
+                key={habit.id} 
+                habit={habit}
+                onToggle={() => toggleHabitCompletion(habit.id)}
+                onDelete={() => deleteHabit(habit.id)}
+                today={today}
+              />
             ))}
           </div>
           {dailyHabits.length === 0 && (
@@ -51,12 +64,17 @@ const HabitsPage = () => {
           )}
         </section>
 
-        {/* Weekly Habits */}
         <section>
           <h3 className="text-lg font-medium text-foreground mb-4">Weekly Habits</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {weeklyHabits.map((habit) => (
-              <HabitCard key={habit.id} habit={habit} />
+              <HabitCard 
+                key={habit.id} 
+                habit={habit}
+                onToggle={() => toggleHabitCompletion(habit.id)}
+                onDelete={() => deleteHabit(habit.id)}
+                today={today}
+              />
             ))}
           </div>
           {weeklyHabits.length === 0 && (

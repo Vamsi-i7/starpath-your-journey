@@ -1,15 +1,13 @@
 import { Target, CheckCircle2, Flame, Zap } from 'lucide-react';
-import { useApp } from '@/contexts/AppContext';
 
 interface StatsCardsProps {
   totalHabits: number;
   completedToday: number;
   totalStreak: number;
+  totalXp: number;
 }
 
-export function StatsCards({ totalHabits, completedToday, totalStreak }: StatsCardsProps) {
-  const { user } = useApp();
-
+export function StatsCards({ totalHabits, completedToday, totalStreak, totalXp }: StatsCardsProps) {
   const stats = [
     {
       label: 'Total Habits',
@@ -34,7 +32,7 @@ export function StatsCards({ totalHabits, completedToday, totalStreak }: StatsCa
     },
     {
       label: 'Total XP',
-      value: user ? user.level * 500 + user.xp : 0,
+      value: totalXp,
       icon: Zap,
       color: 'text-level',
       bgColor: 'bg-level/10',

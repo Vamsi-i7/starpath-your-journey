@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Target, 
@@ -15,7 +14,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useApp } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useState } from 'react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/app' },
@@ -30,7 +30,13 @@ const navItems = [
 export function AppSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
-  const { user } = useApp();
+  const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <aside 
@@ -39,7 +45,6 @@ export function AppSidebar() {
         isCollapsed ? "w-20" : "w-64"
       )}
     >
-      {/* Logo */}
       <div className="flex items-center gap-3 p-5 border-b border-border/30">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 glow">
           <Sparkles className="w-5 h-5 text-primary-foreground" />
@@ -54,7 +59,6 @@ export function AppSidebar() {
         )}
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -79,7 +83,6 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* User Section */}
       <div className="p-3 border-t border-border/30">
         <NavLink
           to="/app/settings"
@@ -94,31 +97,29 @@ export function AppSidebar() {
           {!isCollapsed && <span className="font-medium">Settings</span>}
         </NavLink>
 
-        <NavLink
-          to="/"
-          className="flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {!isCollapsed && <span className="font-medium">Logout</span>}
-        </NavLink>
+        </button>
 
-        {/* User Profile Preview */}
-        {user && !isCollapsed && (
+        {profile && !isCollapsed && (
           <div className="mt-3 p-3 rounded-xl bg-card/30 border border-border/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm">
-                {user.username.charAt(0)}
+                {profile.username.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate text-sm">{user.username}</p>
-                <p className="text-xs text-muted-foreground">Level {user.level}</p>
+                <p className="font-medium text-foreground truncate text-sm">{profile.username}</p>
+                <p className="text-xs text-muted-foreground">Level {profile.level}</p>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Collapse Toggle */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"

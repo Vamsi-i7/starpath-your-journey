@@ -1,9 +1,9 @@
 import { AppTopbar } from '@/components/app/AppTopbar';
-import { useApp } from '@/contexts/AppContext';
+import { useHabits } from '@/hooks/useHabits';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
 const AnalyticsPage = () => {
-  const { habits, getTodayString } = useApp();
+  const { habits, getTodayString } = useHabits();
   const today = getTodayString();
 
   const weeklyData = Array.from({ length: 7 }, (_, i) => {

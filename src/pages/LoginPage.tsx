@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,9 +31,18 @@ const LoginPage = () => {
 
     setIsLoading(true);
     
-    // Simulate login
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { error } = await signIn(email, password);
     
+    if (error) {
+      toast({
+        title: 'Login failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+      setIsLoading(false);
+      return;
+    }
+
     toast({
       title: 'Welcome back!',
       description: 'Successfully logged in',
@@ -46,7 +57,6 @@ const LoginPage = () => {
       <ParallaxBackground />
       
       <div className="relative z-10 w-full max-w-md">
-        {/* Back to home */}
         <Link 
           to="/" 
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
@@ -55,9 +65,7 @@ const LoginPage = () => {
           Back to home
         </Link>
 
-        {/* Card */}
         <div className="p-8 rounded-2xl glass-dark border border-border/20">
-          {/* Logo */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow">
               <Sparkles className="w-6 h-6 text-primary-foreground" />
