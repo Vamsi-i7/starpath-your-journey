@@ -12,7 +12,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  User
+  User,
+  Award
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +24,7 @@ const navItems = [
   { icon: Target, label: 'Habits', path: '/app/habits' },
   { icon: Trophy, label: 'Goals', path: '/app/goals' },
   { icon: Star, label: 'Constellation', path: '/app/constellation' },
+  { icon: Award, label: 'Achievements', path: '/app/achievements' },
   { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
   { icon: MessageCircle, label: 'Chats', path: '/app/chats' },
   { icon: Users, label: 'Friends', path: '/app/friends' },

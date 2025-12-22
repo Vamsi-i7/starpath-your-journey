@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          rarity: string
+          requirement_type: string
+          requirement_value: number
+          xp_reward: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          name: string
+          rarity?: string
+          requirement_type: string
+          requirement_value: number
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          rarity?: string
+          requirement_type?: string
+          requirement_value?: number
+          xp_reward?: number
+        }
+        Relationships: []
+      }
+      daily_challenges: {
+        Row: {
+          active_date: string
+          challenge_type: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          target_value: number
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          active_date?: string
+          challenge_type: string
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          target_value: number
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          active_date?: string
+          challenge_type?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          target_value?: number
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           created_at: string
@@ -254,6 +329,73 @@ export type Database = {
             columns: ["goal_id"]
             isOneToOne: false
             referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_challenge_progress: {
+        Row: {
+          challenge_id: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          progress: number
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          progress?: number
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          progress?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
             referencedColumns: ["id"]
           },
         ]
