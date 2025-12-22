@@ -1,15 +1,16 @@
 import { AppTopbar } from '@/components/app/AppTopbar';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, AccentColor } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle } from 'lucide-react';
+import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle, Palette, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { validatePassword } from '@/lib/passwordValidation';
 import { useTutorial } from '@/components/onboarding/WelcomeTutorial';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,8 +32,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+const ACCENT_COLORS: { id: AccentColor; name: string; color: string }[] = [
+  { id: 'default', name: 'Purple', color: 'hsl(250 85% 60%)' },
+  { id: 'blue', name: 'Blue', color: 'hsl(220 90% 56%)' },
+  { id: 'violet', name: 'Violet', color: 'hsl(270 80% 60%)' },
+  { id: 'emerald', name: 'Emerald', color: 'hsl(160 84% 39%)' },
+  { id: 'rose', name: 'Rose', color: 'hsl(350 89% 60%)' },
+  { id: 'amber', name: 'Amber', color: 'hsl(38 92% 50%)' },
+];
+
 const SettingsPage = () => {
-  const { profile, theme, toggleTheme, updateProfile, signOut } = useAuth();
+  const { profile, theme, toggleTheme, accent, setAccent, updateProfile, signOut } = useAuth();
   const { toast } = useToast();
   const { resetTutorial } = useTutorial();
   const [notifications, setNotifications] = useState(true);
@@ -244,7 +254,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <AppTopbar title="Settings" />
       <div className="p-6 max-w-2xl space-y-6">
         <div className="p-6 rounded-2xl bg-card border border-border/30">
@@ -255,7 +265,7 @@ const SettingsPage = () => {
               <Input 
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)}
-                className="mt-1" 
+                className="mt-1 bg-background" 
               />
             </div>
             <div>
@@ -263,7 +273,7 @@ const SettingsPage = () => {
               <Input 
                 value={email} 
                 disabled
-                className="mt-1 opacity-60" 
+                className="mt-1 opacity-60 bg-background" 
               />
               <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
             </div>
@@ -272,7 +282,7 @@ const SettingsPage = () => {
               <Input 
                 value={bio} 
                 onChange={(e) => setBio(e.target.value)}
-                className="mt-1" 
+                className="mt-1 bg-background" 
               />
             </div>
             <Button 
@@ -294,12 +304,49 @@ const SettingsPage = () => {
 
         <div className="p-6 rounded-2xl bg-card border border-border/30">
           <h3 className="font-semibold text-foreground mb-4">Appearance</h3>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {theme === 'dark' ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-streak" />}
-              <span className="text-foreground">Dark Mode</span>
+          <div className="space-y-6">
+            {/* Theme Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {theme === 'dark' ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-streak" />}
+                <div>
+                  <span className="text-foreground font-medium">Dark Mode</span>
+                  <p className="text-xs text-muted-foreground">Switch between light and dark themes</p>
+                </div>
+              </div>
+              <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
             </div>
-            <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+
+            {/* Accent Color */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Palette className="w-5 h-5 text-primary" />
+                <div>
+                  <span className="text-foreground font-medium">Accent Color</span>
+                  <p className="text-xs text-muted-foreground">Choose your preferred accent color</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {ACCENT_COLORS.map((color) => (
+                  <button
+                    key={color.id}
+                    onClick={() => setAccent(color.id)}
+                    className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 border-2",
+                      accent === color.id 
+                        ? "border-foreground scale-110" 
+                        : "border-transparent hover:scale-105"
+                    )}
+                    style={{ backgroundColor: color.color }}
+                    title={color.name}
+                  >
+                    {accent === color.id && (
+                      <Check className="w-5 h-5 text-white" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
