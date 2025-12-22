@@ -61,6 +61,9 @@ export interface Friend {
   level: number;
 }
 
+export type ThemeMode = 'light' | 'dark';
+export type AccentColor = 'default' | 'blue' | 'violet' | 'emerald' | 'rose' | 'amber';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -71,21 +74,24 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
-  theme: 'light' | 'dark';
+  theme: ThemeMode;
   toggleTheme: () => void;
+  setTheme: (theme: ThemeMode) => void;
+  accent: AccentColor;
+  setAccent: (accent: AccentColor) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Theme utilities
-const getSystemTheme = (): 'light' | 'dark' => {
+const getSystemTheme = (): ThemeMode => {
   if (typeof window !== 'undefined' && window.matchMedia) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
   return 'dark';
 };
 
-const getStoredTheme = (): 'light' | 'dark' | null => {
+const getStoredTheme = (): ThemeMode | null => {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('starpath-theme');
     if (stored === 'light' || stored === 'dark') {
@@ -95,9 +101,25 @@ const getStoredTheme = (): 'light' | 'dark' | null => {
   return null;
 };
 
-const setStoredTheme = (theme: 'light' | 'dark') => {
+const setStoredTheme = (theme: ThemeMode) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('starpath-theme', theme);
+  }
+};
+
+const getStoredAccent = (): AccentColor => {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('starpath-accent');
+    if (['default', 'blue', 'violet', 'emerald', 'rose', 'amber'].includes(stored || '')) {
+      return stored as AccentColor;
+    }
+  }
+  return 'default';
+};
+
+const setStoredAccent = (accent: AccentColor) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('starpath-accent', accent);
   }
 };
 
@@ -108,19 +130,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   
   // Initialize theme from localStorage or system preference
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+  const [theme, setThemeState] = useState<ThemeMode>(() => {
     const stored = getStoredTheme();
     return stored ?? getSystemTheme();
   });
+
+  // Initialize accent from localStorage
+  const [accent, setAccentState] = useState<AccentColor>(getStoredAccent);
   
   const { toast } = useToast();
 
-  // Apply theme to document and persist
+  // Apply theme and accent to document
   useEffect(() => {
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
+    const root = document.documentElement;
+    
+    // Remove old theme classes
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
     setStoredTheme(theme);
-  }, [theme]);
+    
+    // Remove old accent classes
+    root.classList.remove('accent-blue', 'accent-violet', 'accent-emerald', 'accent-rose', 'accent-amber');
+    if (accent !== 'default') {
+      root.classList.add(`accent-${accent}`);
+    }
+    setStoredAccent(accent);
+  }, [theme, accent]);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -131,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Only auto-switch if user hasn't explicitly set a preference
       const stored = getStoredTheme();
       if (!stored) {
-        setTheme(e.matches ? 'dark' : 'light');
+        setThemeState(e.matches ? 'dark' : 'light');
       }
     };
     
@@ -140,7 +175,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    setThemeState(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const setTheme = (newTheme: ThemeMode) => {
+    setThemeState(newTheme);
+  };
+
+  const setAccent = (newAccent: AccentColor) => {
+    setAccentState(newAccent);
   };
 
   const fetchProfile = async (userId: string) => {
@@ -278,6 +321,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       updateProfile,
       theme,
       toggleTheme,
+      setTheme,
+      accent,
+      setAccent,
     }}>
       {children}
     </AuthContext.Provider>

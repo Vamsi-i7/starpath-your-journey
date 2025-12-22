@@ -9,7 +9,7 @@ import { Sparkles } from 'lucide-react';
 
 const LandingPage = () => {
   return (
-    <div className="relative min-h-screen overflow-hidden dark">
+    <div className="relative min-h-screen overflow-hidden">
       <ParallaxBackground />
       <FloatingStars />
       <LandingNavbar />

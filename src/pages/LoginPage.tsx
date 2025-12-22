@@ -15,7 +15,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, theme } = useAuth();
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +57,7 @@ const LoginPage = () => {
   const InputIcon = isEmail ? Mail : User;
 
   return (
-    <div className={`relative min-h-screen flex items-center justify-center p-6 ${theme}`}>
+    <div className="relative min-h-screen flex items-center justify-center p-6">
       <ParallaxBackground />
       
       <div className="relative z-10 w-full max-w-md">
@@ -69,7 +69,7 @@ const LoginPage = () => {
           Back to home
         </Link>
 
-        <div className="p-8 rounded-2xl glass-dark border border-border/20">
+        <div className="p-8 rounded-2xl bg-card/80 backdrop-blur-xl border border-border/30 shadow-lg">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow">
               <Sparkles className="w-6 h-6 text-primary-foreground" />
@@ -93,7 +93,7 @@ const LoginPage = () => {
                   placeholder="you@example.com or SPXXXXXX"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="pl-10 bg-card/50 border-border/50 focus:border-primary"
+                  className="pl-10 bg-background/50 border-border focus:border-primary"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -111,7 +111,7 @@ const LoginPage = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 bg-card/50 border-border/50 focus:border-primary"
+                  className="pl-10 pr-10 bg-background/50 border-border focus:border-primary"
                 />
                 <button
                   type="button"
