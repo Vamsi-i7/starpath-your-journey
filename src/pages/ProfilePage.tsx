@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Shield, Copy, Check, Loader2, Save, X, Camera, Upload } from 'lucide-react';
+import { User, Mail, Shield, Copy, Check, Loader2, Save, X, Camera, Upload, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -234,6 +234,40 @@ const ProfilePage = () => {
     }
   };
 
+  const handleRemoveAvatar = async () => {
+    if (!user || !profile?.avatar_url) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      // Delete avatar from storage
+      const { data: existingFiles } = await supabase.storage
+        .from('avatars')
+        .list(user.id);
+      
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles.map(f => `${user.id}/${f.name}`);
+        await supabase.storage.from('avatars').remove(filesToDelete);
+      }
+
+      // Update profile to remove avatar URL
+      await updateProfile({ avatar_url: null });
+      await refreshProfile();
+
+      toast({
+        title: 'Avatar removed',
+        description: 'Your profile picture has been removed.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove avatar. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const handleChangeEmail = async () => {
     if (!newEmail.trim()) {
       toast({
@@ -419,14 +453,29 @@ const ProfilePage = () => {
                 {profile?.username}
               </h2>
               <p className="text-sm text-muted-foreground">Level {profile?.level || 1}</p>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingAvatar}
-                className="text-xs text-primary hover:underline mt-1 flex items-center gap-1"
-              >
-                <Upload className="w-3 h-3" />
-                {isUploadingAvatar ? 'Uploading...' : 'Change photo'}
-              </button>
+              <div className="flex items-center gap-2 mt-1">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingAvatar}
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  <Upload className="w-3 h-3" />
+                  {isUploadingAvatar ? 'Processing...' : 'Change photo'}
+                </button>
+                {profile?.avatar_url && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <button
+                      onClick={handleRemoveAvatar}
+                      disabled={isUploadingAvatar}
+                      className="text-xs text-destructive hover:underline flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Remove
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           
