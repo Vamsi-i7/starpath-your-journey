@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useNotificationSound } from './useNotificationSound';
 
 interface Message {
   id: string;
@@ -34,6 +35,7 @@ export const useChat = (selectedFriendId: string | null) => {
   const [friendIsTyping, setFriendIsTyping] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const { playMessageSound } = useNotificationSound();
 
   // Fetch friends list for chat sidebar
   const { data: chatFriends = [], isLoading: friendsLoading } = useQuery({
@@ -128,6 +130,11 @@ export const useChat = (selectedFriendId: string | null) => {
 
           // Check if message is relevant to current user
           if (newMessage.sender_id === user.id || newMessage.receiver_id === user.id) {
+            // Play sound notification for incoming messages (not sent by current user)
+            if (newMessage.receiver_id === user.id) {
+              playMessageSound();
+            }
+            
             // Invalidate messages for the specific conversation
             queryClient.invalidateQueries({ queryKey: ['messages'] });
             // Invalidate chat friends to update last message
@@ -140,7 +147,7 @@ export const useChat = (selectedFriendId: string | null) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient, playMessageSound]);
 
   // Presence channel for typing indicators
   useEffect(() => {

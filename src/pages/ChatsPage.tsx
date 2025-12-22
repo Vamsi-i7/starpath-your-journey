@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday } from 'date-fns';
+import { useOnlinePresence } from '@/hooks/useOnlinePresence';
 
 const ChatsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,6 +19,7 @@ const ChatsPage = () => {
   const [messageInput, setMessageInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { isUserOnline } = useOnlinePresence();
 
   const { chatFriends, messages, isLoading, sendMessage, isSending, friendIsTyping, handleTyping } = useChat(selectedFriendId);
 
@@ -99,15 +101,25 @@ const ChatsPage = () => {
                         : "hover:bg-card/50"
                     )}
                   >
-                    <Avatar className="w-10 h-10">
-                      <AvatarImage src={friend.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {friend.username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="w-10 h-10">
+                        <AvatarImage src={friend.avatar_url || undefined} />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {friend.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {isUserOnline(friend.id) && (
+                        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium text-foreground truncate">{friend.username}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground truncate">{friend.username}</p>
+                          {isUserOnline(friend.id) && (
+                            <span className="text-xs text-green-500">online</span>
+                          )}
+                        </div>
                         <span className="text-xs text-muted-foreground">
                           {formatLastMessageTime(friend.lastMessageTime)}
                         </span>
@@ -135,16 +147,28 @@ const ChatsPage = () => {
             <>
               {/* Chat header */}
               <div className="p-4 border-b border-border/30 flex items-center gap-3">
-                <Avatar className="w-10 h-10">
-                  <AvatarImage src={selectedFriend.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    {selectedFriend.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={selectedFriend.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {selectedFriend.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {isUserOnline(selectedFriend.id) && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
+                  )}
+                </div>
                 <div>
-                  <p className="font-semibold text-foreground">{selectedFriend.username}</p>
-                  {friendIsTyping && (
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground">{selectedFriend.username}</p>
+                    {isUserOnline(selectedFriend.id) && (
+                      <span className="text-xs text-green-500">● online</span>
+                    )}
+                  </div>
+                  {friendIsTyping ? (
                     <p className="text-xs text-primary animate-pulse">typing...</p>
+                  ) : !isUserOnline(selectedFriend.id) && (
+                    <p className="text-xs text-muted-foreground">offline</p>
                   )}
                 </div>
               </div>
