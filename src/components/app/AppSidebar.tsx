@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import clawzerLogo from '@/assets/clawzer-logo.png';
+import { usePendingFriendRequests } from '@/hooks/usePendingFriendRequests';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/app' },
@@ -28,7 +29,7 @@ const navItems = [
   { icon: Award, label: 'Achievements', path: '/app/achievements' },
   { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
   { icon: MessageCircle, label: 'Chats', path: '/app/chats' },
-  { icon: Users, label: 'Friends', path: '/app/friends' },
+  { icon: Users, label: 'Friends', path: '/app/friends', hasBadge: true },
 ];
 
 export function AppSidebar() {
@@ -36,6 +37,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
+  const pendingRequestsCount = usePendingFriendRequests();
 
   const handleLogout = async () => {
     await signOut();
@@ -68,21 +70,34 @@ export function AppSidebar() {
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const showBadge = item.hasBadge && pendingRequestsCount > 0;
           
           return (
             <NavLink
               key={item.path}
               to={item.path}
               className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200",
+                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 relative",
                 isActive 
                   ? "bg-primary text-primary-foreground glow" 
                   : "text-muted-foreground hover:text-foreground hover:bg-card/50"
               )}
             >
-              <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary-foreground")} />
+              <div className="relative">
+                <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary-foreground")} />
+                {showBadge && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1">
+                    {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                  </span>
+                )}
+              </div>
               {!isCollapsed && (
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium flex-1">{item.label}</span>
+              )}
+              {!isCollapsed && showBadge && (
+                <span className="text-xs bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded-full">
+                  {pendingRequestsCount}
+                </span>
               )}
             </NavLink>
           );
