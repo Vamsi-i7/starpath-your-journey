@@ -6,6 +6,7 @@ import { StatsCards } from '@/components/dashboard/StatsCards';
 import { TodayProgress } from '@/components/dashboard/TodayProgress';
 import { DailyChallengesCard } from '@/components/dashboard/DailyChallengesCard';
 import { RecentAchievementsCard } from '@/components/dashboard/RecentAchievementsCard';
+import { WelcomeTutorial } from '@/components/onboarding/WelcomeTutorial';
 import { useHabits } from '@/hooks/useHabits';
 import { Loader2 } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen">
+      <WelcomeTutorial />
       <AppTopbar title="Dashboard" />
       
       <div className="p-6 space-y-6">
