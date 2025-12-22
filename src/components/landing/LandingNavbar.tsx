@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Menu, X } from 'lucide-react';
+import { Sparkles, Menu, X, Moon, Sun } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function LandingNavbar() {
+  const { theme, toggleTheme } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -39,13 +41,21 @@ export function LandingNavbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
             Features
           </a>
           <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
             How it Works
           </a>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={toggleTheme}
+            className="text-muted-foreground hover:text-foreground hover:bg-card/30"
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
           <Link to="/login">
             <Button variant="ghost" className="text-foreground hover:bg-card/30">
               Log In
@@ -85,6 +95,16 @@ export function LandingNavbar() {
             How it Works
           </a>
           <div className="flex flex-col gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                toggleTheme();
+              }}
+              className="w-full border-border/50 gap-2"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            </Button>
             <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
               <Button variant="outline" className="w-full border-border/50">
                 Log In
