@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +29,45 @@ export const useFriends = () => {
   const queryClient = useQueryClient();
   const [searchResult, setSearchResult] = useState<FriendProfile | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Subscribe to realtime changes on friendships table
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('friendships-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'friendships',
+        },
+        (payload) => {
+          console.log('Friendships realtime update:', payload);
+          
+          // Check if this change involves the current user
+          const newRecord = payload.new as Friendship | null;
+          const oldRecord = payload.old as Friendship | null;
+          
+          const isRelevant = 
+            (newRecord?.user_id === user.id || newRecord?.friend_id === user.id) ||
+            (oldRecord?.user_id === user.id || oldRecord?.friend_id === user.id);
+          
+          if (isRelevant) {
+            // Invalidate all friend-related queries to refresh data
+            queryClient.invalidateQueries({ queryKey: ['friends'] });
+            queryClient.invalidateQueries({ queryKey: ['pending-requests'] });
+            queryClient.invalidateQueries({ queryKey: ['sent-requests'] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   // Fetch accepted friends
   const { data: friends = [], isLoading: friendsLoading } = useQuery({
