@@ -19,6 +19,7 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import ChatsPage from "./pages/ChatsPage";
 import FriendsPage from "./pages/FriendsPage";
 import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="chats" element={<ChatsPage />} />
               <Route path="friends" element={<FriendsPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

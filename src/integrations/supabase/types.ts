@@ -182,6 +182,7 @@ export type Database = {
           max_hearts: number
           total_habits_completed: number
           updated_at: string
+          user_code: string | null
           username: string
           xp: number
         }
@@ -197,6 +198,7 @@ export type Database = {
           max_hearts?: number
           total_habits_completed?: number
           updated_at?: string
+          user_code?: string | null
           username: string
           xp?: number
         }
@@ -212,6 +214,7 @@ export type Database = {
           max_hearts?: number
           total_habits_completed?: number
           updated_at?: string
+          user_code?: string | null
           username?: string
           xp?: number
         }
@@ -260,6 +263,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_user_code: { Args: never; Returns: string }
       is_friend_with: { Args: { _profile_id: string }; Returns: boolean }
     }
     Enums: {

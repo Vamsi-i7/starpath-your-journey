@@ -19,12 +19,18 @@ export interface Habit {
 }
 
 export function useHabits() {
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, refreshProfile } = useAuth();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   const getTodayString = () => new Date().toISOString().split('T')[0];
+
+  const getYesterdayString = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0];
+  };
 
   const fetchHabits = async () => {
     if (!user) {
@@ -128,6 +134,7 @@ export function useHabits() {
       return;
     }
 
+    // New habits start with streak 0
     const { error } = await supabase
       .from('habits')
       .insert({
@@ -138,6 +145,7 @@ export function useHabits() {
         frequency: habitData.frequency,
         xp_reward: habitData.xp_reward,
         user_id: user.id,
+        streak: 0,
       });
 
     if (error) {
@@ -172,6 +180,50 @@ export function useHabits() {
     }
   };
 
+  // Calculate consecutive streak days across all habits
+  const calculateTotalConsecutiveStreakDays = async (): Promise<number> => {
+    if (!user) return 0;
+
+    const { data: completions, error } = await supabase
+      .from('habit_completions')
+      .select('completed_date')
+      .eq('user_id', user.id)
+      .order('completed_date', { ascending: false });
+
+    if (error || !completions || completions.length === 0) return 0;
+
+    // Get unique dates
+    const uniqueDates = [...new Set(completions.map(c => c.completed_date))].sort().reverse();
+    
+    if (uniqueDates.length === 0) return 0;
+
+    // Check if today or yesterday has a completion (to count current streak)
+    const today = getTodayString();
+    const yesterday = getYesterdayString();
+    
+    if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) {
+      return 0; // Streak is broken
+    }
+
+    // Count consecutive days
+    let streakDays = 0;
+    let currentDate = new Date(uniqueDates[0]);
+    
+    for (const dateStr of uniqueDates) {
+      const checkDate = new Date(dateStr);
+      const diffDays = Math.floor((currentDate.getTime() - checkDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays <= 1) {
+        streakDays++;
+        currentDate = checkDate;
+      } else {
+        break;
+      }
+    }
+
+    return streakDays;
+  };
+
   const toggleHabitCompletion = async (habitId: string) => {
     if (!user || !profile) return;
 
@@ -198,10 +250,11 @@ export function useHabits() {
         return;
       }
 
-      // Update streak
+      // Update habit streak
+      const newStreak = Math.max(0, habit.streak - 1);
       await supabase
         .from('habits')
-        .update({ streak: Math.max(0, habit.streak - 1) })
+        .update({ streak: newStreak })
         .eq('id', habitId);
 
       // Decrease XP
@@ -227,7 +280,7 @@ export function useHabits() {
         return;
       }
 
-      // Update streak
+      // Update habit streak
       const newStreak = habit.streak + 1;
       await supabase
         .from('habits')
@@ -244,22 +297,32 @@ export function useHabits() {
         newLevel++;
       }
 
-      // Check for heart bonus (every 7-day streak)
+      // Calculate total consecutive streak days for heart bonus
+      const totalStreakDays = await calculateTotalConsecutiveStreakDays();
+      
+      // Award heart every 5 consecutive streak days (if not at max)
       let newHearts = profile.hearts;
-      if (newStreak % 7 === 0 && newHearts < profile.max_hearts) {
-        newHearts++;
+      const heartsEarned = Math.floor(totalStreakDays / 5);
+      const currentHeartsFromStreak = Math.min(heartsEarned, profile.max_hearts);
+      
+      // Only award if we've crossed a new 5-day threshold
+      if (totalStreakDays > 0 && totalStreakDays % 5 === 0 && newHearts < profile.max_hearts) {
+        newHearts = Math.min(newHearts + 1, profile.max_hearts);
         toast({
           title: '❤️ Heart Earned!',
-          description: '7-day streak bonus!',
+          description: `${totalStreakDays}-day streak bonus! Keep it up!`,
         });
       }
+
+      // Update longest streak if this is a new record
+      const newLongestStreak = Math.max(profile.longest_streak, newStreak);
 
       await updateProfile({ 
         xp: newXp, 
         level: newLevel,
         hearts: newHearts,
         total_habits_completed: profile.total_habits_completed + 1,
-        longest_streak: Math.max(profile.longest_streak, newStreak),
+        longest_streak: newLongestStreak,
       });
 
       toast({
