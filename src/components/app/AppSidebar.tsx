@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/app' },
@@ -121,16 +122,24 @@ export function AppSidebar() {
           {!isCollapsed && <span className="font-medium">Logout</span>}
         </button>
 
-        {profile && !isCollapsed && (
-          <div className="mt-3 p-3 rounded-xl bg-card/30 border border-border/20">
+        {profile && (
+          <div className={cn("mt-3 p-3 rounded-xl bg-card/30 border border-border/20", isCollapsed && "p-2")}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm">
-                {profile.username.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate text-sm">{profile.username}</p>
-                <p className="text-xs text-muted-foreground">Level {profile.level}</p>
-              </div>
+              <Avatar className={cn("border-2 border-primary/30", isCollapsed ? "w-8 h-8" : "w-10 h-10")}>
+                <AvatarImage 
+                  src={profile.avatar_url || undefined} 
+                  alt={profile.username} 
+                />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-bold text-sm">
+                  {profile.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {!isCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground truncate text-sm">{profile.username}</p>
+                  <p className="text-xs text-muted-foreground">Level {profile.level}</p>
+                </div>
+              )}
             </div>
           </div>
         )}
