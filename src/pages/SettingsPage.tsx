@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Bell, Lock, Trash2, Loader2 } from 'lucide-react';
+import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { validatePassword } from '@/lib/passwordValidation';
+import { useTutorial } from '@/components/onboarding/WelcomeTutorial';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,7 @@ import {
 const SettingsPage = () => {
   const { profile, theme, toggleTheme, updateProfile, signOut } = useAuth();
   const { toast } = useToast();
+  const { resetTutorial } = useTutorial();
   const [notifications, setNotifications] = useState(true);
   
   // Profile form state
@@ -310,6 +312,23 @@ const SettingsPage = () => {
             </div>
             <Switch checked={notifications} onCheckedChange={setNotifications} />
           </div>
+        </div>
+
+        <div className="p-6 rounded-2xl bg-card border border-border/30">
+          <h3 className="font-semibold text-foreground mb-4">Help</h3>
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            onClick={() => {
+              resetTutorial();
+              toast({
+                title: 'Tutorial reset',
+                description: 'Go to Dashboard to see the tutorial again.',
+              });
+            }}
+          >
+            <HelpCircle className="w-4 h-4" /> Replay Welcome Tutorial
+          </Button>
         </div>
 
         <div className="p-6 rounded-2xl bg-card border border-border/30">
