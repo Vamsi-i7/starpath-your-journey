@@ -84,17 +84,24 @@ export function HowItWorksSection() {
 
                 {/* Content Card */}
                 <div className={`flex-1 ${index % 2 === 1 ? 'lg:pr-24' : 'lg:pl-24'}`}>
-                  <div className="p-8 rounded-2xl glass-dark border border-border/20">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="lg:hidden w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold glow">
+                  <div className="p-6 sm:p-8 rounded-2xl glass-dark border border-border/20">
+                    {/* Mobile: Number + Icon row */}
+                    <div className="flex items-center gap-4 mb-4 lg:hidden">
+                      <div className="w-12 h-12 shrink-0 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold glow">
                         {step.number}
                       </div>
+                      <step.icon className="w-8 h-8 shrink-0 text-primary" />
+                    </div>
+                    
+                    {/* Desktop: Just icon */}
+                    <div className="hidden lg:block mb-4">
                       <step.icon className="w-8 h-8 text-primary" />
                     </div>
-                    <h3 className="text-2xl font-semibold text-foreground mb-3">
+                    
+                    <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-2 sm:mb-3">
                       {step.title}
                     </h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                       {step.description}
                     </p>
                   </div>
