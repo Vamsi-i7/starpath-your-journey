@@ -94,7 +94,7 @@ const getSystemTheme = (): ThemeMode => {
 
 const getStoredTheme = (): ThemeMode | null => {
   if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('starpath-theme');
+    const stored = localStorage.getItem('clawzer-theme');
     if (stored === 'light' || stored === 'dark') {
       return stored;
     }
@@ -104,13 +104,13 @@ const getStoredTheme = (): ThemeMode | null => {
 
 const setStoredTheme = (theme: ThemeMode) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('starpath-theme', theme);
+    localStorage.setItem('clawzer-theme', theme);
   }
 };
 
 const getStoredAccent = (): AccentColor => {
   if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('starpath-accent');
+    const stored = localStorage.getItem('clawzer-accent');
     if (['default', 'blue', 'violet', 'emerald', 'rose', 'amber'].includes(stored || '')) {
       return stored as AccentColor;
     }
@@ -120,7 +120,7 @@ const getStoredAccent = (): AccentColor => {
 
 const setStoredAccent = (accent: AccentColor) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('starpath-accent', accent);
+    localStorage.setItem('clawzer-accent', accent);
   }
 };
 

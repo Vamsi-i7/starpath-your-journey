@@ -9,7 +9,6 @@ import {
   Users, 
   Settings, 
   LogOut,
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   User,
@@ -19,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import clawzerLogo from '@/assets/clawzer-logo.png';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/app' },
@@ -50,15 +50,17 @@ export function AppSidebar() {
       )}
     >
       <div className="flex items-center gap-3 p-5 border-b border-border/30">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 glow">
-          <Sparkles className="w-5 h-5 text-primary-foreground" />
-        </div>
+        <img 
+          src={clawzerLogo} 
+          alt="Clawzer" 
+          className="h-10 w-auto flex-shrink-0"
+        />
         {!isCollapsed && (
           <span 
             className="text-xl font-bold text-foreground"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            StarPath
+            Clawzer
           </span>
         )}
       </div>

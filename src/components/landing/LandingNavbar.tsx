@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Menu, X, Moon, Sun, Palette, Check } from 'lucide-react';
+import { Menu, X, Moon, Sun, Palette, Check } from 'lucide-react';
 import { useAuth, AccentColor } from '@/contexts/AuthContext';
 import {
   Popover,
@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import clawzerLogo from '@/assets/clawzer-logo.png';
 
 const ACCENT_COLORS: { id: AccentColor; name: string; color: string }[] = [
   { id: 'default', name: 'Purple', color: 'hsl(250 85% 60%)' },
@@ -44,14 +45,16 @@ export function LandingNavbar() {
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center group-hover:scale-105 transition-transform">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img 
+            src={clawzerLogo} 
+            alt="Clawzer" 
+            className="h-10 w-auto group-hover:scale-105 transition-transform"
+          />
           <span 
             className="text-xl font-bold text-foreground"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            StarPath
+            Clawzer
           </span>
         </Link>
 
