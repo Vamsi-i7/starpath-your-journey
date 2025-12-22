@@ -81,11 +81,69 @@ export function useGoals() {
   }) => {
     if (!user) return;
 
+    // Validate title
+    const trimmedTitle = goalData.title?.trim() || '';
+    if (!trimmedTitle || trimmedTitle.length > 200) {
+      toast({
+        title: 'Invalid goal title',
+        description: 'Title must be between 1 and 200 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate description
+    const trimmedDescription = goalData.description?.trim() || '';
+    if (trimmedDescription.length > 1000) {
+      toast({
+        title: 'Description too long',
+        description: 'Description must be less than 1000 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate deadline format
+    if (goalData.deadline) {
+      const deadlineDate = new Date(goalData.deadline);
+      if (isNaN(deadlineDate.getTime())) {
+        toast({
+          title: 'Invalid deadline',
+          description: 'Please provide a valid date.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    // Validate tasks count
+    if (goalData.tasks.length > 50) {
+      toast({
+        title: 'Too many tasks',
+        description: 'Maximum 50 tasks per goal.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate each task title
+    for (const task of goalData.tasks) {
+      const trimmedTaskTitle = task.title?.trim() || '';
+      if (!trimmedTaskTitle || trimmedTaskTitle.length > 200) {
+        toast({
+          title: 'Invalid task title',
+          description: 'Each task title must be between 1 and 200 characters.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     const { data: goal, error: goalError } = await supabase
       .from('goals')
       .insert({
-        title: goalData.title,
-        description: goalData.description,
+        title: trimmedTitle.slice(0, 200),
+        description: trimmedDescription.slice(0, 1000) || null,
         deadline: goalData.deadline || null,
         user_id: user.id,
       })
@@ -105,7 +163,7 @@ export function useGoals() {
       const tasksToInsert = goalData.tasks.map(t => ({
         goal_id: goal.id,
         user_id: user.id,
-        title: t.title,
+        title: t.title.trim().slice(0, 200),
       }));
 
       await supabase.from('tasks').insert(tasksToInsert);
