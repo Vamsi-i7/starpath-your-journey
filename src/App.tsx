@@ -20,6 +20,7 @@ import ChatsPage from "./pages/ChatsPage";
 import FriendsPage from "./pages/FriendsPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
+import AchievementsPage from "./pages/AchievementsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="friends" element={<FriendsPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="achievements" element={<AchievementsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
