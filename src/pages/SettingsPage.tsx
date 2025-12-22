@@ -91,6 +91,15 @@ const SettingsPage = () => {
   };
 
   const handleChangePassword = async () => {
+    if (!currentPassword) {
+      toast({
+        title: 'Current password required',
+        description: 'Please enter your current password.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!newPassword || !confirmPassword) {
       toast({
         title: 'Password required',
@@ -120,6 +129,23 @@ const SettingsPage = () => {
 
     setIsChangingPassword(true);
     try {
+      // Verify current password first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        toast({
+          title: 'Incorrect password',
+          description: 'Your current password is incorrect.',
+          variant: 'destructive',
+        });
+        setIsChangingPassword(false);
+        return;
+      }
+
+      // Now update to new password
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -266,6 +292,16 @@ const SettingsPage = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                <div>
+                  <Label>Current Password</Label>
+                  <Input 
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password"
+                    className="mt-1"
+                  />
+                </div>
                 <div>
                   <Label>New Password</Label>
                   <Input 
