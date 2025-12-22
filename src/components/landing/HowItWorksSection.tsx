@@ -24,6 +24,7 @@ const steps = [
 
 export function HowItWorksSection() {
   const [isVisible, setIsVisible] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -43,11 +44,32 @@ export function HowItWorksSection() {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        const sectionTop = rect.top;
+        const windowHeight = window.innerHeight;
+        // Calculate progress: 0 when section enters viewport, 1 when it leaves
+        const progress = Math.max(0, Math.min(1, (windowHeight - sectionTop) / (windowHeight + rect.height)));
+        setScrollY(progress);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Initial call
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <section ref={sectionRef} className="relative py-24 px-6">
       <div className="max-w-5xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div 
+          className="text-center mb-16"
+          style={{ transform: `translateY(${scrollY * -20}px)` }}
+        >
           <h2 
             className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4"
             style={{ fontFamily: 'var(--font-display)' }}
@@ -64,7 +86,10 @@ export function HowItWorksSection() {
         {/* Steps */}
         <div className="relative">
           {/* Connection Line */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-accent/50 to-primary/50 hidden lg:block" />
+          <div 
+            className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-accent/50 to-primary/50 hidden lg:block"
+            style={{ transform: `scaleY(${0.8 + scrollY * 0.2})`, transformOrigin: 'top' }}
+          />
 
           <div className="space-y-12 lg:space-y-24">
             {steps.map((step, index) => (
@@ -75,10 +100,16 @@ export function HowItWorksSection() {
                 } transition-all duration-700 ${
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
-                style={{ transitionDelay: `${index * 200}ms` }}
+                style={{ 
+                  transitionDelay: `${index * 200}ms`,
+                  transform: `translateY(${scrollY * (10 - index * 5)}px)`
+                }}
               >
                 {/* Number Badge (center on desktop) */}
-                <div className="absolute left-1/2 -translate-x-1/2 hidden lg:flex w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent items-center justify-center text-primary-foreground font-bold text-xl z-10 glow transition-transform duration-300 hover:scale-110">
+                <div 
+                  className="absolute left-1/2 -translate-x-1/2 hidden lg:flex w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent items-center justify-center text-primary-foreground font-bold text-xl z-10 glow transition-transform duration-300 hover:scale-110"
+                  style={{ transform: `translateX(-50%) translateY(${scrollY * (5 - index * 3)}px)` }}
+                >
                   {step.number}
                 </div>
 
