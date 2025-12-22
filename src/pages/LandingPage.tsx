@@ -1,4 +1,5 @@
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
+import { FloatingStars } from '@/components/landing/FloatingStars';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
@@ -10,6 +11,7 @@ const LandingPage = () => {
   return (
     <div className="relative min-h-screen overflow-hidden dark">
       <ParallaxBackground />
+      <FloatingStars />
       <LandingNavbar />
       
       <main className="relative z-10">
