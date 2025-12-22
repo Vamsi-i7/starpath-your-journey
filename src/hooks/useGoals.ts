@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logError } from '@/lib/errorLogger';
+import { getDisplayErrorMessage } from '@/lib/errorMessages';
 
 export interface Task {
   id: string;
@@ -186,9 +187,10 @@ export function useGoals() {
       .single();
 
     if (goalError) {
+      logError('Goal Create', goalError);
       toast({
         title: 'Error creating goal',
-        description: goalError.message,
+        description: getDisplayErrorMessage(goalError, 'goal'),
         variant: 'destructive',
       });
       return false;
@@ -234,9 +236,10 @@ export function useGoals() {
       .eq('user_id', user.id);
 
     if (error) {
+      logError('Goal Update', error);
       toast({
         title: 'Error updating goal',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'goal'),
         variant: 'destructive',
       });
       return false;
@@ -254,9 +257,10 @@ export function useGoals() {
       .eq('id', id);
 
     if (error) {
+      logError('Goal Delete', error);
       toast({
         title: 'Error deleting goal',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'goal'),
         variant: 'destructive',
       });
     } else {
@@ -288,9 +292,10 @@ export function useGoals() {
       });
 
     if (error) {
+      logError('Task Add', error);
       toast({
         title: 'Error adding task',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'goal'),
         variant: 'destructive',
       });
       return false;
@@ -313,9 +318,10 @@ export function useGoals() {
       .eq('user_id', user.id);
 
     if (error) {
+      logError('Task Update', error);
       toast({
         title: 'Error updating task',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'goal'),
         variant: 'destructive',
       });
       return false;
@@ -335,9 +341,10 @@ export function useGoals() {
       .eq('user_id', user.id);
 
     if (error) {
+      logError('Task Delete', error);
       toast({
         title: 'Error deleting task',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'goal'),
         variant: 'destructive',
       });
       return false;
@@ -373,9 +380,10 @@ export function useGoals() {
       .eq('id', taskId);
 
     if (error) {
+      logError('Task Toggle', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'goal'),
         variant: 'destructive',
       });
       await fetchGoals();

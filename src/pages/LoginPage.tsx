@@ -7,6 +7,8 @@ import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft, User } from 'lucide-react
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { logError } from '@/lib/errorLogger';
+import { getDisplayErrorMessage } from '@/lib/errorMessages';
 
 const LoginPage = () => {
   const [identifier, setIdentifier] = useState('');
@@ -34,9 +36,10 @@ const LoginPage = () => {
     const { error } = await signIn(identifier, password);
     
     if (error) {
+      logError('Login', error);
       toast({
         title: 'Login failed',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'auth'),
         variant: 'destructive',
       });
       setIsLoading(false);

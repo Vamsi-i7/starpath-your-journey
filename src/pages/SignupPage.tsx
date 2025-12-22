@@ -8,6 +8,8 @@ import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { validatePassword } from '@/lib/passwordValidation';
+import { logError } from '@/lib/errorLogger';
+import { getDisplayErrorMessage } from '@/lib/errorMessages';
 
 const SignupPage = () => {
   const [username, setUsername] = useState('');
@@ -56,19 +58,12 @@ const SignupPage = () => {
     const { error } = await signUp(email, password, username);
     
     if (error) {
-      if (error.message.includes('already registered') || error.message.includes('already exists')) {
-        toast({
-          title: 'Account exists',
-          description: 'This email is already registered. Please sign in instead.',
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Signup failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+      logError('Signup', error);
+      toast({
+        title: 'Signup failed',
+        description: getDisplayErrorMessage(error, 'auth'),
+        variant: 'destructive',
+      });
       setIsLoading(false);
       return;
     }
