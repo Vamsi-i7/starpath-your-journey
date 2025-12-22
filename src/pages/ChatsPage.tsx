@@ -19,7 +19,7 @@ const ChatsPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
-  const { chatFriends, messages, isLoading, sendMessage, isSending } = useChat(selectedFriendId);
+  const { chatFriends, messages, isLoading, sendMessage, isSending, friendIsTyping, handleTyping } = useChat(selectedFriendId);
 
   const selectedFriend = chatFriends.find(f => f.id === selectedFriendId);
 
@@ -143,6 +143,9 @@ const ChatsPage = () => {
                 </Avatar>
                 <div>
                   <p className="font-semibold text-foreground">{selectedFriend.username}</p>
+                  {friendIsTyping && (
+                    <p className="text-xs text-primary animate-pulse">typing...</p>
+                  )}
                 </div>
               </div>
 
@@ -178,6 +181,17 @@ const ChatsPage = () => {
                       </div>
                     );
                   })}
+                  {friendIsTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-2">
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
@@ -187,7 +201,10 @@ const ChatsPage = () => {
                 <div className="flex gap-2">
                   <Input
                     value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
+                    onChange={(e) => {
+                      setMessageInput(e.target.value);
+                      handleTyping();
+                    }}
                     onKeyPress={handleKeyPress}
                     placeholder="Type a message..."
                     className="flex-1"
