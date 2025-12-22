@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logError } from '@/lib/errorLogger';
 
 export interface UserProfile {
   id: string;
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
     
     if (error) {
-      console.error('Error fetching profile:', error);
+      logError('Profile Fetch', error);
       return null;
     }
     return data as UserProfile | null;

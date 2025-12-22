@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { logError } from '@/lib/errorLogger';
 
 export interface Task {
   id: string;
@@ -45,7 +46,7 @@ export function useGoals() {
       .order('created_at', { ascending: false });
 
     if (goalsError) {
-      console.error('Error fetching goals:', goalsError);
+      logError('Goals Fetch', goalsError);
       setIsLoading(false);
       return;
     }
@@ -56,7 +57,7 @@ export function useGoals() {
       .eq('user_id', user.id);
 
     if (tasksError) {
-      console.error('Error fetching tasks:', tasksError);
+      logError('Tasks Fetch', tasksError);
     }
 
     const goalsWithTasks: Goal[] = (goalsData || []).map(goal => ({
