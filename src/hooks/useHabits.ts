@@ -84,10 +84,59 @@ export function useHabits() {
   }) => {
     if (!user) return;
 
+    // Input validation
+    const allowedColors = ['primary', 'secondary', 'streak', 'destructive'];
+    const allowedIcons = ['🧘', '📚', '💪', '💻', '✍️', '🎯', '🌅', '💧', '🥗', '😴', '🎨', '🎵'];
+    
+    // Validate name (max 100 chars)
+    if (!habitData.name || habitData.name.length > 100) {
+      toast({
+        title: 'Invalid habit name',
+        description: 'Name must be between 1 and 100 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate description (max 500 chars)
+    if (habitData.description && habitData.description.length > 500) {
+      toast({
+        title: 'Description too long',
+        description: 'Description must be less than 500 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate icon
+    if (!allowedIcons.includes(habitData.icon)) {
+      toast({
+        title: 'Invalid icon',
+        description: 'Please select a valid icon.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate color
+    if (!allowedColors.includes(habitData.color)) {
+      toast({
+        title: 'Invalid color',
+        description: 'Please select a valid color.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from('habits')
       .insert({
-        ...habitData,
+        name: habitData.name.trim().slice(0, 100),
+        description: habitData.description?.trim().slice(0, 500) || null,
+        icon: habitData.icon,
+        color: habitData.color,
+        frequency: habitData.frequency,
+        xp_reward: habitData.xp_reward,
         user_id: user.id,
       });
 
