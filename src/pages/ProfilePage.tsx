@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { validatePassword } from '@/lib/passwordValidation';
+import { AvatarCropper } from '@/components/profile/AvatarCropper';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,8 @@ const ProfilePage = () => {
   
   // Avatar upload state
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize form with profile data
@@ -127,7 +130,7 @@ const ProfilePage = () => {
     setHasChanges(false);
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
@@ -153,10 +156,25 @@ const ProfilePage = () => {
       return;
     }
 
+    // Create object URL for cropper
+    const imageUrl = URL.createObjectURL(file);
+    setCropperImage(imageUrl);
+    setShowCropper(true);
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!user) return;
+
+    setShowCropper(false);
     setIsUploadingAvatar(true);
+
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `avatar.${fileExt}`;
+      const fileName = `avatar.jpg`;
       const filePath = `${user.id}/${fileName}`;
 
       // Delete old avatar if exists
@@ -169,10 +187,10 @@ const ProfilePage = () => {
         await supabase.storage.from('avatars').remove(filesToDelete);
       }
 
-      // Upload new avatar
+      // Upload cropped avatar
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, croppedBlob, { upsert: true, contentType: 'image/jpeg' });
 
       if (uploadError) throw uploadError;
 
@@ -200,10 +218,19 @@ const ProfilePage = () => {
       });
     } finally {
       setIsUploadingAvatar(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      // Clean up object URL
+      if (cropperImage) {
+        URL.revokeObjectURL(cropperImage);
+        setCropperImage(null);
       }
+    }
+  };
+
+  const handleCropperClose = () => {
+    setShowCropper(false);
+    if (cropperImage) {
+      URL.revokeObjectURL(cropperImage);
+      setCropperImage(null);
     }
   };
 
@@ -335,7 +362,18 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <>
+      {/* Avatar Cropper Modal */}
+      {cropperImage && (
+        <AvatarCropper
+          imageSrc={cropperImage}
+          open={showCropper}
+          onClose={handleCropperClose}
+          onCropComplete={handleCropComplete}
+        />
+      )}
+
+      <div className="min-h-screen">
       <AppTopbar title="Profile" />
       <div className="p-6 max-w-2xl space-y-6">
         {/* User ID Card */}
@@ -371,7 +409,7 @@ const ProfilePage = () => {
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/gif,image/webp"
-                onChange={handleAvatarUpload}
+                onChange={handleFileSelect}
                 className="hidden"
               />
             </div>
@@ -620,6 +658,7 @@ const ProfilePage = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
