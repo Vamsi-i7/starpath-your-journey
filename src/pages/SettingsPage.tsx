@@ -48,6 +48,10 @@ const SettingsPage = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   
+  // Rate limiting for password attempts
+  const [failedPasswordAttempts, setFailedPasswordAttempts] = useState(0);
+  const [passwordLockoutUntil, setPasswordLockoutUntil] = useState<Date | null>(null);
+  
   // Delete account state
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -92,6 +96,17 @@ const SettingsPage = () => {
   };
 
   const handleChangePassword = async () => {
+    // Check rate limiting lockout
+    if (passwordLockoutUntil && new Date() < passwordLockoutUntil) {
+      const minutesLeft = Math.ceil((passwordLockoutUntil.getTime() - Date.now()) / 60000);
+      toast({
+        title: 'Too many attempts',
+        description: `Please try again in ${minutesLeft} minute${minutesLeft > 1 ? 's' : ''}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!currentPassword) {
       toast({
         title: 'Current password required',
@@ -138,14 +153,33 @@ const SettingsPage = () => {
       });
 
       if (signInError) {
-        toast({
-          title: 'Incorrect password',
-          description: 'Your current password is incorrect.',
-          variant: 'destructive',
-        });
+        // Track failed attempts for rate limiting
+        const newAttempts = failedPasswordAttempts + 1;
+        setFailedPasswordAttempts(newAttempts);
+        
+        if (newAttempts >= 3) {
+          const lockout = new Date();
+          lockout.setMinutes(lockout.getMinutes() + 15);
+          setPasswordLockoutUntil(lockout);
+          toast({
+            title: 'Too many failed attempts',
+            description: 'Password change locked for 15 minutes.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Verification failed',
+            description: `Unable to verify. ${3 - newAttempts} attempt${3 - newAttempts > 1 ? 's' : ''} remaining.`,
+            variant: 'destructive',
+          });
+        }
         setIsChangingPassword(false);
         return;
       }
+      
+      // Reset attempts on successful verification
+      setFailedPasswordAttempts(0);
+      setPasswordLockoutUntil(null);
 
       // Now update to new password
       const { error } = await supabase.auth.updateUser({

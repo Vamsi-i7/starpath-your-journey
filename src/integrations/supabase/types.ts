@@ -257,51 +257,7 @@ export type Database = {
       }
     }
     Views: {
-      friend_profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          hearts: number | null
-          id: string | null
-          level: number | null
-          longest_streak: number | null
-          max_hearts: number | null
-          total_habits_completed: number | null
-          updated_at: string | null
-          username: string | null
-          xp: number | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          hearts?: number | null
-          id?: string | null
-          level?: number | null
-          longest_streak?: number | null
-          max_hearts?: number | null
-          total_habits_completed?: number | null
-          updated_at?: string | null
-          username?: string | null
-          xp?: number | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string | null
-          hearts?: number | null
-          id?: string | null
-          level?: number | null
-          longest_streak?: number | null
-          max_hearts?: number | null
-          total_habits_completed?: number | null
-          updated_at?: string | null
-          username?: string | null
-          xp?: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       is_friend_with: { Args: { _profile_id: string }; Returns: boolean }
