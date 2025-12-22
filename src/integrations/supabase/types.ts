@@ -442,6 +442,22 @@ export type Database = {
     }
     Functions: {
       generate_user_code: { Args: never; Returns: string }
+      get_friend_profile: {
+        Args: { friend_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          hearts: number
+          id: string
+          level: number
+          longest_streak: number
+          max_hearts: number
+          total_habits_completed: number
+          user_code: string
+          username: string
+          xp: number
+        }[]
+      }
       is_friend_with: { Args: { _profile_id: string }; Returns: boolean }
     }
     Enums: {
