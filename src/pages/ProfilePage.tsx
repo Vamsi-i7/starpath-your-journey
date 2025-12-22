@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useState, useEffect } from 'react';
-import { User, Mail, Shield, Copy, Check, Loader2, Save, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { User, Mail, Shield, Copy, Check, Loader2, Save, X, Camera, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { validatePassword } from '@/lib/passwordValidation';
 import {
   Dialog,
@@ -43,6 +44,10 @@ const ProfilePage = () => {
   
   // Copy state
   const [copied, setCopied] = useState(false);
+  
+  // Avatar upload state
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize form with profile data
   useEffect(() => {
@@ -120,6 +125,86 @@ const ProfilePage = () => {
       setBio(profile.bio || '');
     }
     setHasChanges(false);
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: 'Invalid file type',
+        description: 'Please upload a JPEG, PNG, GIF, or WebP image.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: 'File too large',
+        description: 'Please upload an image smaller than 5MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Delete old avatar if exists
+      const { data: existingFiles } = await supabase.storage
+        .from('avatars')
+        .list(user.id);
+      
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles.map(f => `${user.id}/${f.name}`);
+        await supabase.storage.from('avatars').remove(filesToDelete);
+      }
+
+      // Upload new avatar
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Add cache-busting parameter
+      const avatarUrl = `${publicUrl}?t=${Date.now()}`;
+
+      // Update profile with new avatar URL
+      await updateProfile({ avatar_url: avatarUrl });
+      await refreshProfile();
+
+      toast({
+        title: 'Avatar updated',
+        description: 'Your profile picture has been updated successfully.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to upload avatar. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const handleChangeEmail = async () => {
@@ -256,16 +341,54 @@ const ProfilePage = () => {
         {/* User ID Card */}
         <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow">
-              <span className="text-2xl font-bold text-primary-foreground">
-                {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
-              </span>
+            {/* Avatar with upload */}
+            <div className="relative group">
+              <Avatar className="w-20 h-20 border-4 border-primary/30">
+                <AvatarImage 
+                  src={profile?.avatar_url || undefined} 
+                  alt={profile?.username || 'User avatar'} 
+                />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-2xl font-bold text-primary-foreground">
+                  {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              
+              {/* Upload overlay */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-6 h-6 text-white" />
+                )}
+              </button>
+              
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
             </div>
+            
             <div className="flex-1">
               <h2 className="text-xl font-bold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
                 {profile?.username}
               </h2>
               <p className="text-sm text-muted-foreground">Level {profile?.level || 1}</p>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="text-xs text-primary hover:underline mt-1 flex items-center gap-1"
+              >
+                <Upload className="w-3 h-3" />
+                {isUploadingAvatar ? 'Uploading...' : 'Change photo'}
+              </button>
             </div>
           </div>
           
