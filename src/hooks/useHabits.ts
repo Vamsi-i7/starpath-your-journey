@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logError } from '@/lib/errorLogger';
+import { getDisplayErrorMessage } from '@/lib/errorMessages';
 
 export interface Habit {
   id: string;
@@ -149,9 +150,10 @@ export function useHabits() {
       });
 
     if (error) {
+      logError('Habit Create', error);
       toast({
         title: 'Error creating habit',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'habit'),
         variant: 'destructive',
       });
     } else {
@@ -170,9 +172,10 @@ export function useHabits() {
       .eq('id', id);
 
     if (error) {
+      logError('Habit Delete', error);
       toast({
         title: 'Error deleting habit',
-        description: error.message,
+        description: getDisplayErrorMessage(error, 'habit'),
         variant: 'destructive',
       });
     } else {
@@ -242,9 +245,10 @@ export function useHabits() {
         .eq('completed_date', today);
 
       if (error) {
+        logError('Habit Completion Remove', error);
         toast({
           title: 'Error',
-          description: error.message,
+          description: getDisplayErrorMessage(error, 'habit'),
           variant: 'destructive',
         });
         return;
@@ -272,9 +276,10 @@ export function useHabits() {
         });
 
       if (error) {
+        logError('Habit Completion Add', error);
         toast({
           title: 'Error',
-          description: error.message,
+          description: getDisplayErrorMessage(error, 'habit'),
           variant: 'destructive',
         });
         return;
