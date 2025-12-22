@@ -11,6 +11,7 @@ export interface Task {
   title: string;
   completed: boolean;
   due_date: string | null;
+  created_at: string;
 }
 
 export interface Goal {
@@ -21,7 +22,10 @@ export interface Goal {
   progress: number;
   deadline: string | null;
   created_at: string;
+  updated_at: string;
   tasks: Task[];
+  status: 'active' | 'completed' | 'at_risk';
+  goal_type: 'short_term' | 'long_term';
 }
 
 export function useGoals() {
@@ -54,16 +58,52 @@ export function useGoals() {
     const { data: tasksData, error: tasksError } = await supabase
       .from('tasks')
       .select('*')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true });
 
     if (tasksError) {
       logError('Tasks Fetch', tasksError);
     }
 
-    const goalsWithTasks: Goal[] = (goalsData || []).map(goal => ({
-      ...goal,
-      tasks: (tasksData || []).filter(t => t.goal_id === goal.id),
-    }));
+    const goalsWithTasks: Goal[] = (goalsData || []).map(goal => {
+      const goalTasks = (tasksData || []).filter(t => t.goal_id === goal.id);
+      const completedCount = goalTasks.filter(t => t.completed).length;
+      const progress = goalTasks.length > 0 ? Math.round((completedCount / goalTasks.length) * 100) : 0;
+      
+      // Determine status
+      let status: Goal['status'] = 'active';
+      if (progress === 100) {
+        status = 'completed';
+      } else if (goal.deadline) {
+        const deadline = new Date(goal.deadline);
+        const now = new Date();
+        const daysUntilDeadline = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysUntilDeadline < 0) {
+          status = 'at_risk';
+        } else if (daysUntilDeadline <= 3 && progress < 75) {
+          status = 'at_risk';
+        }
+      }
+
+      // Determine goal type based on deadline
+      let goalType: Goal['goal_type'] = 'short_term';
+      if (goal.deadline) {
+        const deadline = new Date(goal.deadline);
+        const now = new Date();
+        const daysUntilDeadline = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysUntilDeadline > 30) {
+          goalType = 'long_term';
+        }
+      }
+
+      return {
+        ...goal,
+        tasks: goalTasks,
+        progress,
+        status,
+        goal_type: goalType,
+      };
+    });
 
     setGoals(goalsWithTasks);
     setIsLoading(false);
@@ -77,11 +117,10 @@ export function useGoals() {
     title: string;
     description: string;
     deadline?: string;
-    tasks: { title: string }[];
-  }) => {
-    if (!user) return;
+    tasks: { title: string; due_date?: string }[];
+  }): Promise<boolean> => {
+    if (!user) return false;
 
-    // Validate title
     const trimmedTitle = goalData.title?.trim() || '';
     if (!trimmedTitle || trimmedTitle.length > 200) {
       toast({
@@ -89,10 +128,9 @@ export function useGoals() {
         description: 'Title must be between 1 and 200 characters.',
         variant: 'destructive',
       });
-      return;
+      return false;
     }
 
-    // Validate description
     const trimmedDescription = goalData.description?.trim() || '';
     if (trimmedDescription.length > 1000) {
       toast({
@@ -100,10 +138,9 @@ export function useGoals() {
         description: 'Description must be less than 1000 characters.',
         variant: 'destructive',
       });
-      return;
+      return false;
     }
 
-    // Validate deadline format
     if (goalData.deadline) {
       const deadlineDate = new Date(goalData.deadline);
       if (isNaN(deadlineDate.getTime())) {
@@ -112,21 +149,19 @@ export function useGoals() {
           description: 'Please provide a valid date.',
           variant: 'destructive',
         });
-        return;
+        return false;
       }
     }
 
-    // Validate tasks count
     if (goalData.tasks.length > 50) {
       toast({
         title: 'Too many tasks',
         description: 'Maximum 50 tasks per goal.',
         variant: 'destructive',
       });
-      return;
+      return false;
     }
 
-    // Validate each task title
     for (const task of goalData.tasks) {
       const trimmedTaskTitle = task.title?.trim() || '';
       if (!trimmedTaskTitle || trimmedTaskTitle.length > 200) {
@@ -135,7 +170,7 @@ export function useGoals() {
           description: 'Each task title must be between 1 and 200 characters.',
           variant: 'destructive',
         });
-        return;
+        return false;
       }
     }
 
@@ -156,7 +191,7 @@ export function useGoals() {
         description: goalError.message,
         variant: 'destructive',
       });
-      return;
+      return false;
     }
 
     if (goalData.tasks.length > 0) {
@@ -164,17 +199,52 @@ export function useGoals() {
         goal_id: goal.id,
         user_id: user.id,
         title: t.title.trim().slice(0, 200),
+        due_date: t.due_date || null,
       }));
 
-      await supabase.from('tasks').insert(tasksToInsert);
+      const { error: tasksError } = await supabase.from('tasks').insert(tasksToInsert);
+      if (tasksError) {
+        logError('Tasks Insert', tasksError);
+      }
     }
 
     toast({
       title: 'Goal created!',
-      description: `"${goalData.title}" has been added`,
+      description: `"${trimmedTitle}" has been added`,
     });
 
-    fetchGoals();
+    await fetchGoals();
+    return true;
+  };
+
+  const updateGoal = async (id: string, updates: {
+    title?: string;
+    description?: string;
+    deadline?: string | null;
+  }): Promise<boolean> => {
+    if (!user) return false;
+
+    const { error } = await supabase
+      .from('goals')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast({
+        title: 'Error updating goal',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    toast({ title: 'Goal updated!' });
+    await fetchGoals();
+    return true;
   };
 
   const deleteGoal = async (id: string) => {
@@ -191,7 +261,90 @@ export function useGoals() {
       });
     } else {
       setGoals(goals.filter(g => g.id !== id));
+      toast({ title: 'Goal deleted' });
     }
+  };
+
+  const addTask = async (goalId: string, title: string, dueDate?: string): Promise<boolean> => {
+    if (!user) return false;
+
+    const trimmedTitle = title?.trim() || '';
+    if (!trimmedTitle || trimmedTitle.length > 200) {
+      toast({
+        title: 'Invalid task title',
+        description: 'Title must be between 1 and 200 characters.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    const { error } = await supabase
+      .from('tasks')
+      .insert({
+        goal_id: goalId,
+        user_id: user.id,
+        title: trimmedTitle,
+        due_date: dueDate || null,
+      });
+
+    if (error) {
+      toast({
+        title: 'Error adding task',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    await fetchGoals();
+    return true;
+  };
+
+  const updateTask = async (taskId: string, updates: {
+    title?: string;
+    due_date?: string | null;
+  }): Promise<boolean> => {
+    if (!user) return false;
+
+    const { error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', taskId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast({
+        title: 'Error updating task',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    await fetchGoals();
+    return true;
+  };
+
+  const deleteTask = async (taskId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', taskId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast({
+        title: 'Error deleting task',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    await fetchGoals();
+    return true;
   };
 
   const toggleTask = async (goalId: string, taskId: string) => {
@@ -202,6 +355,17 @@ export function useGoals() {
     if (!task) return;
 
     const newCompleted = !task.completed;
+
+    // Optimistic update
+    setGoals(prevGoals => prevGoals.map(g => {
+      if (g.id !== goalId) return g;
+      const updatedTasks = g.tasks.map(t => 
+        t.id === taskId ? { ...t, completed: newCompleted } : t
+      );
+      const completedCount = updatedTasks.filter(t => t.completed).length;
+      const progress = updatedTasks.length > 0 ? Math.round((completedCount / updatedTasks.length) * 100) : 0;
+      return { ...g, tasks: updatedTasks, progress };
+    }));
 
     const { error } = await supabase
       .from('tasks')
@@ -214,10 +378,11 @@ export function useGoals() {
         description: error.message,
         variant: 'destructive',
       });
+      await fetchGoals();
       return;
     }
 
-    // Calculate new progress
+    // Update goal progress in DB
     const updatedTasks = goal.tasks.map(t => 
       t.id === taskId ? { ...t, completed: newCompleted } : t
     );
@@ -228,15 +393,17 @@ export function useGoals() {
       .from('goals')
       .update({ progress })
       .eq('id', goalId);
-
-    fetchGoals();
   };
 
   return {
     goals,
     isLoading,
     addGoal,
+    updateGoal,
     deleteGoal,
+    addTask,
+    updateTask,
+    deleteTask,
     toggleTask,
     refetch: fetchGoals,
   };
