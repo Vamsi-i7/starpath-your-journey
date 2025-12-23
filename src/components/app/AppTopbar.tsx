@@ -28,15 +28,15 @@ export function AppTopbar({ title }: AppTopbarProps) {
   };
 
   return (
-    <header className="h-16 flex items-center justify-between px-6 border-b border-border/30 bg-card/50 backdrop-blur-xl">
+    <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border/30 bg-card/50 backdrop-blur-xl">
       <h1 
-        className="text-2xl font-bold text-foreground"
+        className="text-lg sm:text-2xl font-bold text-foreground pl-10 lg:pl-0"
         style={{ fontFamily: 'var(--font-display)' }}
       >
         {title}
       </h1>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
@@ -49,22 +49,22 @@ export function AppTopbar({ title }: AppTopbarProps) {
           variant="ghost" 
           size="icon" 
           onClick={toggleTheme}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground w-9 h-9 sm:w-10 sm:h-10"
         >
-          {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          {theme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
         </Button>
 
         <NotificationDropdown />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 p-2 rounded-xl hover:bg-card/50 transition-colors">
-              <Avatar className="w-9 h-9 border-2 border-primary/30">
+            <button className="flex items-center gap-3 p-1.5 sm:p-2 rounded-xl hover:bg-card/50 transition-colors">
+              <Avatar className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-primary/30">
                 <AvatarImage 
                   src={profile?.avatar_url || undefined} 
                   alt={profile?.username || 'User'} 
                 />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-bold text-sm">
+                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-bold text-xs sm:text-sm">
                   {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -79,7 +79,7 @@ export function AppTopbar({ title }: AppTopbarProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/app/friends">Profile</Link>
+              <Link to="/app/profile">Profile</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/app/settings">Settings</Link>
