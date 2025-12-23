@@ -55,27 +55,27 @@ export function HabitCard({ habit, onToggle, onDelete, today }: HabitCardProps) 
     <>
       <div 
         className={cn(
-          "group p-5 rounded-2xl border transition-all duration-300 hover:shadow-lg cursor-pointer",
+          "group p-4 sm:p-5 rounded-2xl border transition-all duration-300 hover:shadow-lg cursor-pointer min-w-0",
           isCompletedToday 
             ? "bg-gradient-to-br from-xp/20 to-xp/5 border-xp/30" 
             : `bg-gradient-to-br ${colorClasses[habit.color] || colorClasses.primary}`
         )}
         onClick={onToggle}
       >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{habit.icon}</span>
-            <div>
-              <h3 className="font-semibold text-foreground">{habit.name}</h3>
-              <p className="text-sm text-muted-foreground">{habit.description}</p>
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <span className="text-2xl sm:text-3xl flex-shrink-0">{habit.icon}</span>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">{habit.name}</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{habit.description}</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-card/50 transition-all">
-                  <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
+                <button className="p-1.5 rounded-lg sm:opacity-0 sm:group-hover:opacity-100 hover:bg-card/50 transition-all">
+                  <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -95,28 +95,28 @@ export function HabitCard({ habit, onToggle, onDelete, today }: HabitCardProps) 
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 text-streak">
-              <Flame className="w-4 h-4" />
-              <span className="text-sm font-medium">{habit.streak} day streak</span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap min-w-0">
+            <div className="flex items-center gap-1 sm:gap-1.5 text-streak">
+              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium whitespace-nowrap">{habit.streak}d</span>
             </div>
-            <div className="flex items-center gap-1.5 text-level">
-              <Zap className="w-4 h-4" />
-              <span className="text-sm font-medium">+{habit.xp_reward} XP</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 text-level">
+              <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium whitespace-nowrap">+{habit.xp_reward} XP</span>
             </div>
           </div>
 
           <div className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300",
+            "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0",
             isCompletedToday 
               ? "bg-xp text-xp-foreground" 
               : "bg-card/50 text-muted-foreground group-hover:bg-card"
           )}>
             {isCompletedToday ? (
-              <CheckCircle2 className="w-5 h-5" />
+              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
             ) : (
-              <Circle className="w-5 h-5" />
+              <Circle className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </div>
         </div>

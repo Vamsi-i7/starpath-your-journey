@@ -23,21 +23,21 @@ const HabitsPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <AppTopbar title="Habits" />
       
-      <div className="p-6 space-y-8">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
               Your Habits
             </h2>
-            <p className="text-muted-foreground">Track and manage your daily habits</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Track and manage your daily habits</p>
           </div>
           
           <Button 
             onClick={() => setShowCreateModal(true)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 w-full sm:w-auto"
           >
             <Plus className="w-5 h-5" />
             New Habit
@@ -45,8 +45,8 @@ const HabitsPage = () => {
         </div>
 
         <section>
-          <h3 className="text-lg font-medium text-foreground mb-4">Daily Habits</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4">Daily Habits</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {dailyHabits.map((habit) => (
               <HabitCard 
                 key={habit.id} 
@@ -58,15 +58,15 @@ const HabitsPage = () => {
             ))}
           </div>
           {dailyHabits.length === 0 && (
-            <div className="text-center py-12 rounded-2xl border border-dashed border-border/50">
-              <p className="text-muted-foreground">No daily habits yet</p>
+            <div className="text-center py-8 sm:py-12 rounded-2xl border border-dashed border-border/50">
+              <p className="text-sm sm:text-base text-muted-foreground">No daily habits yet</p>
             </div>
           )}
         </section>
 
         <section>
-          <h3 className="text-lg font-medium text-foreground mb-4">Weekly Habits</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h3 className="text-base sm:text-lg font-medium text-foreground mb-3 sm:mb-4">Weekly Habits</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {weeklyHabits.map((habit) => (
               <HabitCard 
                 key={habit.id} 
@@ -78,8 +78,8 @@ const HabitsPage = () => {
             ))}
           </div>
           {weeklyHabits.length === 0 && (
-            <div className="text-center py-12 rounded-2xl border border-dashed border-border/50">
-              <p className="text-muted-foreground">No weekly habits yet</p>
+            <div className="text-center py-8 sm:py-12 rounded-2xl border border-dashed border-border/50">
+              <p className="text-sm sm:text-base text-muted-foreground">No weekly habits yet</p>
             </div>
           )}
         </section>
