@@ -27,11 +27,11 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <WelcomeTutorial />
       <AppTopbar title="Dashboard" />
       
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <StatsCards 
           totalHabits={habits.length}
           completedToday={completedToday}
@@ -39,21 +39,25 @@ const DashboardPage = () => {
           totalXp={profile ? profile.level * 500 + profile.xp : 0}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Daily Challenges */}
             <DailyChallengesCard />
 
             {/* Today's Habits */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h2 className="text-lg sm:text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
                   Today's Habits
                 </h2>
                 <TodayProgress completed={completedToday} total={habits.length} />
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <p className="text-xs text-muted-foreground sm:hidden">
+                Swipe right on a habit to mark complete
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {habits.map((habit) => (
                   <HabitCard 
                     key={habit.id} 
@@ -66,8 +70,8 @@ const DashboardPage = () => {
               </div>
 
               {habits.length === 0 && (
-                <div className="text-center py-12 rounded-2xl border border-dashed border-border/50">
-                  <p className="text-muted-foreground">No habits yet. Create your first habit!</p>
+                <div className="text-center py-8 sm:py-12 rounded-2xl border border-dashed border-border/50">
+                  <p className="text-sm sm:text-base text-muted-foreground">No habits yet. Create your first habit!</p>
                 </div>
               )}
             </div>

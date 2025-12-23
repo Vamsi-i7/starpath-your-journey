@@ -40,20 +40,20 @@ export function StatsCards({ totalHabits, completedToday, totalStreak, totalXp }
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
       {stats.map((stat, index) => (
         <div 
           key={index}
-          className="p-5 rounded-2xl bg-card border border-border/30 hover:border-primary/30 transition-all duration-300 animate-scale-in"
+          className="p-3 sm:p-5 rounded-xl sm:rounded-2xl bg-card border border-border/30 hover:border-primary/30 transition-all duration-300 animate-scale-in"
           style={{ animationDelay: `${index * 50}ms` }}
         >
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
-              <stat.icon className={`w-6 h-6 ${stat.color}`} />
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl ${stat.bgColor} flex items-center justify-center flex-shrink-0`}>
+              <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color}`} />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-              <p className="text-2xl font-bold text-foreground">{stat.value.toLocaleString()}</p>
+            <div className="text-center sm:text-left min-w-0">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{stat.label}</p>
+              <p className="text-lg sm:text-2xl font-bold text-foreground">{stat.value.toLocaleString()}</p>
             </div>
           </div>
         </div>
