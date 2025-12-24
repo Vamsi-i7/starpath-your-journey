@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, Circle, Flame, Zap, MoreHorizontal, Trash2, Edit } from 'lucide-react';
+import { CheckCircle2, Circle, Zap, MoreHorizontal, Trash2, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import {
@@ -26,7 +26,6 @@ interface HabitCardProps {
     description: string | null;
     icon: string;
     color: string;
-    streak: number;
     xp_reward: number;
     completedDates: string[];
   };
@@ -153,10 +152,6 @@ export function HabitCard({ habit, onToggle, onDelete, today }: HabitCardProps) 
 
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap min-w-0">
-              <div className="flex items-center gap-1 sm:gap-1.5 text-streak">
-                <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="text-xs sm:text-sm font-medium whitespace-nowrap">{habit.streak}d</span>
-              </div>
               <div className="flex items-center gap-1 sm:gap-1.5 text-level">
                 <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                 <span className="text-xs sm:text-sm font-medium whitespace-nowrap">+{habit.xp_reward} XP</span>
@@ -184,7 +179,7 @@ export function HabitCard({ habit, onToggle, onDelete, today }: HabitCardProps) 
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Habit</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{habit.name}"? This action cannot be undone and you will lose all streak data.
+              Are you sure you want to delete "{habit.name}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
