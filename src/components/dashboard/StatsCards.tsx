@@ -1,13 +1,12 @@
-import { Target, CheckCircle2, Flame, Zap } from 'lucide-react';
+import { Target, CheckCircle2, Zap } from 'lucide-react';
 
 interface StatsCardsProps {
   totalHabits: number;
   completedToday: number;
-  totalStreak: number;
   totalXp: number;
 }
 
-export function StatsCards({ totalHabits, completedToday, totalStreak, totalXp }: StatsCardsProps) {
+export function StatsCards({ totalHabits, completedToday, totalXp }: StatsCardsProps) {
   const stats = [
     {
       label: 'Total Habits',
@@ -24,13 +23,6 @@ export function StatsCards({ totalHabits, completedToday, totalStreak, totalXp }
       bgColor: 'bg-xp/10',
     },
     {
-      label: 'Total Streak Days',
-      value: totalStreak,
-      icon: Flame,
-      color: 'text-streak',
-      bgColor: 'bg-streak/10',
-    },
-    {
       label: 'Total XP',
       value: totalXp,
       icon: Zap,
@@ -40,7 +32,7 @@ export function StatsCards({ totalHabits, completedToday, totalStreak, totalXp }
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+    <div className="grid grid-cols-3 gap-2 sm:gap-4">
       {stats.map((stat, index) => (
         <div 
           key={index}

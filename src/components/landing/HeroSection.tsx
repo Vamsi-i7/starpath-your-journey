@@ -79,32 +79,6 @@ export function HeroSection() {
           </Button>
         </div>
 
-        {/* Stats */}
-        <div 
-          className={`grid grid-cols-3 gap-8 mt-16 pt-8 border-t border-border/20 max-w-2xl mx-auto transition-all duration-700 delay-500 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-        >
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <Star className="w-4 h-4 text-star fill-star" />
-              <span className="text-2xl sm:text-3xl font-bold text-foreground">10k+</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Active Students</p>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <span className="text-2xl sm:text-3xl font-bold text-foreground">500k+</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Habits Completed</p>
-          </div>
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-1 mb-1">
-              <span className="text-2xl sm:text-3xl font-bold text-foreground">95%</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Success Rate</p>
-          </div>
-        </div>
       </div>
 
       {/* Scroll indicator */}

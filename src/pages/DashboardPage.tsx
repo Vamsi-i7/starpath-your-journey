@@ -16,7 +16,6 @@ const DashboardPage = () => {
   const today = getTodayString();
 
   const completedToday = habits.filter(h => h.completedDates.includes(today)).length;
-  const totalStreak = habits.reduce((sum, h) => sum + h.streak, 0);
 
   if (isLoading) {
     return (
@@ -35,7 +34,6 @@ const DashboardPage = () => {
         <StatsCards 
           totalHabits={habits.length}
           completedToday={completedToday}
-          totalStreak={totalStreak}
           totalXp={profile ? profile.level * 500 + profile.xp : 0}
         />
 

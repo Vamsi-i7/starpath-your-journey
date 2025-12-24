@@ -13,7 +13,9 @@ import {
   ChevronRight,
   User,
   Award,
-  X
+  X,
+  Sparkles,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +38,8 @@ const navItems = [
   { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
   { icon: MessageCircle, label: 'Chats', path: '/app/chats' },
   { icon: Users, label: 'Friends', path: '/app/friends', hasBadge: true },
+  { icon: Sparkles, label: 'AI Tools', path: '/app/ai-tools' },
+  { icon: CreditCard, label: 'Subscription', path: '/app/subscription' },
 ];
 
 export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarProps) {
