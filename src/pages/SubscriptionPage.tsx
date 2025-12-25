@@ -57,7 +57,7 @@ const plans = [
   {
     id: 'yearly',
     name: 'Premium Yearly',
-    price: '$99.99',
+    price: '₹999',
     period: 'per year',
     savings: 'Save $20',
     features: [
