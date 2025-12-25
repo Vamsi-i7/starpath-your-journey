@@ -40,7 +40,7 @@ const plans = [
   {
     id: 'monthly',
     name: 'Premium Monthly',
-    price: '$9.99',
+    price: '₹99',
     period: 'per month',
     popular: true,
     features: [
