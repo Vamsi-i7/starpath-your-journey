@@ -20,7 +20,7 @@ const plans = [
   {
     id: 'free',
     name: 'Free',
-    price: '$0',
+    price: '₹0',
     period: 'forever',
     features: [
       'Unlimited habits tracking',
