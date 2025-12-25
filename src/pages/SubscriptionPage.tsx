@@ -59,7 +59,7 @@ const plans = [
     name: 'Premium Yearly',
     price: '₹999',
     period: 'per year',
-    savings: 'Save $20',
+    savings: 'Save ₹189',
     features: [
       'Everything in Free',
       'AI Notes Generator',
