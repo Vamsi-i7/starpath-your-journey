@@ -615,7 +615,33 @@ export type Database = {
           xp: number
         }[]
       }
+      get_public_profile: {
+        Args: { profile_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          id: string
+          level: number
+          longest_streak: number
+          total_habits_completed: number
+          user_code: string
+          username: string
+          xp: number
+        }[]
+      }
       is_friend_with: { Args: { _profile_id: string }; Returns: boolean }
+      search_user_by_code: {
+        Args: { search_code: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          id: string
+          level: number
+          user_code: string
+          username: string
+          xp: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

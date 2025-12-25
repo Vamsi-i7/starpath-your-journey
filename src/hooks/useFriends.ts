@@ -171,7 +171,7 @@ export const useFriends = () => {
     enabled: !!user?.id
   });
 
-  // Search user by user_code
+  // Search user by user_code using the RPC function
   const searchByUserCode = async (userCode: string) => {
     if (!userCode.trim()) {
       toast.error('Please enter a user code');
@@ -183,21 +183,23 @@ export const useFriends = () => {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url, level, xp, user_code, bio')
-        .eq('user_code', userCode.toUpperCase().trim())
-        .maybeSingle();
+        .rpc('search_user_by_code', { search_code: userCode.trim() });
 
-      if (error || !data) {
-        toast.error('User not found');
+      if (error) {
+        console.error('Search error:', error);
+        toast.error('Error searching for user');
         setSearchResult(null);
-      } else if (data.id === user?.id) {
+      } else if (!data || data.length === 0) {
+        toast.error('User not found. Make sure you entered the correct user code.');
+        setSearchResult(null);
+      } else if (data[0].id === user?.id) {
         toast.error("You can't add yourself as a friend");
         setSearchResult(null);
       } else {
-        setSearchResult(data as FriendProfile);
+        setSearchResult(data[0] as FriendProfile);
       }
     } catch (err) {
+      console.error('Search error:', err);
       toast.error('Error searching for user');
     } finally {
       setIsSearching(false);
