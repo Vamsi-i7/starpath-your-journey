@@ -4,11 +4,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, UserPlus, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Loader2, AlertCircle, Info } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FriendProfile {
   id: string;
@@ -28,6 +30,7 @@ interface AddFriendModalProps {
   searchResult: FriendProfile | null;
   isSearching: boolean;
   isSending: boolean;
+  searchError?: string | null;
   onClear: () => void;
 }
 
@@ -39,12 +42,14 @@ export const AddFriendModal = ({
   searchResult,
   isSearching,
   isSending,
+  searchError,
   onClear
 }: AddFriendModalProps) => {
   const [userCode, setUserCode] = useState('');
 
   const handleSearch = () => {
-    onSearch(userCode);
+    if (!userCode.trim()) return;
+    onSearch(userCode.trim());
   };
 
   const handleClose = (isOpen: boolean) => {
@@ -55,29 +60,42 @@ export const AddFriendModal = ({
     onOpenChange(isOpen);
   };
 
+  const formatUserCode = (value: string) => {
+    // Remove any non-alphanumeric characters and uppercase
+    return value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add Friend</DialogTitle>
+          <DialogDescription>
+            Enter your friend's user code to send them a friend request.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Enter your friend's user code to send them a friend request.
-          </p>
+          <Alert variant="default" className="bg-muted/50">
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              User codes look like <span className="font-mono font-semibold">SP30CD77</span>. 
+              You can find your code in your Profile page.
+            </AlertDescription>
+          </Alert>
           
           <div className="flex gap-2">
             <Input
-              placeholder="Enter user code (e.g., ABC123)"
+              placeholder="e.g. SP30CD77"
               value={userCode}
-              onChange={(e) => setUserCode(e.target.value.toUpperCase())}
-              className="flex-1"
+              onChange={(e) => setUserCode(formatUserCode(e.target.value))}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="flex-1 font-mono uppercase tracking-wider"
               maxLength={10}
             />
             <Button 
               onClick={handleSearch} 
-              disabled={isSearching || !userCode.trim()}
+              disabled={isSearching || userCode.length < 6}
               variant="secondary"
             >
               {isSearching ? (
@@ -87,6 +105,13 @@ export const AddFriendModal = ({
               )}
             </Button>
           </div>
+
+          {searchError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{searchError}</AlertDescription>
+            </Alert>
+          )}
 
           {searchResult && (
             <div className="p-4 rounded-xl bg-card border border-border">
@@ -100,7 +125,7 @@ export const AddFriendModal = ({
                 <div className="flex-1">
                   <p className="font-semibold text-foreground">{searchResult.username}</p>
                   <p className="text-sm text-muted-foreground">
-                    Level {searchResult.level} • {searchResult.user_code}
+                    Level {searchResult.level} • <span className="font-mono">{searchResult.user_code}</span>
                   </p>
                 </div>
                 <Button

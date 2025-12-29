@@ -29,6 +29,7 @@ export const useFriends = () => {
   const queryClient = useQueryClient();
   const [searchResult, setSearchResult] = useState<FriendProfile | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Subscribe to realtime changes on friendships table
   useEffect(() => {
@@ -119,11 +120,11 @@ export const useFriends = () => {
 
       if (error) throw error;
 
-      // Fetch requester profiles
+      // Fetch requester profiles using get_public_profile instead
       const requestsWithProfiles: Friendship[] = [];
       for (const friendship of friendships || []) {
         const { data: profileData } = await supabase
-          .rpc('get_friend_profile', { friend_id: friendship.user_id });
+          .rpc('get_public_profile', { profile_id: friendship.user_id });
 
         if (profileData && profileData.length > 0) {
           requestsWithProfiles.push({
@@ -152,11 +153,11 @@ export const useFriends = () => {
 
       if (error) throw error;
 
-      // Fetch friend profiles
+      // Fetch friend profiles using get_public_profile
       const requestsWithProfiles: Friendship[] = [];
       for (const friendship of friendships || []) {
         const { data: profileData } = await supabase
-          .rpc('get_friend_profile', { friend_id: friendship.friend_id });
+          .rpc('get_public_profile', { profile_id: friendship.friend_id });
 
         if (profileData && profileData.length > 0) {
           requestsWithProfiles.push({
@@ -173,8 +174,17 @@ export const useFriends = () => {
 
   // Search user by user_code using the RPC function
   const searchByUserCode = async (userCode: string) => {
+    setSearchError(null);
+    
     if (!userCode.trim()) {
-      toast.error('Please enter a user code');
+      setSearchError('Please enter a user code');
+      return;
+    }
+
+    // Validate format - should be like SP + 6 alphanumeric chars
+    const cleanCode = userCode.trim().toUpperCase();
+    if (cleanCode.length < 6) {
+      setSearchError('User code must be at least 6 characters (e.g., SP30CD77)');
       return;
     }
 
@@ -183,24 +193,43 @@ export const useFriends = () => {
 
     try {
       const { data, error } = await supabase
-        .rpc('search_user_by_code', { search_code: userCode.trim() });
+        .rpc('search_user_by_code', { search_code: cleanCode });
 
       if (error) {
         console.error('Search error:', error);
-        toast.error('Error searching for user');
+        setSearchError('Error searching for user. Please try again.');
         setSearchResult(null);
       } else if (!data || data.length === 0) {
-        toast.error('User not found. Make sure you entered the correct user code.');
+        setSearchError(`No user found with code "${cleanCode}". Please check the code and try again.`);
         setSearchResult(null);
       } else if (data[0].id === user?.id) {
-        toast.error("You can't add yourself as a friend");
+        setSearchError("You can't add yourself as a friend!");
         setSearchResult(null);
       } else {
-        setSearchResult(data[0] as FriendProfile);
+        // Check if already friends or request pending
+        const { data: existing } = await supabase
+          .from('friendships')
+          .select('status')
+          .or(`and(user_id.eq.${user?.id},friend_id.eq.${data[0].id}),and(user_id.eq.${data[0].id},friend_id.eq.${user?.id})`)
+          .maybeSingle();
+
+        if (existing) {
+          if (existing.status === 'accepted') {
+            setSearchError(`You're already friends with ${data[0].username}!`);
+            setSearchResult(null);
+          } else if (existing.status === 'pending') {
+            setSearchError(`A friend request with ${data[0].username} is already pending.`);
+            setSearchResult(null);
+          } else {
+            setSearchResult(data[0] as FriendProfile);
+          }
+        } else {
+          setSearchResult(data[0] as FriendProfile);
+        }
       }
     } catch (err) {
       console.error('Search error:', err);
-      toast.error('Error searching for user');
+      setSearchError('Error searching for user. Please try again.');
     } finally {
       setIsSearching(false);
     }
@@ -239,6 +268,7 @@ export const useFriends = () => {
     onSuccess: () => {
       toast.success('Friend request sent!');
       setSearchResult(null);
+      setSearchError(null);
       queryClient.invalidateQueries({ queryKey: ['sent-requests'] });
     },
     onError: (error: Error) => {
@@ -309,6 +339,7 @@ export const useFriends = () => {
     pendingRequests,
     sentRequests,
     searchResult,
+    searchError,
     isSearching,
     isLoading: friendsLoading || requestsLoading || sentLoading,
     searchByUserCode,
@@ -317,6 +348,9 @@ export const useFriends = () => {
     rejectRequest: rejectRequestMutation.mutate,
     removeFriend: removeFriendMutation.mutate,
     isSending: sendRequestMutation.isPending,
-    clearSearchResult: () => setSearchResult(null)
+    clearSearchResult: () => {
+      setSearchResult(null);
+      setSearchError(null);
+    }
   };
 };

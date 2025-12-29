@@ -20,6 +20,7 @@ const FriendsPage = () => {
     pendingRequests,
     sentRequests,
     searchResult,
+    searchError,
     isSearching,
     isLoading,
     searchByUserCode,
@@ -198,6 +199,7 @@ const FriendsPage = () => {
         onSearch={searchByUserCode}
         onSendRequest={sendRequest}
         searchResult={searchResult}
+        searchError={searchError}
         isSearching={isSearching}
         isSending={isSending}
         onClear={clearSearchResult}
