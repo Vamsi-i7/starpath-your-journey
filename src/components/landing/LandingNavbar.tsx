@@ -133,7 +133,7 @@ export function LandingNavbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 glass-dark border-t border-border/20 p-6 space-y-4">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/20 p-6 space-y-4 z-50">
           <a 
             href="#features" 
             className="block text-foreground py-2"
