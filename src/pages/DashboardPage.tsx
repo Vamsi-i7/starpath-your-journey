@@ -7,6 +7,9 @@ import { TodayProgress } from '@/components/dashboard/TodayProgress';
 import { DailyChallengesCard } from '@/components/dashboard/DailyChallengesCard';
 import { RecentAchievementsCard } from '@/components/dashboard/RecentAchievementsCard';
 import { WelcomeTutorial } from '@/components/onboarding/WelcomeTutorial';
+import { AIAffirmationCard } from '@/components/dashboard/AIAffirmationCard';
+import { AIHabitSuggestionsCard } from '@/components/dashboard/AIHabitSuggestionsCard';
+import { AICoachChat } from '@/components/dashboard/AICoachChat';
 import { useHabits } from '@/hooks/useHabits';
 import { Loader2 } from 'lucide-react';
 
@@ -76,11 +79,15 @@ const DashboardPage = () => {
           </div>
 
           <div className="lg:col-span-1 space-y-4">
+            <AIAffirmationCard />
             <GamificationPanel />
+            <AIHabitSuggestionsCard />
             <RecentAchievementsCard />
           </div>
         </div>
       </div>
+      
+      <AICoachChat />
     </div>
   );
 };
