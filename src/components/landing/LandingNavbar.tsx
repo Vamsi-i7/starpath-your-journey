@@ -34,131 +34,158 @@ export function LandingNavbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close mobile menu on scroll
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      const handleScroll = () => setIsMobileMenuOpen(false);
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [isMobileMenuOpen]);
+
   return (
-    <nav 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'py-3 glass-dark' 
-          : 'py-4 bg-transparent'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <img 
-            src={clawzerLogo} 
-            alt="StarPath" 
-            className="h-10 w-auto rounded-xl group-hover:scale-105 transition-transform"
-          />
-          <span 
-            className="text-xl font-bold text-foreground"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            StarPath
-          </span>
-        </Link>
+    <>
+      <nav 
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          isScrolled ? "py-3 bg-background/80 backdrop-blur-xl border-b border-border/20" : "py-4 bg-transparent"
+        )}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <img 
+              src={clawzerLogo} 
+              alt="StarPath" 
+              className="h-8 sm:h-10 w-auto rounded-xl group-hover:scale-105 transition-transform"
+            />
+            <span 
+              className="text-lg sm:text-xl font-bold text-foreground"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              StarPath
+            </span>
+          </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
-            Features
-          </a>
-          <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
-            How it Works
-          </a>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="text-muted-foreground hover:text-foreground hover:bg-card/30"
-              >
-                <Palette className="w-5 h-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-3 bg-popover border-border" align="center">
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Accent Color</p>
-                <div className="flex gap-2">
-                  {ACCENT_COLORS.map((color) => (
-                    <button
-                      key={color.id}
-                      onClick={() => setAccent(color.id)}
-                      className={cn(
-                        "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 border-2",
-                        accent === color.id 
-                          ? "border-foreground scale-110" 
-                          : "border-transparent hover:scale-105"
-                      )}
-                      style={{ backgroundColor: color.color }}
-                      title={color.name}
-                    >
-                      {accent === color.id && (
-                        <Check className="w-3.5 h-3.5 text-white" />
-                      )}
-                    </button>
-                  ))}
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-6">
+            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+              Features
+            </a>
+            <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
+              How it Works
+            </a>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground hover:bg-card/30"
+                >
+                  <Palette className="w-5 h-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-3 bg-popover border-border" align="center">
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Accent Color</p>
+                  <div className="flex gap-2">
+                    {ACCENT_COLORS.map((color) => (
+                      <button
+                        key={color.id}
+                        onClick={() => setAccent(color.id)}
+                        className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 border-2",
+                          accent === color.id 
+                            ? "border-foreground scale-110" 
+                            : "border-transparent hover:scale-105"
+                        )}
+                        style={{ backgroundColor: color.color }}
+                        title={color.name}
+                      >
+                        {accent === color.id && (
+                          <Check className="w-3.5 h-3.5 text-white" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={toggleTheme}
-            className="text-muted-foreground hover:text-foreground hover:bg-card/30"
+              </PopoverContent>
+            </Popover>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={toggleTheme}
+              className="text-muted-foreground hover:text-foreground hover:bg-card/30"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            <Link to="/login">
+              <Button variant="ghost" className="text-foreground hover:bg-card/30">
+                Log In
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button 
+            className="md:hidden p-2 text-foreground z-50"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle menu"
           >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
-          <Link to="/login">
-            <Button variant="ghost" className="text-foreground hover:bg-card/30">
-              Log In
-            </Button>
-          </Link>
-          <Link to="/signup">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full">
-              Get Started
-            </Button>
-          </Link>
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+      </nav>
 
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden p-2 text-foreground"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/20 p-6 space-y-4 z-50">
-          <a 
-            href="#features" 
-            className="block text-foreground py-2"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Features
-          </a>
-          <a 
-            href="#how-it-works" 
-            className="block text-foreground py-2"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            How it Works
-          </a>
-          <div className="flex flex-col gap-3 pt-4">
-            {/* Accent Color Picker for Mobile */}
-            <div className="p-3 rounded-xl bg-card/30 border border-border/30">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Accent Color</p>
-              <div className="flex gap-2 justify-center">
+        <div 
+          className="md:hidden fixed inset-0 bg-background/60 backdrop-blur-sm z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Menu Panel */}
+      <div 
+        className={cn(
+          "md:hidden fixed top-0 right-0 h-full w-72 max-w-[80vw] bg-background border-l border-border/30 z-50 transform transition-transform duration-300 ease-in-out shadow-2xl",
+          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        <div className="flex flex-col h-full p-6 pt-20">
+          <nav className="space-y-1">
+            <a 
+              href="#features" 
+              className="block px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Features
+            </a>
+            <a 
+              href="#how-it-works" 
+              className="block px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              How it Works
+            </a>
+          </nav>
+
+          <div className="mt-6 pt-6 border-t border-border/30 space-y-4">
+            {/* Accent Color Picker */}
+            <div className="p-4 rounded-xl bg-muted/50">
+              <p className="text-xs font-medium text-muted-foreground mb-3">Accent Color</p>
+              <div className="flex gap-2 flex-wrap justify-center">
                 {ACCENT_COLORS.map((color) => (
                   <button
                     key={color.id}
                     onClick={() => setAccent(color.id)}
                     className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 border-2",
+                      "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border-2",
                       accent === color.id 
                         ? "border-foreground scale-110" 
                         : "border-transparent hover:scale-105"
@@ -173,29 +200,32 @@ export function LandingNavbar() {
                 ))}
               </div>
             </div>
+
+            {/* Theme Toggle */}
             <Button 
               variant="outline" 
-              onClick={() => {
-                toggleTheme();
-              }}
-              className="w-full border-border/50 gap-2"
+              onClick={toggleTheme}
+              className="w-full gap-2"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </Button>
-            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full border-border/50">
+          </div>
+
+          <div className="mt-auto space-y-3">
+            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="block">
+              <Button variant="outline" className="w-full">
                 Log In
               </Button>
             </Link>
-            <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+            <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="block">
               <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                 Get Started
               </Button>
             </Link>
           </div>
         </div>
-      )}
-    </nav>
+      </div>
+    </>
   );
 }
