@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { type, prompt, context } = await req.json();
+    const { type, prompt, context, fileData } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -29,8 +29,21 @@ serve(async (req) => {
 Format the response in markdown.`;
         break;
         
+      case "notes_from_file":
+        systemPrompt = `You are an expert note-taking assistant. Analyze the provided document/image and generate comprehensive, well-structured study notes. Include:
+- Key concepts and definitions extracted from the content
+- Important points with bullet points
+- Main ideas and supporting details
+- Summary at the end
+Format the response in markdown. Be thorough and extract all relevant information.`;
+        break;
+        
       case "flashcards":
         systemPrompt = `You are an expert flashcard creator for students. Generate 10 flashcards based on the topic provided. Return a JSON array with objects containing "question" and "answer" fields. Only return the JSON array, no other text.`;
+        break;
+        
+      case "flashcards_from_file":
+        systemPrompt = `You are an expert flashcard creator. Analyze the provided document/image and generate 10-15 flashcards based on the content. Return a JSON array with objects containing "question" and "answer" fields. Only return the JSON array, no other text. Make sure to cover all key concepts from the document.`;
         break;
         
       case "roadmap":
@@ -39,6 +52,15 @@ Format the response in markdown.`;
 - Milestones and checkpoints
 - Resources to use
 - Skills to acquire at each stage
+Format the response in markdown with clear sections.`;
+        break;
+        
+      case "roadmap_from_file":
+        systemPrompt = `You are an expert learning roadmap creator. Analyze the provided document/image and create a learning roadmap based on the content. Include:
+- Timeline (weeks/months) to master the content
+- Milestones and checkpoints
+- Related resources to explore
+- Skills and concepts to acquire at each stage
 Format the response in markdown with clear sections.`;
         break;
         
@@ -62,6 +84,38 @@ Format the response in markdown with clear sections.`;
         throw new Error("Invalid generation type");
     }
 
+    // Build messages array
+    const messages: any[] = [
+      { role: "system", content: systemPrompt },
+    ];
+
+    // Handle file content for multimodal requests
+    if (fileData && (type.includes('_from_file'))) {
+      const { base64, mimeType, fileName } = JSON.parse(fileData);
+      
+      // Use multimodal message format for Gemini
+      messages.push({
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: prompt || `Please analyze this ${fileName} and generate content based on it.`
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:${mimeType};base64,${base64}`
+            }
+          }
+        ]
+      });
+    } else {
+      messages.push({
+        role: "user",
+        content: context ? `${prompt}\n\nContext: ${context}` : prompt
+      });
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -70,10 +124,7 @@ Format the response in markdown with clear sections.`;
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: context ? `${prompt}\n\nContext: ${context}` : prompt },
-        ],
+        messages,
       }),
     });
 

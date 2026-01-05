@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { AppTopbar } from '@/components/app/AppTopbar';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAIGenerate } from '@/hooks/useAIGenerate';
-import { Lock, FileText, BookOpen, Map, MessageCircle, Loader2, Sparkles } from 'lucide-react';
+import { Lock, FileText, BookOpen, Map, MessageCircle, Loader2, Sparkles, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { FileUploadZone } from '@/components/ai-tools/FileUploadZone';
 
 const AIToolsPage = () => {
   const { isPremium, isLoading: subLoading } = useSubscription();
@@ -17,13 +18,19 @@ const AIToolsPage = () => {
   
   const [notesPrompt, setNotesPrompt] = useState('');
   const [notesResult, setNotesResult] = useState('');
+  const [notesFileData, setNotesFileData] = useState<string | null>(null);
+  const [notesFileName, setNotesFileName] = useState<string | null>(null);
   
   const [flashcardsPrompt, setFlashcardsPrompt] = useState('');
   const [flashcards, setFlashcards] = useState<{ question: string; answer: string }[]>([]);
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const [flashcardsFileData, setFlashcardsFileData] = useState<string | null>(null);
+  const [flashcardsFileName, setFlashcardsFileName] = useState<string | null>(null);
   
   const [roadmapPrompt, setRoadmapPrompt] = useState('');
   const [roadmapResult, setRoadmapResult] = useState('');
+  const [roadmapFileData, setRoadmapFileData] = useState<string | null>(null);
+  const [roadmapFileName, setRoadmapFileName] = useState<string | null>(null);
   
   const [mentorMessages, setMentorMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [mentorInput, setMentorInput] = useState('');
@@ -64,14 +71,16 @@ const AIToolsPage = () => {
   }
 
   const handleGenerateNotes = async () => {
-    if (!notesPrompt.trim()) return;
-    const result = await generate('notes', notesPrompt);
+    if (!notesPrompt.trim() && !notesFileData) return;
+    const type = notesFileData ? 'notes_from_file' : 'notes';
+    const result = await generate(type, notesPrompt || 'Generate comprehensive notes from this document', undefined, notesFileData || undefined);
     if (result) setNotesResult(result);
   };
 
   const handleGenerateFlashcards = async () => {
-    if (!flashcardsPrompt.trim()) return;
-    const result = await generate('flashcards', flashcardsPrompt);
+    if (!flashcardsPrompt.trim() && !flashcardsFileData) return;
+    const type = flashcardsFileData ? 'flashcards_from_file' : 'flashcards';
+    const result = await generate(type, flashcardsPrompt || 'Generate flashcards from this document', undefined, flashcardsFileData || undefined);
     if (result) {
       try {
         const parsed = JSON.parse(result);
@@ -94,8 +103,9 @@ const AIToolsPage = () => {
   };
 
   const handleGenerateRoadmap = async () => {
-    if (!roadmapPrompt.trim()) return;
-    const result = await generate('roadmap', roadmapPrompt);
+    if (!roadmapPrompt.trim() && !roadmapFileData) return;
+    const type = roadmapFileData ? 'roadmap_from_file' : 'roadmap';
+    const result = await generate(type, roadmapPrompt || 'Create a learning roadmap from this document', undefined, roadmapFileData || undefined);
     if (result) setRoadmapResult(result);
   };
 
@@ -152,19 +162,39 @@ const AIToolsPage = () => {
           <TabsContent value="notes">
             <Card>
               <CardHeader>
-                <CardTitle>Notes Generator</CardTitle>
-                <CardDescription>Generate comprehensive study notes on any topic</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  Notes Generator
+                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    + File Upload
+                  </span>
+                </CardTitle>
+                <CardDescription>Generate comprehensive study notes from text or upload a document</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <FileUploadZone
+                  onFileContent={(content, fileName) => {
+                    setNotesFileData(content);
+                    setNotesFileName(fileName);
+                  }}
+                  isProcessing={isGenerating}
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
+                  </div>
+                </div>
                 <Textarea
                   placeholder="Enter a topic or subject to generate notes (e.g., 'Photosynthesis in plants' or 'World War II causes')"
                   value={notesPrompt}
                   onChange={(e) => setNotesPrompt(e.target.value)}
                   rows={3}
                 />
-                <Button onClick={handleGenerateNotes} disabled={isGenerating || !notesPrompt.trim()}>
+                <Button onClick={handleGenerateNotes} disabled={isGenerating || (!notesPrompt.trim() && !notesFileData)}>
                   {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  Generate Notes
+                  {notesFileData ? 'Generate Notes from File' : 'Generate Notes'}
                 </Button>
                 {notesResult && (
                   <div className="mt-4 p-4 bg-muted rounded-lg prose prose-sm max-w-none dark:prose-invert">
@@ -178,19 +208,39 @@ const AIToolsPage = () => {
           <TabsContent value="flashcards">
             <Card>
               <CardHeader>
-                <CardTitle>Flashcards Generator</CardTitle>
-                <CardDescription>Create study flashcards from any topic</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  Flashcards Generator
+                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    + File Upload
+                  </span>
+                </CardTitle>
+                <CardDescription>Create study flashcards from text or upload a document</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <FileUploadZone
+                  onFileContent={(content, fileName) => {
+                    setFlashcardsFileData(content);
+                    setFlashcardsFileName(fileName);
+                  }}
+                  isProcessing={isGenerating}
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
+                  </div>
+                </div>
                 <Textarea
                   placeholder="Enter a topic to generate flashcards (e.g., 'Spanish vocabulary for beginners' or 'JavaScript array methods')"
                   value={flashcardsPrompt}
                   onChange={(e) => setFlashcardsPrompt(e.target.value)}
                   rows={3}
                 />
-                <Button onClick={handleGenerateFlashcards} disabled={isGenerating || !flashcardsPrompt.trim()}>
+                <Button onClick={handleGenerateFlashcards} disabled={isGenerating || (!flashcardsPrompt.trim() && !flashcardsFileData)}>
                   {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  Generate Flashcards
+                  {flashcardsFileData ? 'Generate Flashcards from File' : 'Generate Flashcards'}
                 </Button>
                 {flashcards.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
@@ -214,19 +264,39 @@ const AIToolsPage = () => {
           <TabsContent value="roadmap">
             <Card>
               <CardHeader>
-                <CardTitle>Learning Roadmap</CardTitle>
-                <CardDescription>Get a personalized learning path for any skill</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  Learning Roadmap
+                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    + File Upload
+                  </span>
+                </CardTitle>
+                <CardDescription>Get a personalized learning path from text or upload a document</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <FileUploadZone
+                  onFileContent={(content, fileName) => {
+                    setRoadmapFileData(content);
+                    setRoadmapFileName(fileName);
+                  }}
+                  isProcessing={isGenerating}
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
+                  </div>
+                </div>
                 <Textarea
                   placeholder="Enter a skill or topic you want to learn (e.g., 'Machine Learning from scratch' or 'Becoming a full-stack developer')"
                   value={roadmapPrompt}
                   onChange={(e) => setRoadmapPrompt(e.target.value)}
                   rows={3}
                 />
-                <Button onClick={handleGenerateRoadmap} disabled={isGenerating || !roadmapPrompt.trim()}>
+                <Button onClick={handleGenerateRoadmap} disabled={isGenerating || (!roadmapPrompt.trim() && !roadmapFileData)}>
                   {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  Generate Roadmap
+                  {roadmapFileData ? 'Generate Roadmap from File' : 'Generate Roadmap'}
                 </Button>
                 {roadmapResult && (
                   <div className="mt-4 p-4 bg-muted rounded-lg prose prose-sm max-w-none dark:prose-invert">

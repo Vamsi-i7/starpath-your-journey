@@ -3,14 +3,14 @@ import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
-type GenerationType = 'notes' | 'flashcards' | 'roadmap' | 'mentor' | 'habit_suggestion' | 'affirmation' | 'coach';
+type GenerationType = 'notes' | 'flashcards' | 'roadmap' | 'mentor' | 'habit_suggestion' | 'affirmation' | 'coach' | 'notes_from_file' | 'flashcards_from_file' | 'roadmap_from_file';
 
 export function useAIGenerate() {
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  const generate = async (type: GenerationType, prompt: string, context?: string) => {
+  const generate = async (type: GenerationType, prompt: string, context?: string, fileData?: string) => {
     if (!user) {
       toast({
         title: 'Not authenticated',
@@ -24,7 +24,7 @@ export function useAIGenerate() {
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-generate', {
-        body: { type, prompt, context },
+        body: { type, prompt, context, fileData },
       });
 
       if (error) {
@@ -39,7 +39,7 @@ export function useAIGenerate() {
       await supabase.from('ai_generations').insert({
         user_id: user.id,
         type,
-        prompt,
+        prompt: fileData ? `[File Upload] ${prompt}` : prompt,
         result: { content: data.result },
       });
 
