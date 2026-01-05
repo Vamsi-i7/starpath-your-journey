@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/integrations/supabase/safeClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface AIContext {
@@ -68,17 +68,14 @@ export function useAICoach() {
   ) => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ type: 'coach_chat', context: { message } }),
-        }
-      );
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-coach`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ type: 'coach_chat', context: { message } }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
