@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { AppTopbar } from '@/components/app/AppTopbar';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAIGenerate } from '@/hooks/useAIGenerate';
-import { Lock, FileText, BookOpen, Map, MessageCircle, Loader2, Sparkles, Upload } from 'lucide-react';
+import { Lock, FileText, BookOpen, Map, MessageCircle, Loader2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { FileUploadZone } from '@/components/ai-tools/FileUploadZone';
+import { FileHistory } from '@/components/ai-tools/FileHistory';
 
 const AIToolsPage = () => {
   const { isPremium, isLoading: subLoading } = useSubscription();
@@ -134,11 +135,29 @@ const AIToolsPage = () => {
     });
   };
 
+  const handleHistorySelect = (type: string, result: string) => {
+    if (type.includes('notes')) {
+      setNotesResult(result);
+    } else if (type.includes('flashcards')) {
+      try {
+        const parsed = JSON.parse(result);
+        setFlashcards(parsed);
+        setFlippedCards(new Set());
+      } catch {
+        // If it's not JSON, just clear flashcards
+      }
+    } else if (type.includes('roadmap')) {
+      setRoadmapResult(result);
+    }
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden">
       <AppTopbar title="AI Tools" />
       
-      <div className="p-4 sm:p-6">
+      <div className="p-4 sm:p-6 space-y-6">
+        <FileHistory onSelectGeneration={handleHistorySelect} />
+        
         <Tabs defaultValue="notes" className="w-full">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6">
             <TabsTrigger value="notes" className="gap-2">

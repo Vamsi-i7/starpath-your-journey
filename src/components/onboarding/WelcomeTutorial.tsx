@@ -3,8 +3,6 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { 
   Sparkles, 
-  Heart, 
-  Flame, 
   Target, 
   Trophy, 
   ChevronRight, 
@@ -27,7 +25,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     description: 'Your journey to building better habits starts here. Let us show you how everything works.',
     icon: <Sparkles className="w-12 h-12 text-primary" />,
     details: [
-      'Track daily habits and build streaks',
+      'Track daily habits and complete them consistently',
       'Earn XP and level up your profile',
       'Complete goals and unlock achievements',
       'Join a community of habit builders',
@@ -42,28 +40,6 @@ const TUTORIAL_STEPS: TutorialStep[] = [
       'Finish daily challenges: +50-100 XP',
       'Unlock achievements: +100-500 XP',
       'Complete goals: Bonus XP rewards',
-    ],
-  },
-  {
-    title: 'Lives System',
-    description: 'Lives protect your progress. Start with 0 and earn them through consistency!',
-    icon: <Heart className="w-12 h-12 text-destructive" />,
-    details: [
-      'You start with 0 lives (max 5)',
-      'Every 5 consecutive streak days = +1 life',
-      'Lives protect you when you miss a day',
-      'Build your streak to earn more lives',
-    ],
-  },
-  {
-    title: 'Streaks & Consistency',
-    description: 'Streaks reward your daily commitment. Keep the flame burning!',
-    icon: <Flame className="w-12 h-12 text-streak" />,
-    details: [
-      'Complete habits daily to build streaks',
-      'Longer streaks = more rewards',
-      'Missing a day breaks your streak',
-      'Lives can save your streak (coming soon)',
     ],
   },
   {

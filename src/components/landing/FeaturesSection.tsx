@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { 
   Target, 
-  Flame, 
   Trophy, 
   Users, 
   BarChart3, 
   Sparkles,
-  Heart,
   Zap
 } from 'lucide-react';
 
@@ -19,25 +17,11 @@ const features = [
     bgColor: 'bg-primary/10',
   },
   {
-    icon: Flame,
-    title: 'Streak System',
-    description: 'Build momentum with streak tracking. The longer you go, the brighter your stars shine.',
-    color: 'text-streak',
-    bgColor: 'bg-streak/10',
-  },
-  {
     icon: Zap,
     title: 'XP & Leveling',
     description: 'Earn experience points for completing habits and level up your productivity.',
     color: 'text-xp',
     bgColor: 'bg-xp/10',
-  },
-  {
-    icon: Heart,
-    title: 'Lives System',
-    description: 'Maintain your progress with hearts. Build streaks to earn extra protection.',
-    color: 'text-heart',
-    bgColor: 'bg-heart/10',
   },
   {
     icon: Sparkles,
@@ -49,7 +33,7 @@ const features = [
   {
     icon: BarChart3,
     title: 'Detailed Analytics',
-    description: 'Visualize your progress with charts showing completion rates, streaks, and more.',
+    description: 'Visualize your progress with charts showing completion rates and trends.',
     color: 'text-accent-foreground',
     bgColor: 'bg-accent/10',
   },

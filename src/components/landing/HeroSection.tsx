@@ -44,7 +44,7 @@ export function HeroSection() {
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
         >
-          Track habits, earn XP, build streaks, and watch your progress light up the night sky. 
+          Track habits, earn XP, level up, and watch your progress light up the night sky. 
           The gamified habit tracker designed for students who dream big.
         </p>
 
