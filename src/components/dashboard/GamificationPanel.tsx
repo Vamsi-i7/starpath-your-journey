@@ -1,11 +1,6 @@
-import { Heart, Zap, Star, TrendingUp, Info } from 'lucide-react';
+import { Zap, Star, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from '@/components/ui/progress';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 export function GamificationPanel() {
   const { profile } = useAuth();
@@ -13,12 +8,6 @@ export function GamificationPanel() {
   if (!profile) return null;
 
   const xpProgress = (profile.xp / 500) * 100;
-  const heartsArray = Array.from({ length: profile.max_hearts }, (_, i) => i < profile.hearts);
-
-  // Calculate hearts earned info
-  const heartsToNext = profile.hearts < profile.max_hearts 
-    ? `Complete 5-day streaks to earn hearts` 
-    : 'Maximum hearts reached!';
 
   return (
     <div className="space-y-3 sm:space-y-4">
@@ -44,48 +33,6 @@ export function GamificationPanel() {
             {500 - profile.xp} XP to next level
           </p>
         </div>
-      </div>
-
-      {/* Hearts Card */}
-      <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-card border border-border/30">
-        <div className="flex items-center gap-3 mb-3 sm:mb-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-heart/10 flex items-center justify-center flex-shrink-0">
-            <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-heart fill-heart" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-xs sm:text-sm text-muted-foreground">Lives</p>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs text-sm">
-                    Hearts start at 0 and are earned by maintaining streaks. 
-                    Every 5 consecutive streak days earns you 1 heart!
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold text-foreground">{profile.hearts} / {profile.max_hearts}</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          {heartsArray.map((filled, index) => (
-            <Heart 
-              key={index} 
-              className={`w-6 h-6 sm:w-8 sm:h-8 transition-all duration-300 ${
-                filled 
-                  ? 'text-heart fill-heart' 
-                  : 'text-muted-foreground/30'
-              }`} 
-            />
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground mt-2 sm:mt-3">
-          {heartsToNext}
-        </p>
       </div>
 
       {/* Level Badge */}
@@ -121,8 +68,8 @@ export function GamificationPanel() {
             <span className="font-medium text-foreground">{profile.total_habits_completed}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Longest Streak</span>
-            <span className="font-medium text-streak">{profile.longest_streak} days</span>
+            <span className="text-muted-foreground">Total XP Earned</span>
+            <span className="font-medium text-xp">{profile.level * 500 + profile.xp} XP</span>
           </div>
         </div>
       </div>

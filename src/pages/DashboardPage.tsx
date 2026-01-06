@@ -11,11 +11,13 @@ import { AIAffirmationCard } from '@/components/dashboard/AIAffirmationCard';
 import { AIHabitSuggestionsCard } from '@/components/dashboard/AIHabitSuggestionsCard';
 import { AICoachChat } from '@/components/dashboard/AICoachChat';
 import { useHabits } from '@/hooks/useHabits';
+import { useTimeBasedXP } from '@/hooks/useTimeBasedXP';
 import { Loader2 } from 'lucide-react';
 
 const DashboardPage = () => {
   const { habits, isLoading, getTodayString, toggleHabitCompletion, deleteHabit } = useHabits();
   const { profile } = useAuth();
+  useTimeBasedXP(); // Award XP based on time spent in app
   const today = getTodayString();
 
   const completedToday = habits.filter(h => h.completedDates.includes(today)).length;
