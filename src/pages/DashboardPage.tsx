@@ -10,6 +10,7 @@ import { WelcomeTutorial } from '@/components/onboarding/WelcomeTutorial';
 import { AIAffirmationCard } from '@/components/dashboard/AIAffirmationCard';
 import { AIHabitSuggestionsCard } from '@/components/dashboard/AIHabitSuggestionsCard';
 import { AICoachChat } from '@/components/dashboard/AICoachChat';
+import { SessionTimer } from '@/components/dashboard/SessionTimer';
 import { useHabits } from '@/hooks/useHabits';
 import { useTimeBasedXP } from '@/hooks/useTimeBasedXP';
 import { Loader2 } from 'lucide-react';
@@ -36,6 +37,8 @@ const DashboardPage = () => {
       <AppTopbar title="Dashboard" />
       
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <SessionTimer />
+        
         <StatsCards 
           totalHabits={habits.length}
           completedToday={completedToday}
