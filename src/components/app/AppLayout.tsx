@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar';
 import { Menu, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 
 export function AppLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -12,6 +13,7 @@ export function AppLayout() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
+    <SessionTimerProvider>
     <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
       {/* Mobile menu button - fixed at top */}
       <button
@@ -76,5 +78,6 @@ export function AppLayout() {
         <Outlet />
       </main>
     </div>
+    </SessionTimerProvider>
   );
 }
