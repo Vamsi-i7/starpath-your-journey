@@ -11,6 +11,7 @@ import { AIAffirmationCard } from '@/components/dashboard/AIAffirmationCard';
 import { AIHabitSuggestionsCard } from '@/components/dashboard/AIHabitSuggestionsCard';
 import { AICoachChat } from '@/components/dashboard/AICoachChat';
 import { SessionTimer } from '@/components/dashboard/SessionTimer';
+import { SessionHistoryCard } from '@/components/dashboard/SessionHistoryCard';
 import { useHabits } from '@/hooks/useHabits';
 import { useTimeBasedXP } from '@/hooks/useTimeBasedXP';
 import { Loader2 } from 'lucide-react';
@@ -84,6 +85,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="lg:col-span-1 space-y-4">
+            <SessionHistoryCard />
             <AIAffirmationCard />
             <GamificationPanel />
             <AIHabitSuggestionsCard />

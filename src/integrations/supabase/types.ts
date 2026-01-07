@@ -455,6 +455,39 @@ export type Database = {
         }
         Relationships: []
       }
+      session_history: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          ended_at: string
+          id: string
+          session_type: string
+          started_at: string
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds: number
+          ended_at?: string
+          id?: string
+          session_type?: string
+          started_at: string
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string
+          id?: string
+          session_type?: string
+          started_at?: string
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
