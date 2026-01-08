@@ -36,7 +36,7 @@ const SessionTimerContext = createContext<SessionTimerContextType | undefined>(u
 export function SessionTimerProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [sessionSeconds, setSessionSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<TimerMode>('focus');
   const [pomodoroPhase, setPomodoroPhase] = useState<PomodoroPhase>('work');
   const [workDuration, setWorkDuration] = useState(DEFAULT_WORK_DURATION);
@@ -118,7 +118,7 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
     setPomodoroTimeLeft(workDuration * 60);
     setPomodoroPhase('work');
     setPomodoroCount(0);
-    setIsRunning(true);
+    setIsRunning(false);
     sessionStartRef.current = new Date();
   }, [workDuration]);
 

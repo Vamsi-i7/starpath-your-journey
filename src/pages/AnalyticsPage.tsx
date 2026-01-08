@@ -1,18 +1,20 @@
 import { useState, useMemo } from 'react';
 import { AppTopbar } from '@/components/app/AppTopbar';
 import { useHabits } from '@/hooks/useHabits';
+import { useGoals } from '@/hooks/useGoals';
 import { useSessionHistory } from '@/hooks/useSessionHistory';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { format, subDays, subMonths, subYears, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, startOfWeek, startOfMonth, endOfWeek, endOfMonth } from 'date-fns';
-import { Calendar, TrendingUp, Clock, Target } from 'lucide-react';
+import { format, subDays, subMonths, subYears, eachDayOfInterval, eachMonthOfInterval, endOfMonth } from 'date-fns';
+import { Calendar, TrendingUp, Clock, Target, Flag, CheckCircle2 } from 'lucide-react';
 
 type TimePeriod = '1w' | '1m' | '1y';
 
 const AnalyticsPage = () => {
   const [period, setPeriod] = useState<TimePeriod>('1m');
   const { habits, getTodayString } = useHabits();
+  const { goals } = useGoals();
   const { data: sessions } = useSessionHistory(100);
   const today = getTodayString();
 
@@ -43,12 +45,11 @@ const AnalyticsPage = () => {
     }
   }, [period]);
 
-  // Generate completion data based on period
+  // Generate habit completion data based on period
   const completionData = useMemo(() => {
     const { startDate, endDate } = periodConfig;
 
     if (period === '1w') {
-      // Daily data for week
       return eachDayOfInterval({ start: startDate, end: endDate }).map(date => {
         const dateStr = format(date, 'yyyy-MM-dd');
         const completed = habits.filter(h => h.completedDates.includes(dateStr)).length;
@@ -61,7 +62,6 @@ const AnalyticsPage = () => {
         };
       });
     } else if (period === '1m') {
-      // Daily data for month (last 30 days)
       return Array.from({ length: 30 }, (_, i) => {
         const date = subDays(new Date(), 29 - i);
         const dateStr = format(date, 'yyyy-MM-dd');
@@ -75,7 +75,6 @@ const AnalyticsPage = () => {
         };
       });
     } else {
-      // Monthly data for year
       return eachMonthOfInterval({ start: startDate, end: endDate }).map(monthStart => {
         const monthEnd = endOfMonth(monthStart);
         const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd > endDate ? endDate : monthEnd });
@@ -100,6 +99,43 @@ const AnalyticsPage = () => {
       });
     }
   }, [period, periodConfig, habits]);
+
+  // Goal completion data
+  const goalStats = useMemo(() => {
+    const { startDate } = periodConfig;
+    const startDateStr = format(startDate, 'yyyy-MM-dd');
+    
+    const goalsInPeriod = goals.filter(g => g.created_at >= startDateStr);
+    const completedGoals = goals.filter(g => g.status === 'completed');
+    const activeGoals = goals.filter(g => g.status === 'active');
+    const atRiskGoals = goals.filter(g => g.status === 'at_risk');
+    
+    const totalTasks = goals.reduce((acc, g) => acc + g.tasks.length, 0);
+    const completedTasks = goals.reduce((acc, g) => acc + g.tasks.filter(t => t.completed).length, 0);
+    const avgProgress = goals.length > 0 
+      ? Math.round(goals.reduce((acc, g) => acc + g.progress, 0) / goals.length)
+      : 0;
+
+    return {
+      total: goals.length,
+      completed: completedGoals.length,
+      active: activeGoals.length,
+      atRisk: atRiskGoals.length,
+      totalTasks,
+      completedTasks,
+      avgProgress,
+      newInPeriod: goalsInPeriod.length,
+    };
+  }, [goals, periodConfig]);
+
+  // Goal progress distribution for pie chart
+  const goalProgressData = useMemo(() => {
+    return [
+      { name: 'Completed', value: goalStats.completed, color: 'hsl(var(--primary))' },
+      { name: 'Active', value: goalStats.active, color: 'hsl(var(--accent))' },
+      { name: 'At Risk', value: goalStats.atRisk, color: 'hsl(var(--destructive))' },
+    ].filter(d => d.value > 0);
+  }, [goalStats]);
 
   // Session time data based on period
   const sessionData = useMemo(() => {
@@ -158,9 +194,9 @@ const AnalyticsPage = () => {
     return { totalCompleted, avgRate, totalMinutes, totalXp };
   }, [completionData, sessionData]);
 
-  // Today's pie chart
+  // Today's habit pie chart
   const completedToday = habits.filter(h => h.completedDates.includes(today)).length;
-  const pieData = [
+  const habitPieData = [
     { name: 'Completed', value: completedToday },
     { name: 'Remaining', value: Math.max(0, habits.length - completedToday) },
   ];
@@ -185,13 +221,13 @@ const AnalyticsPage = () => {
           </Tabs>
         </div>
 
-        {/* Summary Cards */}
+        {/* Habit Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-primary" />
-                <span className="text-sm text-muted-foreground">Completions</span>
+                <span className="text-sm text-muted-foreground">Habit Completions</span>
               </div>
               <p className="text-2xl font-bold mt-1">{summaryStats.totalCompleted}</p>
             </CardContent>
@@ -225,6 +261,46 @@ const AnalyticsPage = () => {
           </Card>
         </div>
 
+        {/* Goal Summary Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2">
+                <Flag className="w-4 h-4 text-accent" />
+                <span className="text-sm text-muted-foreground">Total Goals</span>
+              </div>
+              <p className="text-2xl font-bold mt-1">{goalStats.total}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <span className="text-sm text-muted-foreground">Goals Completed</span>
+              </div>
+              <p className="text-2xl font-bold mt-1">{goalStats.completed}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-accent" />
+                <span className="text-sm text-muted-foreground">Tasks Done</span>
+              </div>
+              <p className="text-2xl font-bold mt-1">{goalStats.completedTasks}/{goalStats.totalTasks}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                <span className="text-sm text-muted-foreground">Avg Progress</span>
+              </div>
+              <p className="text-2xl font-bold mt-1">{goalStats.avgProgress}%</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -252,13 +328,13 @@ const AnalyticsPage = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Today's Progress</CardTitle>
+              <CardTitle className="text-base">Goal Status Distribution</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie 
-                    data={pieData} 
+                    data={goalProgressData} 
                     cx="50%" 
                     cy="50%" 
                     innerRadius={60} 
@@ -266,7 +342,9 @@ const AnalyticsPage = () => {
                     dataKey="value" 
                     label={({ name, value }) => `${name}: ${value}`}
                   >
-                    {pieData.map((_, index) => <Cell key={index} fill={COLORS[index]} />)}
+                    {goalProgressData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
                   </Pie>
                   <Tooltip 
                     contentStyle={{ 
@@ -282,7 +360,7 @@ const AnalyticsPage = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Completion Rate Trend</CardTitle>
+              <CardTitle className="text-base">Habit Completion Rate Trend</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -322,6 +400,36 @@ const AnalyticsPage = () => {
                   />
                   <Line type="monotone" dataKey="minutes" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} />
                 </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Today's Habit Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie 
+                    data={habitPieData} 
+                    cx="50%" 
+                    cy="50%" 
+                    innerRadius={60} 
+                    outerRadius={100} 
+                    dataKey="value" 
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {habitPieData.map((_, index) => <Cell key={index} fill={COLORS[index]} />)}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      background: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))', 
+                      borderRadius: '8px' 
+                    }} 
+                  />
+                </PieChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
