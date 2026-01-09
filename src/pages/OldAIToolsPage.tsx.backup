@@ -1,0 +1,455 @@
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { AppTopbar } from '@/components/app/AppTopbar';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useAIGenerate } from '@/hooks/useAIGenerate';
+import { Lock, FileText, BookOpen, Map, MessageCircle, Loader2, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FileUploadZone } from '@/components/ai-tools/FileUploadZone';
+import { FileHistory } from '@/components/ai-tools/FileHistory';
+import { MarkdownRenderer } from '@/components/ai-tools/MarkdownRenderer';
+import { NotesViewer } from '@/components/ai-tools/NotesViewer';
+import { CopyButton } from '@/components/ai-tools/CopyButton';
+import { CharacterCount } from '@/components/ai-tools/CharacterCount';
+import { ExportMenu } from '@/components/ai-tools/ExportMenu';
+import { FlipCard } from '@/components/ai-tools/FlipCard';
+import { LoadingProgress } from '@/components/ai-tools/LoadingProgress';
+import { FlashcardStudyMode } from '@/components/ai-tools/FlashcardStudyMode';
+import { RoadmapGraph } from '@/components/ai-tools/RoadmapGraph';
+import { EnhancedMentorChat } from '@/components/ai-tools/EnhancedMentorChat';
+import { SaveButton } from '@/components/ai-tools/SaveButton';
+import { UsageLimitBanner } from '@/components/ai-tools/UsageLimitBanner';
+import { CreditDisplay } from '@/components/ai-tools/CreditDisplay';
+import { useCredits } from '@/hooks/useCredits';
+
+const AIToolsPage = () => {
+  const { isPremium, isLoading: subLoading } = useSubscription();
+  const { generate, isGenerating } = useAIGenerate();
+  const navigate = useNavigate();
+  
+  const [notesPrompt, setNotesPrompt] = useState('');
+  const [notesResult, setNotesResult] = useState('');
+  const [notesFileData, setNotesFileData] = useState<string | null>(null);
+  const [notesFileName, setNotesFileName] = useState<string | null>(null);
+  
+  const [flashcardsPrompt, setFlashcardsPrompt] = useState('');
+  const [flashcards, setFlashcards] = useState<{ question: string; answer: string }[]>([]);
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const [flashcardsFileData, setFlashcardsFileData] = useState<string | null>(null);
+  const [flashcardsFileName, setFlashcardsFileName] = useState<string | null>(null);
+  const [isStudyMode, setIsStudyMode] = useState(false);
+  
+  const [roadmapPrompt, setRoadmapPrompt] = useState('');
+  const [roadmapResult, setRoadmapResult] = useState('');
+  const [roadmapFileData, setRoadmapFileData] = useState<string | null>(null);
+  const [roadmapFileName, setRoadmapFileName] = useState<string | null>(null);
+  const [showRoadmapGraph, setShowRoadmapGraph] = useState(false);
+  
+  const [mentorMessages, setMentorMessages] = useState<{ role: 'user' | 'assistant'; content: string; timestamp: Date }[]>([]);
+
+  if (subLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+      <div className="min-h-screen overflow-x-hidden">
+        <AppTopbar title="AI Tools" />
+        <div className="p-4 sm:p-6">
+          <Card className="max-w-lg mx-auto text-center">
+            <CardHeader>
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Lock className="w-8 h-8 text-primary" />
+              </div>
+              <CardTitle>Premium Feature</CardTitle>
+              <CardDescription>
+                AI Tools are available exclusively to premium subscribers. Unlock notes generator, flashcard creator, learning roadmaps, and AI mentor.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/app/subscription')} className="gap-2">
+                <Sparkles className="w-4 h-4" />
+                Upgrade to Premium
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const handleGenerateNotes = async () => {
+    if (!notesPrompt.trim() && !notesFileData) return;
+    const type = notesFileData ? 'notes_from_file' : 'notes';
+    const result = await generate(type, notesPrompt || 'Generate comprehensive notes from this document', undefined, notesFileData || undefined);
+    if (result) setNotesResult(result);
+  };
+
+  const handleGenerateFlashcards = async () => {
+    if (!flashcardsPrompt.trim() && !flashcardsFileData) return;
+    const type = flashcardsFileData ? 'flashcards_from_file' : 'flashcards';
+    const result = await generate(type, flashcardsPrompt || 'Generate flashcards from this document', undefined, flashcardsFileData || undefined);
+    if (result) {
+      try {
+        const parsed = JSON.parse(result);
+        setFlashcards(parsed);
+        setFlippedCards(new Set());
+      } catch {
+        // If parsing fails, try to extract JSON from the response
+        const match = result.match(/\[[\s\S]*\]/);
+        if (match) {
+          try {
+            const parsed = JSON.parse(match[0]);
+            setFlashcards(parsed);
+            setFlippedCards(new Set());
+          } catch {
+            if (import.meta.env.DEV) {
+              console.error('Failed to parse flashcards');
+            }
+          }
+        }
+      }
+    }
+  };
+
+  const handleGenerateRoadmap = async () => {
+    if (!roadmapPrompt.trim() && !roadmapFileData) return;
+    const type = roadmapFileData ? 'roadmap_from_file' : 'roadmap';
+    const result = await generate(type, roadmapPrompt || 'Create a learning roadmap from this document', undefined, roadmapFileData || undefined);
+    if (result) setRoadmapResult(result);
+  };
+
+  const handleSendMentor = async (message: string, userContext?: string) => {
+    if (!message.trim()) return;
+    
+    setMentorMessages(prev => [...prev, { role: 'user', content: message, timestamp: new Date() }]);
+    
+    // Build conversation context
+    const conversationContext = mentorMessages.map(m => `${m.role}: ${m.content}`).join('\n');
+    const fullContext = userContext 
+      ? `${userContext}\n\n${conversationContext}`
+      : conversationContext;
+    
+    const result = await generate('mentor', message, fullContext);
+    if (result) {
+      setMentorMessages(prev => [...prev, { role: 'assistant', content: result, timestamp: new Date() }]);
+    }
+  };
+
+  const toggleCard = (index: number) => {
+    setFlippedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const handleHistorySelect = (type: string, result: string) => {
+    if (type.includes('notes')) {
+      setNotesResult(result);
+    } else if (type.includes('flashcards')) {
+      try {
+        const parsed = JSON.parse(result);
+        setFlashcards(parsed);
+        setFlippedCards(new Set());
+      } catch {
+        // If it's not JSON, just clear flashcards
+      }
+    } else if (type.includes('roadmap')) {
+      setRoadmapResult(result);
+    }
+  };
+
+  return (
+    <div className="min-h-screen overflow-x-hidden">
+      <AppTopbar title="AI Tools" />
+      
+      <div className="p-4 sm:p-6 space-y-6">
+        <CreditDisplay showDetails={true} />
+        <UsageLimitBanner />
+        <FileHistory onSelectGeneration={handleHistorySelect} />
+        
+        <Tabs defaultValue="notes" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6">
+            <TabsTrigger value="notes" className="gap-2">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Notes</span>
+            </TabsTrigger>
+            <TabsTrigger value="flashcards" className="gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Flashcards</span>
+            </TabsTrigger>
+            <TabsTrigger value="roadmap" className="gap-2">
+              <Map className="w-4 h-4" />
+              <span className="hidden sm:inline">Roadmap</span>
+            </TabsTrigger>
+            <TabsTrigger value="mentor" className="gap-2">
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Mentor</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="notes">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Notes Generator
+                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    + File Upload
+                  </span>
+                </CardTitle>
+                <CardDescription>Generate comprehensive study notes from text or upload a document</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FileUploadZone
+                  onFileContent={(content, fileName) => {
+                    setNotesFileData(content);
+                    setNotesFileName(fileName);
+                  }}
+                  isProcessing={isGenerating}
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Enter a topic or subject to generate notes (e.g., 'Photosynthesis in plants' or 'World War II causes')"
+                    value={notesPrompt}
+                    onChange={(e) => setNotesPrompt(e.target.value)}
+                    rows={3}
+                    maxLength={5000}
+                  />
+                  <CharacterCount current={notesPrompt.length} max={5000} />
+                </div>
+                <Button onClick={handleGenerateNotes} disabled={isGenerating || (!notesPrompt.trim() && !notesFileData)}>
+                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  {notesFileData ? 'Generate Notes from File' : 'Generate Notes'}
+                </Button>
+                {isGenerating && <LoadingProgress message="Generating your notes..." />}
+                {notesResult && (
+                  <Card className="mt-4">
+                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                      <div>
+                        <CardTitle className="text-lg">Generated Notes</CardTitle>
+                        <CardDescription>Created just now</CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <SaveButton content={notesResult} rawContent={notesResult} toolType="notes" defaultTitle="My Notes" />
+                        <CopyButton content={notesResult} />
+                        <ExportMenu content={notesResult} title="Notes" type="notes" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <NotesViewer content={notesResult} />
+                    </CardContent>
+                  </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="flashcards">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Flashcards Generator
+                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    + File Upload
+                  </span>
+                </CardTitle>
+                <CardDescription>Create study flashcards from text or upload a document</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FileUploadZone
+                  onFileContent={(content, fileName) => {
+                    setFlashcardsFileData(content);
+                    setFlashcardsFileName(fileName);
+                  }}
+                  isProcessing={isGenerating}
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Enter a topic to generate flashcards (e.g., 'Spanish vocabulary for beginners' or 'JavaScript array methods')"
+                    value={flashcardsPrompt}
+                    onChange={(e) => setFlashcardsPrompt(e.target.value)}
+                    rows={3}
+                    maxLength={5000}
+                  />
+                  <CharacterCount current={flashcardsPrompt.length} max={5000} />
+                </div>
+                <Button onClick={handleGenerateFlashcards} disabled={isGenerating || (!flashcardsPrompt.trim() && !flashcardsFileData)}>
+                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  {flashcardsFileData ? 'Generate Flashcards from File' : 'Generate Flashcards'}
+                </Button>
+                {isGenerating && <LoadingProgress message="Creating your flashcards..." />}
+                {flashcards.length > 0 && !isStudyMode && (
+                  <div className="space-y-4 mt-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-muted-foreground">
+                        {flashcards.length} Flashcards
+                      </h3>
+                      <div className="flex gap-2">
+                        <Button variant="default" size="sm" onClick={() => setIsStudyMode(true)}>
+                          <BookOpen className="w-4 h-4 mr-2" />
+                          Study Mode
+                        </Button>
+                        <SaveButton content={flashcards} rawContent={JSON.stringify(flashcards, null, 2)} toolType="flashcards" defaultTitle="My Flashcards" />
+                        <CopyButton content={JSON.stringify(flashcards, null, 2)} label="Copy JSON" />
+                        <ExportMenu content={JSON.stringify(flashcards, null, 2)} title="Flashcards" type="flashcards" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {flashcards.map((card, index) => (
+                        <FlipCard
+                          key={index}
+                          question={card.question}
+                          answer={card.answer}
+                          index={index}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {flashcards.length > 0 && isStudyMode && (
+                  <div className="mt-4">
+                    <FlashcardStudyMode
+                      flashcards={flashcards}
+                      onExit={() => setIsStudyMode(false)}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="roadmap">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Learning Roadmap
+                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    + File Upload
+                  </span>
+                </CardTitle>
+                <CardDescription>Get a personalized learning path from text or upload a document</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FileUploadZone
+                  onFileContent={(content, fileName) => {
+                    setRoadmapFileData(content);
+                    setRoadmapFileName(fileName);
+                  }}
+                  isProcessing={isGenerating}
+                />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Enter a skill or topic you want to learn (e.g., 'Machine Learning from scratch' or 'Becoming a full-stack developer')"
+                    value={roadmapPrompt}
+                    onChange={(e) => setRoadmapPrompt(e.target.value)}
+                    rows={3}
+                    maxLength={5000}
+                  />
+                  <CharacterCount current={roadmapPrompt.length} max={5000} />
+                </div>
+                <Button onClick={handleGenerateRoadmap} disabled={isGenerating || (!roadmapPrompt.trim() && !roadmapFileData)}>
+                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  {roadmapFileData ? 'Generate Roadmap from File' : 'Generate Roadmap'}
+                </Button>
+                {isGenerating && <LoadingProgress message="Mapping your learning journey..." />}
+                {roadmapResult && (
+                  <Card className="mt-4">
+                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                      <div>
+                        <CardTitle className="text-lg">Generated Roadmap</CardTitle>
+                        <CardDescription>Created just now</CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={showRoadmapGraph ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setShowRoadmapGraph(!showRoadmapGraph)}
+                        >
+                          <Map className="w-4 h-4 mr-2" />
+                          {showRoadmapGraph ? 'Show Text' : 'Show Graph'}
+                        </Button>
+                        <SaveButton content={roadmapResult} rawContent={roadmapResult} toolType="roadmap" defaultTitle="My Roadmap" />
+                        <CopyButton content={roadmapResult} />
+                        <ExportMenu content={roadmapResult} title="Roadmap" type="roadmap" />
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {showRoadmapGraph ? (
+                        <RoadmapGraph content={roadmapResult} />
+                      ) : (
+                        <MarkdownRenderer content={roadmapResult} />
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="mentor">
+            <Card className="border-2 border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-blue-500/5">
+              <CardContent className="p-12 text-center space-y-6">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center mx-auto">
+                  <MessageCircle className="w-10 h-10 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold mb-2">AI Mentor Has Its Own Page!</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    We've given AI Mentor a dedicated space with enhanced features and a better experience.
+                  </p>
+                </div>
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  onClick={() => navigate('/app/ai-mentor')}
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  Open AI Mentor
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default AIToolsPage;

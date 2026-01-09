@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { AppSidebar } from './AppSidebar';
 import { Menu, Loader2 } from 'lucide-react';
@@ -6,13 +6,18 @@ import { cn } from '@/lib/utils';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
+import { AICoachChat } from '@/components/dashboard/AICoachChat';
 
 function AppLayoutContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isCollapsed } = useSidebar();
   const { pullDistance, isRefreshing, handlers } = usePullToRefresh();
+  const location = useLocation();
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  
+  // Hide AI Coach on Settings and Profile pages
+  const hideAICoach = location.pathname === '/app/settings' || location.pathname === '/app/profile';
 
   return (
     <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
@@ -79,6 +84,9 @@ function AppLayoutContent() {
         
         <Outlet />
       </main>
+      
+      {/* AI Coach Chat - Available on all pages except Settings and Profile */}
+      {!hideAICoach && <AICoachChat />}
     </div>
   );
 }

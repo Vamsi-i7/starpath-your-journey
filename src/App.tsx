@@ -32,6 +32,8 @@ const TermsOfServicePage = lazy(() => import("./pages/TermsOfServicePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AIToolsPage = lazy(() => import("./pages/AIToolsPage"));
 const SubscriptionPage = lazy(() => import("./pages/SubscriptionPage"));
+const LibraryPage = lazy(() => import("./pages/LibraryPage"));
+const AIMentorPage = lazy(() => import("./pages/AIMentorPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -75,6 +77,8 @@ const App = () => (
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="achievements" element={<AchievementsPage />} />
                 <Route path="ai-tools" element={<AIToolsPage />} />
+                <Route path="ai-mentor" element={<AIMentorPage />} />
+                <Route path="library" element={<LibraryPage />} />
                 <Route path="subscription" element={<SubscriptionPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />

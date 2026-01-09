@@ -1,384 +1,400 @@
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AppTopbar } from '@/components/app/AppTopbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { AppTopbar } from '@/components/app/AppTopbar';
-import { useSubscription } from '@/hooks/useSubscription';
+import { Badge } from '@/components/ui/badge';
+import { 
+  FileText, 
+  BookOpen, 
+  Map, 
+  Sparkles, 
+  ArrowRight,
+  Upload,
+  Loader2,
+  ChevronLeft,
+  Wand2
+} from 'lucide-react';
 import { useAIGenerate } from '@/hooks/useAIGenerate';
-import { Lock, FileText, BookOpen, Map, MessageCircle, Loader2, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useCredits } from '@/hooks/useCredits';
+import { CreditDisplay } from '@/components/ai-tools/CreditDisplay';
+import { MarkdownRenderer } from '@/components/ai-tools/MarkdownRenderer';
+import { NotesViewer } from '@/components/ai-tools/NotesViewer';
+import { FlipCard } from '@/components/ai-tools/FlipCard';
+import { FlashcardStudyMode } from '@/components/ai-tools/FlashcardStudyMode';
+import { RoadmapGraph } from '@/components/ai-tools/RoadmapGraph';
+import { SaveButton } from '@/components/ai-tools/SaveButton';
+import { CopyButton } from '@/components/ai-tools/CopyButton';
+import { ExportMenu } from '@/components/ai-tools/ExportMenu';
+import { CharacterCount } from '@/components/ai-tools/CharacterCount';
+import { LoadingProgress } from '@/components/ai-tools/LoadingProgress';
 import { FileUploadZone } from '@/components/ai-tools/FileUploadZone';
-import { FileHistory } from '@/components/ai-tools/FileHistory';
+import { toast } from 'sonner';
 
-const AIToolsPage = () => {
-  const { isPremium, isLoading: subLoading } = useSubscription();
+type ToolType = 'notes' | 'flashcards' | 'roadmap' | null;
+
+const TOOLS = [
+  {
+    id: 'notes',
+    name: 'Notes Generator',
+    description: 'Transform any topic into comprehensive, well-structured notes',
+    icon: FileText,
+    gradient: 'from-blue-500 to-cyan-500',
+    cost: 5,
+    placeholder: 'Enter a topic (e.g., "Photosynthesis in plants", "World War II causes")',
+    emoji: '📝',
+  },
+  {
+    id: 'flashcards',
+    name: 'Flashcard Creator',
+    description: 'Generate interactive flashcards for effective studying',
+    icon: BookOpen,
+    gradient: 'from-purple-500 to-pink-500',
+    cost: 10,
+    placeholder: 'Enter a topic (e.g., "Spanish vocabulary", "JavaScript array methods")',
+    emoji: '🎴',
+  },
+  {
+    id: 'roadmap',
+    name: 'Learning Roadmap',
+    description: 'Build a complete learning path with milestones and goals',
+    icon: Map,
+    gradient: 'from-orange-500 to-red-500',
+    cost: 15,
+    placeholder: 'Enter a skill (e.g., "Machine Learning", "Full-stack development")',
+    emoji: '🗺️',
+  },
+];
+
+export default function NewAIToolsPage() {
   const { generate, isGenerating } = useAIGenerate();
-  const navigate = useNavigate();
+  const { deductCredits, getCost } = useCredits();
   
-  const [notesPrompt, setNotesPrompt] = useState('');
+  const [selectedTool, setSelectedTool] = useState<ToolType>(null);
+  const [prompt, setPrompt] = useState('');
+  const [fileData, setFileData] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  
+  // Results
   const [notesResult, setNotesResult] = useState('');
-  const [notesFileData, setNotesFileData] = useState<string | null>(null);
-  const [notesFileName, setNotesFileName] = useState<string | null>(null);
-  
-  const [flashcardsPrompt, setFlashcardsPrompt] = useState('');
   const [flashcards, setFlashcards] = useState<{ question: string; answer: string }[]>([]);
-  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
-  const [flashcardsFileData, setFlashcardsFileData] = useState<string | null>(null);
-  const [flashcardsFileName, setFlashcardsFileName] = useState<string | null>(null);
-  
-  const [roadmapPrompt, setRoadmapPrompt] = useState('');
   const [roadmapResult, setRoadmapResult] = useState('');
-  const [roadmapFileData, setRoadmapFileData] = useState<string | null>(null);
-  const [roadmapFileName, setRoadmapFileName] = useState<string | null>(null);
-  
-  const [mentorMessages, setMentorMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
-  const [mentorInput, setMentorInput] = useState('');
+  const [isStudyMode, setIsStudyMode] = useState(false);
+  const [showRoadmapGraph, setShowRoadmapGraph] = useState(false);
 
-  if (subLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!isPremium) {
-    return (
-      <div className="min-h-screen overflow-x-hidden">
-        <AppTopbar title="AI Tools" />
-        <div className="p-4 sm:p-6">
-          <Card className="max-w-lg mx-auto text-center">
-            <CardHeader>
-              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Lock className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle>Premium Feature</CardTitle>
-              <CardDescription>
-                AI Tools are available exclusively to premium subscribers. Unlock notes generator, flashcard creator, learning roadmaps, and AI mentor.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate('/app/subscription')} className="gap-2">
-                <Sparkles className="w-4 h-4" />
-                Upgrade to Premium
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  const handleGenerateNotes = async () => {
-    if (!notesPrompt.trim() && !notesFileData) return;
-    const type = notesFileData ? 'notes_from_file' : 'notes';
-    const result = await generate(type, notesPrompt || 'Generate comprehensive notes from this document', undefined, notesFileData || undefined);
-    if (result) setNotesResult(result);
+  const handleToolSelect = (toolId: ToolType) => {
+    setSelectedTool(toolId);
+    setPrompt('');
+    setFileData(null);
+    setFileName(null);
+    // Clear previous results
+    setNotesResult('');
+    setFlashcards([]);
+    setRoadmapResult('');
   };
 
-  const handleGenerateFlashcards = async () => {
-    if (!flashcardsPrompt.trim() && !flashcardsFileData) return;
-    const type = flashcardsFileData ? 'flashcards_from_file' : 'flashcards';
-    const result = await generate(type, flashcardsPrompt || 'Generate flashcards from this document', undefined, flashcardsFileData || undefined);
+  const handleGenerate = async () => {
+    if (!selectedTool || (!prompt.trim() && !fileData)) {
+      toast.error('Please enter a prompt or upload a file');
+      return;
+    }
+
+    // Deduct credits
+    if (!await deductCredits(selectedTool, `Generated ${selectedTool}`)) {
+      return;
+    }
+
+    const result = await generate(
+      fileData ? `${selectedTool}_from_file` as any : selectedTool,
+      prompt,
+      undefined,
+      fileData || undefined
+    );
+
     if (result) {
-      try {
-        const parsed = JSON.parse(result);
-        setFlashcards(parsed);
-        setFlippedCards(new Set());
-      } catch {
-        // If parsing fails, try to extract JSON from the response
-        const match = result.match(/\[[\s\S]*\]/);
-        if (match) {
-          try {
-            const parsed = JSON.parse(match[0]);
-            setFlashcards(parsed);
-            setFlippedCards(new Set());
-          } catch {
-            if (import.meta.env.DEV) {
-              console.error('Failed to parse flashcards');
-            }
-          }
+      if (selectedTool === 'notes') {
+        setNotesResult(result);
+      } else if (selectedTool === 'flashcards') {
+        try {
+          const parsed = JSON.parse(result);
+          setFlashcards(parsed.flashcards || parsed);
+        } catch {
+          toast.error('Failed to parse flashcards');
         }
+      } else if (selectedTool === 'roadmap') {
+        setRoadmapResult(result);
       }
     }
   };
 
-  const handleGenerateRoadmap = async () => {
-    if (!roadmapPrompt.trim() && !roadmapFileData) return;
-    const type = roadmapFileData ? 'roadmap_from_file' : 'roadmap';
-    const result = await generate(type, roadmapPrompt || 'Create a learning roadmap from this document', undefined, roadmapFileData || undefined);
-    if (result) setRoadmapResult(result);
+  const handleFileUpload = (data: string, name: string) => {
+    setFileData(data);
+    setFileName(name);
+    toast.success(`File uploaded: ${name}`);
   };
 
-  const handleSendMentor = async () => {
-    if (!mentorInput.trim()) return;
-    const userMessage = mentorInput;
-    setMentorInput('');
-    setMentorMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    
-    const context = mentorMessages.map(m => `${m.role}: ${m.content}`).join('\n');
-    const result = await generate('mentor', userMessage, context);
-    if (result) {
-      setMentorMessages(prev => [...prev, { role: 'assistant', content: result }]);
-    }
+  const handleBack = () => {
+    setSelectedTool(null);
+    setPrompt('');
+    setFileData(null);
+    setFileName(null);
   };
 
-  const toggleCard = (index: number) => {
-    setFlippedCards(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
-  };
-
-  const handleHistorySelect = (type: string, result: string) => {
-    if (type.includes('notes')) {
-      setNotesResult(result);
-    } else if (type.includes('flashcards')) {
-      try {
-        const parsed = JSON.parse(result);
-        setFlashcards(parsed);
-        setFlippedCards(new Set());
-      } catch {
-        // If it's not JSON, just clear flashcards
-      }
-    } else if (type.includes('roadmap')) {
-      setRoadmapResult(result);
-    }
-  };
+  const currentTool = TOOLS.find(t => t.id === selectedTool);
+  const hasResult = notesResult || flashcards.length > 0 || roadmapResult;
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
       <AppTopbar title="AI Tools" />
-      
-      <div className="p-4 sm:p-6 space-y-6">
-        <FileHistory onSelectGeneration={handleHistorySelect} />
-        
-        <Tabs defaultValue="notes" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6">
-            <TabsTrigger value="notes" className="gap-2">
-              <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Notes</span>
-            </TabsTrigger>
-            <TabsTrigger value="flashcards" className="gap-2">
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Flashcards</span>
-            </TabsTrigger>
-            <TabsTrigger value="roadmap" className="gap-2">
-              <Map className="w-4 h-4" />
-              <span className="hidden sm:inline">Roadmap</span>
-            </TabsTrigger>
-            <TabsTrigger value="mentor" className="gap-2">
-              <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Mentor</span>
-            </TabsTrigger>
-          </TabsList>
 
-          <TabsContent value="notes">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  Notes Generator
-                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    + File Upload
-                  </span>
-                </CardTitle>
-                <CardDescription>Generate comprehensive study notes from text or upload a document</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FileUploadZone
-                  onFileContent={(content, fileName) => {
-                    setNotesFileData(content);
-                    setNotesFileName(fileName);
-                  }}
-                  isProcessing={isGenerating}
-                />
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
+      <div className="p-4 sm:p-6 pb-20">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Credit Display */}
+          <CreditDisplay showDetails={true} toolType={selectedTool || undefined} />
+
+          {!selectedTool ? (
+            /* Tool Selection Dashboard */
+            <div className="space-y-8">
+              {/* Header */}
+              <div className="text-center space-y-3">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Sparkles className="w-8 h-8 text-purple-500" />
+                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                    AI-Powered Tools
+                  </h1>
+                </div>
+                <p className="text-muted-foreground text-lg">
+                  Choose a tool to get started with AI-powered content generation
+                </p>
+              </div>
+
+              {/* Tool Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {TOOLS.map((tool) => {
+                  const Icon = tool.icon;
+                  
+                  return (
+                    <Card
+                      key={tool.id}
+                      className="group relative overflow-hidden border-2 hover:border-transparent transition-all duration-300 hover:shadow-2xl cursor-pointer"
+                      onClick={() => handleToolSelect(tool.id as ToolType)}
+                    >
+                      {/* Gradient Border on Hover */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10`} />
+                      <div className="absolute inset-[2px] bg-background rounded-lg -z-10" />
+
+                      <CardHeader className="space-y-4">
+                        {/* Icon */}
+                        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300`}>
+                          <Icon className="w-8 h-8 text-white" />
+                        </div>
+
+                        {/* Title */}
+                        <div>
+                          <CardTitle className="text-xl mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-blue-600 group-hover:bg-clip-text transition-all">
+                            {tool.name}
+                          </CardTitle>
+                          <CardDescription>{tool.description}</CardDescription>
+                        </div>
+
+                        {/* Cost Badge */}
+                        <Badge className={`bg-gradient-to-r ${tool.gradient} text-white border-0 w-fit`}>
+                          {tool.cost} credits
+                        </Badge>
+                      </CardHeader>
+
+                      <CardContent>
+                        <Button 
+                          className={`w-full group-hover:bg-gradient-to-r ${tool.gradient} group-hover:text-white transition-all`}
+                          variant="outline"
+                        >
+                          Start Creating
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Feature Highlights */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12">
+                <Card className="text-center p-6 border-purple-500/20 bg-purple-500/5">
+                  <div className="text-3xl mb-2">⚡</div>
+                  <h3 className="font-semibold mb-1">Lightning Fast</h3>
+                  <p className="text-sm text-muted-foreground">Generate content in seconds</p>
+                </Card>
+                <Card className="text-center p-6 border-blue-500/20 bg-blue-500/5">
+                  <div className="text-3xl mb-2">🎯</div>
+                  <h3 className="font-semibold mb-1">Highly Accurate</h3>
+                  <p className="text-sm text-muted-foreground">Powered by advanced AI</p>
+                </Card>
+                <Card className="text-center p-6 border-cyan-500/20 bg-cyan-500/5">
+                  <div className="text-3xl mb-2">💾</div>
+                  <h3 className="font-semibold mb-1">Save & Export</h3>
+                  <p className="text-sm text-muted-foreground">Keep your creations forever</p>
+                </Card>
+              </div>
+            </div>
+          ) : (
+            /* Tool Interface */
+            <div className="space-y-6">
+              {/* Back Button & Tool Header */}
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBack}
+                  className="gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </Button>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${currentTool?.gradient} flex items-center justify-center`}>
+                      <currentTool.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">{currentTool?.name}</h2>
+                      <p className="text-sm text-muted-foreground">{currentTool?.description}</p>
+                    </div>
                   </div>
                 </div>
-                <Textarea
-                  placeholder="Enter a topic or subject to generate notes (e.g., 'Photosynthesis in plants' or 'World War II causes')"
-                  value={notesPrompt}
-                  onChange={(e) => setNotesPrompt(e.target.value)}
-                  rows={3}
-                />
-                <Button onClick={handleGenerateNotes} disabled={isGenerating || (!notesPrompt.trim() && !notesFileData)}>
-                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  {notesFileData ? 'Generate Notes from File' : 'Generate Notes'}
-                </Button>
-                {notesResult && (
-                  <div className="mt-4 p-4 bg-muted rounded-lg prose prose-sm max-w-none dark:prose-invert">
-                    <pre className="whitespace-pre-wrap text-sm">{notesResult}</pre>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+              </div>
 
-          <TabsContent value="flashcards">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  Flashcards Generator
-                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    + File Upload
-                  </span>
-                </CardTitle>
-                <CardDescription>Create study flashcards from text or upload a document</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FileUploadZone
-                  onFileContent={(content, fileName) => {
-                    setFlashcardsFileData(content);
-                    setFlashcardsFileName(fileName);
-                  }}
-                  isProcessing={isGenerating}
-                />
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
-                  </div>
-                </div>
-                <Textarea
-                  placeholder="Enter a topic to generate flashcards (e.g., 'Spanish vocabulary for beginners' or 'JavaScript array methods')"
-                  value={flashcardsPrompt}
-                  onChange={(e) => setFlashcardsPrompt(e.target.value)}
-                  rows={3}
-                />
-                <Button onClick={handleGenerateFlashcards} disabled={isGenerating || (!flashcardsPrompt.trim() && !flashcardsFileData)}>
-                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  {flashcardsFileData ? 'Generate Flashcards from File' : 'Generate Flashcards'}
-                </Button>
-                {flashcards.length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-                    {flashcards.map((card, index) => (
-                      <div
-                        key={index}
-                        onClick={() => toggleCard(index)}
-                        className="cursor-pointer p-4 rounded-xl border border-border bg-card hover:bg-card/80 transition-all min-h-[120px] flex items-center justify-center text-center"
-                      >
-                        <p className="text-sm">
-                          {flippedCards.has(index) ? card.answer : card.question}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="roadmap">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  Learning Roadmap
-                  <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                    + File Upload
-                  </span>
-                </CardTitle>
-                <CardDescription>Get a personalized learning path from text or upload a document</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FileUploadZone
-                  onFileContent={(content, fileName) => {
-                    setRoadmapFileData(content);
-                    setRoadmapFileName(fileName);
-                  }}
-                  isProcessing={isGenerating}
-                />
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">or enter a topic</span>
-                  </div>
-                </div>
-                <Textarea
-                  placeholder="Enter a skill or topic you want to learn (e.g., 'Machine Learning from scratch' or 'Becoming a full-stack developer')"
-                  value={roadmapPrompt}
-                  onChange={(e) => setRoadmapPrompt(e.target.value)}
-                  rows={3}
-                />
-                <Button onClick={handleGenerateRoadmap} disabled={isGenerating || (!roadmapPrompt.trim() && !roadmapFileData)}>
-                  {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  {roadmapFileData ? 'Generate Roadmap from File' : 'Generate Roadmap'}
-                </Button>
-                {roadmapResult && (
-                  <div className="mt-4 p-4 bg-muted rounded-lg prose prose-sm max-w-none dark:prose-invert">
-                    <pre className="whitespace-pre-wrap text-sm">{roadmapResult}</pre>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="mentor">
-            <Card>
-              <CardHeader>
-                <CardTitle>AI Mentor</CardTitle>
-                <CardDescription>Ask questions and get help with your studies</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px] flex flex-col">
-                  <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-                    {mentorMessages.length === 0 && (
-                      <div className="text-center text-muted-foreground py-8">
-                        Ask your AI mentor anything about your studies!
-                      </div>
-                    )}
-                    {mentorMessages.map((msg, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-lg ${
-                          msg.role === 'user'
-                            ? 'bg-primary text-primary-foreground ml-8'
-                            : 'bg-muted mr-8'
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      </div>
-                    ))}
-                    {isGenerating && (
-                      <div className="bg-muted p-3 rounded-lg mr-8">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Ask a question..."
-                      value={mentorInput}
-                      onChange={(e) => setMentorInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMentor()}
+              {/* Input Card */}
+              <Card className={`border-2 bg-gradient-to-br ${currentTool?.gradient}/5`}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wand2 className="w-5 h-5" />
+                    Create Your Content
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Prompt Input */}
+                  <div className="space-y-2">
+                    <Textarea
+                      placeholder={currentTool?.placeholder}
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      rows={4}
+                      maxLength={5000}
+                      className="resize-none"
                     />
-                    <Button onClick={handleSendMentor} disabled={isGenerating || !mentorInput.trim()}>
-                      Send
-                    </Button>
+                    <CharacterCount current={prompt.length} max={5000} />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+
+                  {/* File Upload */}
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Or upload a file:</p>
+                    <FileUploadZone
+                      onFileUpload={handleFileUpload}
+                      currentFileName={fileName}
+                      onClearFile={() => {
+                        setFileData(null);
+                        setFileName(null);
+                      }}
+                    />
+                  </div>
+
+                  {/* Generate Button */}
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || (!prompt.trim() && !fileData)}
+                    className={`w-full h-12 text-lg bg-gradient-to-r ${currentTool?.gradient} hover:opacity-90 text-white border-0 shadow-lg`}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        Generate {currentTool?.name.split(' ')[0]}
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Loading State */}
+              {isGenerating && <LoadingProgress message={`Creating your ${selectedTool}...`} />}
+
+              {/* Results */}
+              {hasResult && !isGenerating && (
+                <Card className="border-2">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <span className="text-2xl">{currentTool?.emoji}</span>
+                        Generated {currentTool?.name}
+                      </CardTitle>
+                      <CardDescription>Created just now</CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      {selectedTool === 'notes' && (
+                        <>
+                          <SaveButton content={notesResult} rawContent={notesResult} toolType="notes" defaultTitle="My Notes" />
+                          <CopyButton content={notesResult} />
+                          <ExportMenu content={notesResult} title="Notes" type="notes" />
+                        </>
+                      )}
+                      {selectedTool === 'flashcards' && !isStudyMode && (
+                        <>
+                          <Button variant="default" size="sm" onClick={() => setIsStudyMode(true)}>
+                            <BookOpen className="w-4 h-4 mr-2" />
+                            Study Mode
+                          </Button>
+                          <SaveButton content={flashcards} rawContent={JSON.stringify(flashcards, null, 2)} toolType="flashcards" defaultTitle="My Flashcards" />
+                          <CopyButton content={JSON.stringify(flashcards, null, 2)} />
+                          <ExportMenu content={JSON.stringify(flashcards, null, 2)} title="Flashcards" type="flashcards" />
+                        </>
+                      )}
+                      {selectedTool === 'roadmap' && (
+                        <>
+                          <Button
+                            variant={showRoadmapGraph ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setShowRoadmapGraph(!showRoadmapGraph)}
+                          >
+                            <Map className="w-4 h-4 mr-2" />
+                            {showRoadmapGraph ? 'Show Text' : 'Show Graph'}
+                          </Button>
+                          <SaveButton content={roadmapResult} rawContent={roadmapResult} toolType="roadmap" defaultTitle="My Roadmap" />
+                          <CopyButton content={roadmapResult} />
+                          <ExportMenu content={roadmapResult} title="Roadmap" type="roadmap" />
+                        </>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedTool === 'notes' && <NotesViewer content={notesResult} />}
+                    {selectedTool === 'flashcards' && !isStudyMode && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {flashcards.map((card, index) => (
+                          <FlipCard key={index} question={card.question} answer={card.answer} index={index} />
+                        ))}
+                      </div>
+                    )}
+                    {selectedTool === 'flashcards' && isStudyMode && (
+                      <FlashcardStudyMode flashcards={flashcards} onExit={() => setIsStudyMode(false)} />
+                    )}
+                    {selectedTool === 'roadmap' && (
+                      showRoadmapGraph ? (
+                        <RoadmapGraph content={roadmapResult} />
+                      ) : (
+                        <MarkdownRenderer content={roadmapResult} />
+                      )
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-};
-
-export default AIToolsPage;
+}
