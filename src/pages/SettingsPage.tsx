@@ -477,42 +477,61 @@ const SettingsPage = () => {
           </Dialog>
         </div>
 
-        <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/30">
-          <h3 className="font-semibold text-destructive mb-4">Danger Zone</h3>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="gap-2">
-                <Trash2 className="w-4 h-4" /> Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account
-                  and remove all your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDeleteAccount}
-                  disabled={isDeleting}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Deleting...
-                    </>
-                  ) : (
-                    'Delete Account'
-                  )}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+        {/* Hidden Account Management - expandable section */}
+        <details className="group">
+          <summary className="cursor-pointer text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors py-2 list-none flex items-center gap-1">
+            <span className="group-open:rotate-90 transition-transform">›</span>
+            Advanced account options
+          </summary>
+          <div className="mt-4 p-6 rounded-2xl bg-destructive/5 border border-destructive/20">
+            <h3 className="font-semibold text-destructive/80 mb-4 text-sm">Danger Zone</h3>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-destructive/70 hover:text-destructive hover:bg-destructive/10 gap-2">
+                  <Trash2 className="w-3 h-3" /> Delete Account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-destructive">⚠️ Permanently Delete Account?</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3">
+                    <p className="font-semibold text-foreground">
+                      This action is IRREVERSIBLE and will permanently destroy:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                      <li>All your habits and completion history</li>
+                      <li>All your goals and tasks</li>
+                      <li>Your XP, level, streaks, and achievements</li>
+                      <li>All session history and analytics data</li>
+                      <li>Friend connections and chat messages</li>
+                      <li>Your profile and all personal data</li>
+                    </ul>
+                    <p className="font-medium text-destructive">
+                      There is NO way to recover your account or data after deletion.
+                    </p>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel, Keep My Account</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      'Yes, Delete Everything'
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </details>
       </div>
     </div>
   );
