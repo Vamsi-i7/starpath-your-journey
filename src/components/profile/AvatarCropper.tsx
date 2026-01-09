@@ -96,7 +96,9 @@ export function AvatarCropper({ imageSrc, open, onClose, onCropComplete }: Avata
       const croppedBlob = await createCroppedImage(imageSrc, croppedAreaPixels);
       onCropComplete(croppedBlob);
     } catch (error) {
-      console.error('Error cropping image:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error cropping image:', error);
+      }
     } finally {
       setIsProcessing(false);
     }

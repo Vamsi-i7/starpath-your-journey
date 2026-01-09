@@ -27,7 +27,9 @@ export function useAICoach() {
       if (error) throw error;
       return data.content;
     } catch (error: any) {
-      console.error('AI error:', error);
+      if (import.meta.env.DEV) {
+        console.error('AI error:', error);
+      }
       toast({
         title: "AI Error",
         description: error.message || "Failed to get suggestions",
@@ -49,7 +51,9 @@ export function useAICoach() {
       if (error) throw error;
       return data.content;
     } catch (error: any) {
-      console.error('AI error:', error);
+      if (import.meta.env.DEV) {
+        console.error('AI error:', error);
+      }
       toast({
         title: "AI Error",
         description: error.message || "Failed to get affirmation",
@@ -119,7 +123,9 @@ export function useAICoach() {
 
       onDone();
     } catch (error: any) {
-      console.error('Chat error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Chat error:', error);
+      }
       toast({
         title: "Chat Error",
         description: error.message || "Failed to get response",

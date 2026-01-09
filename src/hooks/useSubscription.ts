@@ -35,7 +35,9 @@ export function useSubscription() {
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching subscription:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error fetching subscription:', error);
+      }
     }
 
     setSubscription(data as Subscription | null);

@@ -126,7 +126,9 @@ export const useChat = (selectedFriendId: string | null) => {
         },
         (payload) => {
           const newMessage = payload.new as Message;
-          console.log('New message received:', newMessage);
+          if (import.meta.env.DEV) {
+            console.log('New message received:', newMessage);
+          }
 
           // Check if message is relevant to current user
           if (newMessage.sender_id === user.id || newMessage.receiver_id === user.id) {
@@ -159,7 +161,9 @@ export const useChat = (selectedFriendId: string | null) => {
     const channel = supabase.channel(channelName)
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
-        console.log('Presence sync:', state);
+        if (import.meta.env.DEV) {
+          console.log('Presence sync:', state);
+        }
         
         // Check if friend is typing
         let friendTyping = false;
@@ -173,10 +177,14 @@ export const useChat = (selectedFriendId: string | null) => {
         setFriendIsTyping(friendTyping);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        console.log('Presence join:', key, newPresences);
+        if (import.meta.env.DEV) {
+          console.log('Presence join:', key, newPresences);
+        }
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        console.log('Presence leave:', key, leftPresences);
+        if (import.meta.env.DEV) {
+          console.log('Presence leave:', key, leftPresences);
+        }
         // Check if the leaving user was the friend who was typing
         leftPresences.forEach((presence: any) => {
           if (presence.user_id === selectedFriendId) {
@@ -186,7 +194,9 @@ export const useChat = (selectedFriendId: string | null) => {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Presence channel subscribed');
+          if (import.meta.env.DEV) {
+            console.log('Presence channel subscribed');
+          }
         }
       });
 

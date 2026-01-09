@@ -48,7 +48,9 @@ export function useTimeBasedXP() {
           }
         }
       } catch (error) {
-        console.error('Error awarding time-based XP:', error);
+        if (import.meta.env.DEV) {
+          console.error('Error awarding time-based XP:', error);
+        }
       }
     };
 

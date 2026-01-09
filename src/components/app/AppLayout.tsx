@@ -5,15 +5,16 @@ import { Menu, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { SessionTimerProvider } from '@/contexts/SessionTimerContext';
+import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 
-export function AppLayout() {
+function AppLayoutContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isCollapsed } = useSidebar();
   const { pullDistance, isRefreshing, handlers } = usePullToRefresh();
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <SessionTimerProvider>
     <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
       {/* Mobile menu button - fixed at top */}
       <button
@@ -38,12 +39,13 @@ export function AppLayout() {
         onMobileClose={closeMobileMenu}
       />
 
-      {/* Main content */}
+      {/* Main content - responsive to sidebar state */}
       <main 
         {...handlers}
         className={cn(
           "flex-1 transition-all duration-300 overflow-x-hidden",
-          "lg:ml-64" // Only add margin on desktop
+          // Adjust margin based on sidebar state (desktop only)
+          isCollapsed ? "lg:ml-20" : "lg:ml-64"
         )}
         style={{
           transform: pullDistance > 0 ? `translateY(${pullDistance}px)` : undefined,
@@ -78,6 +80,15 @@ export function AppLayout() {
         <Outlet />
       </main>
     </div>
+  );
+}
+
+export function AppLayout() {
+  return (
+    <SessionTimerProvider>
+      <SidebarProvider>
+        <AppLayoutContent />
+      </SidebarProvider>
     </SessionTimerProvider>
   );
 }

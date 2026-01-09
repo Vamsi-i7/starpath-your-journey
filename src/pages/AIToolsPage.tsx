@@ -96,7 +96,9 @@ const AIToolsPage = () => {
             setFlashcards(parsed);
             setFlippedCards(new Set());
           } catch {
-            console.error('Failed to parse flashcards');
+            if (import.meta.env.DEV) {
+              console.error('Failed to parse flashcards');
+            }
           }
         }
       }

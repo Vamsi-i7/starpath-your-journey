@@ -40,7 +40,9 @@ export function FileUploadZone({ onFileContent, isProcessing, accept = ".pdf,.pn
       onFileContent(JSON.stringify({ base64, mimeType, fileName: file.name }), file.name);
     } catch (err) {
       setError('Failed to process file. Please try again.');
-      console.error('File processing error:', err);
+      if (import.meta.env.DEV) {
+        console.error('File processing error:', err);
+      }
     } finally {
       setExtracting(false);
     }

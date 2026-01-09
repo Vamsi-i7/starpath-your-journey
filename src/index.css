@@ -237,6 +237,19 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+  
+  /* Performance optimizations */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* GPU acceleration for transforms */
+  [class*="transition"],
+  [class*="animate"] {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
@@ -286,3 +299,4 @@
     }
   }
 }
+@import "./lib/animations.css";

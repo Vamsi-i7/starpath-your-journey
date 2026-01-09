@@ -407,9 +407,9 @@ const ProfilePage = () => {
         />
       )}
 
-      <div className="min-h-screen">
+      <div className="min-h-screen pb-20">
       <AppTopbar title="Profile" />
-      <div className="p-6 max-w-2xl space-y-6">
+      <div className="p-6 max-w-4xl mx-auto space-y-6">
         {/* User ID Card */}
         <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
           <div className="flex items-center gap-4 mb-4">

@@ -19,10 +19,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import clawzerLogo from '@/assets/clawzer-logo.png';
 import { usePendingFriendRequests } from '@/hooks/usePendingFriendRequests';
+import { useSidebar } from '@/contexts/SidebarContext';
 
 interface AppSidebarProps {
   isMobileOpen?: boolean;
@@ -43,7 +43,7 @@ const navItems = [
 ];
 
 export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, toggleCollapse } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
@@ -206,7 +206,7 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
 
       {/* Desktop collapse button - hidden on mobile */}
       <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={toggleCollapse}
         className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-card border border-border items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
       >
         {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}

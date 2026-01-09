@@ -45,7 +45,9 @@ export function useAIGenerate() {
 
       return data.result;
     } catch (error: any) {
-      console.error('AI generation error:', error);
+      if (import.meta.env.DEV) {
+        console.error('AI generation error:', error);
+      }
       toast({
         title: 'Generation failed',
         description: error.message || 'Could not generate content.',

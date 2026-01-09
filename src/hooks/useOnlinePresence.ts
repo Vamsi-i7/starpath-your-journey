@@ -34,14 +34,20 @@ export const useOnlinePresence = () => {
         });
         
         setOnlineUsers(online);
-        console.log('Online users:', Array.from(online));
+        if (import.meta.env.DEV) {
+          console.log('Online users:', Array.from(online));
+        }
       })
       .on('presence', { event: 'join' }, ({ key }) => {
-        console.log('User came online:', key);
+        if (import.meta.env.DEV) {
+          console.log('User came online:', key);
+        }
         setOnlineUsers(prev => new Set([...prev, key]));
       })
       .on('presence', { event: 'leave' }, ({ key }) => {
-        console.log('User went offline:', key);
+        if (import.meta.env.DEV) {
+          console.log('User went offline:', key);
+        }
         setOnlineUsers(prev => {
           const next = new Set(prev);
           next.delete(key);

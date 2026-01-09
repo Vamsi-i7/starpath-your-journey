@@ -40,7 +40,9 @@ export const useNotificationSound = () => {
       oscillator.start(ctx.currentTime);
       oscillator.stop(ctx.currentTime + 0.3);
     } catch (error) {
-      console.log('Could not play notification sound:', error);
+      if (import.meta.env.DEV) {
+        console.log('Could not play notification sound:', error);
+      }
     }
   }, []);
 

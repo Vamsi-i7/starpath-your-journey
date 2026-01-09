@@ -1,6 +1,12 @@
-import { Zap, Star, TrendingUp } from 'lucide-react';
+import { Zap, Star, TrendingUp, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export function GamificationPanel() {
   const { profile } = useAuth();
@@ -17,8 +23,34 @@ export function GamificationPanel() {
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-level/10 flex items-center justify-center flex-shrink-0">
             <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-level" />
           </div>
-          <div className="min-w-0">
-            <p className="text-xs sm:text-sm text-muted-foreground">Experience Points</p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">Experience Points</p>
+              <TooltipProvider>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <button className="hover:text-primary transition-colors">
+                      <HelpCircle className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground hover:text-primary" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs p-4" side="right">
+                    <div className="space-y-2">
+                      <p className="font-semibold text-sm">How XP & Leveling Works</p>
+                      <div className="space-y-1.5 text-xs text-muted-foreground">
+                        <p>🎯 <span className="text-foreground font-medium">Complete habits:</span> +50 XP each</p>
+                        <p>⏱️ <span className="text-foreground font-medium">Active time:</span> +1 XP per minute</p>
+                        <p>🏆 <span className="text-foreground font-medium">Achievements:</span> Bonus XP</p>
+                        <p>🔥 <span className="text-foreground font-medium">Streaks:</span> Multiplier bonuses</p>
+                        <div className="pt-2 mt-2 border-t border-border">
+                          <p className="text-foreground">📊 <span className="font-medium">500 XP</span> needed per level</p>
+                          <p className="text-muted-foreground mt-1">Higher levels unlock exclusive features!</p>
+                        </div>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <p className="text-xl sm:text-2xl font-bold text-foreground">{profile.xp} XP</p>
           </div>
         </div>

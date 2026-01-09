@@ -45,7 +45,9 @@ export const useFriends = () => {
           table: 'friendships',
         },
         (payload) => {
-          console.log('Friendships realtime update:', payload);
+          if (import.meta.env.DEV) {
+            console.log('Friendships realtime update:', payload);
+          }
           
           // Check if this change involves the current user
           const newRecord = payload.new as Friendship | null;
@@ -196,7 +198,9 @@ export const useFriends = () => {
         .rpc('search_user_by_code', { search_code: cleanCode });
 
       if (error) {
-        console.error('Search error:', error);
+        if (import.meta.env.DEV) {
+          console.error('Search error:', error);
+        }
         setSearchError('Error searching for user. Please try again.');
         setSearchResult(null);
       } else if (!data || data.length === 0) {
@@ -228,7 +232,9 @@ export const useFriends = () => {
         }
       }
     } catch (err) {
-      console.error('Search error:', err);
+      if (import.meta.env.DEV) {
+        console.error('Search error:', err);
+      }
       setSearchError('Error searching for user. Please try again.');
     } finally {
       setIsSearching(false);

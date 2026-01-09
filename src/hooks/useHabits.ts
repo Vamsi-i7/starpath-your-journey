@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logError } from '@/lib/errorLogger';
 import { getDisplayErrorMessage } from '@/lib/errorMessages';
+import { triggerStarConfetti, triggerCelebrationBurst } from '@/lib/confetti';
 
 export interface Habit {
   id: string;
@@ -322,6 +323,9 @@ export function useHabits() {
       // Update longest streak if this is a new record
       const newLongestStreak = Math.max(profile.longest_streak, newStreak);
 
+      // Check if this is the user's first habit completion
+      const isFirstCompletion = profile.total_habits_completed === 0;
+
       await updateProfile({ 
         xp: newXp, 
         level: newLevel,
@@ -330,10 +334,27 @@ export function useHabits() {
         longest_streak: newLongestStreak,
       });
 
-      toast({
-        title: '🎉 Habit completed!',
-        description: `+${habit.xp_reward} XP earned`,
-      });
+      // Trigger confetti celebration for first habit completion
+      if (isFirstCompletion) {
+        triggerStarConfetti();
+        toast({
+          title: '🌟 Congratulations!',
+          description: 'You completed your first habit! Your journey to better habits begins now.',
+          duration: 5000,
+        });
+      } else if (newLevel > profile.level) {
+        // Level up celebration
+        triggerCelebrationBurst();
+        toast({
+          title: `🚀 Level Up! You're now Level ${newLevel}`,
+          description: `+${habit.xp_reward} XP earned`,
+        });
+      } else {
+        toast({
+          title: '🎉 Habit completed!',
+          description: `+${habit.xp_reward} XP earned`,
+        });
+      }
     }
 
     fetchHabits();

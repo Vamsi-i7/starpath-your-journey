@@ -285,7 +285,9 @@ const SettingsPage = () => {
       // Redirect to home page
       window.location.href = '/';
     } catch (error: any) {
-      console.error('Delete account error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Delete account error:', error);
+      }
       toast({
         title: 'Error',
         description: error.message || 'Failed to delete account. Please contact support.',
@@ -297,9 +299,9 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <AppTopbar title="Settings" />
-      <div className="p-6 max-w-2xl space-y-6">
+      <div className="p-6 max-w-4xl mx-auto space-y-6">
         <div className="p-6 rounded-2xl bg-card border border-border/30">
           <h3 className="font-semibold text-foreground mb-4">Profile</h3>
           <div className="space-y-4">
