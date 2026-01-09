@@ -245,30 +245,50 @@ const SettingsPage = () => {
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
-      // Delete user's profile data first
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', profile?.id);
-
-      if (profileError) {
-        console.error('Error deleting profile:', profileError);
+      // Call edge function to delete all user data and auth
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to delete your account.',
+          variant: 'destructive',
+        });
+        return;
       }
 
-      // Sign out the user
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete account');
+      }
+
+      // Sign out locally
       await signOut();
       
       toast({
         title: 'Account deleted',
-        description: 'Your account has been deleted. You will be redirected.',
+        description: 'Your account and all data have been permanently deleted.',
       });
       
       // Redirect to home page
       window.location.href = '/';
     } catch (error: any) {
+      console.error('Delete account error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete account. Please contact support.',
+        description: error.message || 'Failed to delete account. Please contact support.',
         variant: 'destructive',
       });
     } finally {
