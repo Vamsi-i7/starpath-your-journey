@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, Sparkles, Play, Pause, RotateCcw, Settings, Timer, Coffee, Save } from 'lucide-react';
+import { Clock, Sparkles, Play, Pause, RotateCcw, Settings, Timer, Coffee, Save, Sofa } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,8 @@ export function SessionTimer() {
     pomodoroPhase,
     workDuration,
     breakDuration,
+    longBreakDuration,
+    cyclesBeforeLongBreak,
     pomodoroCount,
     start,
     stop,
@@ -31,6 +33,8 @@ export function SessionTimer() {
     setMode,
     setWorkDuration,
     setBreakDuration,
+    setLongBreakDuration,
+    setCyclesBeforeLongBreak,
     saveSession,
     formatPomodoroTime,
   } = useSessionTimer();
@@ -39,6 +43,8 @@ export function SessionTimer() {
   const [customSeconds, setCustomSeconds] = useState('');
   const [customWorkDuration, setCustomWorkDuration] = useState(workDuration.toString());
   const [customBreakDuration, setCustomBreakDuration] = useState(breakDuration.toString());
+  const [customLongBreakDuration, setCustomLongBreakDuration] = useState(longBreakDuration.toString());
+  const [customCycles, setCustomCycles] = useState(cyclesBeforeLongBreak.toString());
 
   const handleSetTime = () => {
     const mins = parseInt(customMinutes) || 0;
@@ -61,8 +67,12 @@ export function SessionTimer() {
   const handleUpdatePomodoro = () => {
     const work = parseInt(customWorkDuration) || 25;
     const brk = parseInt(customBreakDuration) || 5;
+    const longBrk = parseInt(customLongBreakDuration) || 15;
+    const cycles = parseInt(customCycles) || 4;
     setWorkDuration(work);
     setBreakDuration(brk);
+    setLongBreakDuration(longBrk);
+    setCyclesBeforeLongBreak(cycles);
     toast.success('Pomodoro settings updated');
   };
 
@@ -92,6 +102,11 @@ export function SessionTimer() {
                     <Timer className="w-3 h-3" />
                     Work
                   </>
+                ) : pomodoroPhase === 'long_break' ? (
+                  <>
+                    <Sofa className="w-3 h-3" />
+                    Long Break
+                  </>
                 ) : (
                   <>
                     <Coffee className="w-3 h-3" />
@@ -107,8 +122,16 @@ export function SessionTimer() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full ${mode === 'pomodoro' && pomodoroPhase === 'break' ? 'bg-secondary/20' : 'bg-primary/20'}`}>
-                  {mode === 'pomodoro' && pomodoroPhase === 'break' ? (
+                <div className={`p-2 rounded-full ${
+                  mode === 'pomodoro' && pomodoroPhase === 'long_break' 
+                    ? 'bg-accent/20' 
+                    : mode === 'pomodoro' && pomodoroPhase === 'break' 
+                      ? 'bg-secondary/20' 
+                      : 'bg-primary/20'
+                }`}>
+                  {mode === 'pomodoro' && pomodoroPhase === 'long_break' ? (
+                    <Sofa className="w-4 h-4 text-accent" />
+                  ) : mode === 'pomodoro' && pomodoroPhase === 'break' ? (
                     <Coffee className="w-4 h-4 text-secondary-foreground" />
                   ) : (
                     <Clock className="w-4 h-4 text-primary" />
@@ -240,6 +263,28 @@ export function SessionTimer() {
                               max="60"
                               value={customBreakDuration}
                               onChange={(e) => setCustomBreakDuration(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-muted-foreground">Long Break (min)</label>
+                            <Input
+                              type="number"
+                              min="5"
+                              max="60"
+                              value={customLongBreakDuration}
+                              onChange={(e) => setCustomLongBreakDuration(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-muted-foreground">Cycles before long break</label>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={customCycles}
+                              onChange={(e) => setCustomCycles(e.target.value)}
                               className="mt-1"
                             />
                           </div>

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 type TimerMode = 'focus' | 'pomodoro';
-type PomodoroPhase = 'work' | 'break';
+type PomodoroPhase = 'work' | 'break' | 'long_break';
 
 interface SessionTimerContextType {
   sessionSeconds: number;
@@ -13,6 +13,8 @@ interface SessionTimerContextType {
   pomodoroPhase: PomodoroPhase;
   workDuration: number; // in minutes
   breakDuration: number; // in minutes
+  longBreakDuration: number; // in minutes
+  cyclesBeforeLongBreak: number;
   pomodoroTimeLeft: number; // in seconds
   pomodoroCount: number;
   start: () => void;
@@ -23,6 +25,8 @@ interface SessionTimerContextType {
   setMode: (mode: TimerMode) => void;
   setWorkDuration: (minutes: number) => void;
   setBreakDuration: (minutes: number) => void;
+  setLongBreakDuration: (minutes: number) => void;
+  setCyclesBeforeLongBreak: (cycles: number) => void;
   saveSession: () => Promise<void>;
   formatPomodoroTime: () => string;
 }
@@ -30,6 +34,8 @@ interface SessionTimerContextType {
 const XP_PER_MINUTE = 2;
 const DEFAULT_WORK_DURATION = 25;
 const DEFAULT_BREAK_DURATION = 5;
+const DEFAULT_LONG_BREAK_DURATION = 15;
+const DEFAULT_CYCLES_BEFORE_LONG_BREAK = 4;
 
 const SessionTimerContext = createContext<SessionTimerContextType | undefined>(undefined);
 
@@ -41,6 +47,8 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
   const [pomodoroPhase, setPomodoroPhase] = useState<PomodoroPhase>('work');
   const [workDuration, setWorkDuration] = useState(DEFAULT_WORK_DURATION);
   const [breakDuration, setBreakDuration] = useState(DEFAULT_BREAK_DURATION);
+  const [longBreakDuration, setLongBreakDuration] = useState(DEFAULT_LONG_BREAK_DURATION);
+  const [cyclesBeforeLongBreak, setCyclesBeforeLongBreak] = useState(DEFAULT_CYCLES_BEFORE_LONG_BREAK);
   const [pomodoroTimeLeft, setPomodoroTimeLeft] = useState(DEFAULT_WORK_DURATION * 60);
   const [pomodoroCount, setPomodoroCount] = useState(0);
   const sessionStartRef = useRef<Date>(new Date());
@@ -69,11 +77,19 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
             if (user) {
               saveSessionToDb('pomodoro_work', workDuration * 60);
             }
-            setPomodoroPhase('break');
-            setPomodoroCount(c => c + 1);
-            return breakDuration * 60;
+            const newCount = pomodoroCount + 1;
+            setPomodoroCount(newCount);
+            
+            // Check if it's time for a long break
+            if (newCount > 0 && newCount % cyclesBeforeLongBreak === 0) {
+              setPomodoroPhase('long_break');
+              return longBreakDuration * 60;
+            } else {
+              setPomodoroPhase('break');
+              return breakDuration * 60;
+            }
           } else {
-            // Break complete, start new work session
+            // Break or long break complete, start new work session
             setPomodoroPhase('work');
             return workDuration * 60;
           }
@@ -85,7 +101,7 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isRunning, mode, pomodoroPhase, workDuration, breakDuration, user]);
+  }, [isRunning, mode, pomodoroPhase, workDuration, breakDuration, longBreakDuration, cyclesBeforeLongBreak, pomodoroCount, user]);
 
   const saveSessionToDb = async (sessionType: string, durationSeconds: number) => {
     if (!user) return;
@@ -160,6 +176,17 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
     }
   }, [pomodoroPhase]);
 
+  const handleSetLongBreakDuration = useCallback((minutes: number) => {
+    setLongBreakDuration(minutes);
+    if (pomodoroPhase === 'long_break') {
+      setPomodoroTimeLeft(minutes * 60);
+    }
+  }, [pomodoroPhase]);
+
+  const handleSetCyclesBeforeLongBreak = useCallback((cycles: number) => {
+    setCyclesBeforeLongBreak(cycles);
+  }, []);
+
   const saveSession = useCallback(async () => {
     if (!user || sessionSeconds < 60) return;
     
@@ -179,6 +206,8 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
         pomodoroPhase,
         workDuration,
         breakDuration,
+        longBreakDuration,
+        cyclesBeforeLongBreak,
         pomodoroTimeLeft,
         pomodoroCount,
         start,
@@ -189,6 +218,8 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
         setMode: handleSetMode,
         setWorkDuration: handleSetWorkDuration,
         setBreakDuration: handleSetBreakDuration,
+        setLongBreakDuration: handleSetLongBreakDuration,
+        setCyclesBeforeLongBreak: handleSetCyclesBeforeLongBreak,
         saveSession,
         formatPomodoroTime,
       }}
