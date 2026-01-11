@@ -11,6 +11,7 @@ import { AIAffirmationCard } from '@/components/dashboard/AIAffirmationCard';
 import { AIHabitSuggestionsCard } from '@/components/dashboard/AIHabitSuggestionsCard';
 import { SessionTimer } from '@/components/dashboard/SessionTimer';
 import { SessionHistoryCard } from '@/components/dashboard/SessionHistoryCard';
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary';
 import { useHabits } from '@/hooks/useHabits';
 import { useTimeBasedXP } from '@/hooks/useTimeBasedXP';
 import { Loader2 } from 'lucide-react';
@@ -48,7 +49,9 @@ const DashboardPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Daily Challenges */}
-              <DailyChallengesCard />
+              <SectionErrorBoundary compact fallbackMessage="Daily challenges unavailable">
+                <DailyChallengesCard />
+              </SectionErrorBoundary>
 
               {/* Today's Habits */}
               <div className="space-y-3 sm:space-y-4">
@@ -84,11 +87,21 @@ const DashboardPage = () => {
             </div>
 
             <div className="lg:col-span-1 space-y-4">
-              <SessionHistoryCard />
-              <AIAffirmationCard />
-              <GamificationPanel />
-              <AIHabitSuggestionsCard />
-              <RecentAchievementsCard />
+              <SectionErrorBoundary compact fallbackMessage="Session history unavailable">
+                <SessionHistoryCard />
+              </SectionErrorBoundary>
+              <SectionErrorBoundary compact fallbackMessage="AI insights unavailable">
+                <AIAffirmationCard />
+              </SectionErrorBoundary>
+              <SectionErrorBoundary compact fallbackMessage="Stats unavailable">
+                <GamificationPanel />
+              </SectionErrorBoundary>
+              <SectionErrorBoundary compact fallbackMessage="AI suggestions unavailable">
+                <AIHabitSuggestionsCard />
+              </SectionErrorBoundary>
+              <SectionErrorBoundary compact fallbackMessage="Achievements unavailable">
+                <RecentAchievementsCard />
+              </SectionErrorBoundary>
             </div>
           </div>
         </div>

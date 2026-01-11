@@ -41,6 +41,7 @@ import { MathSolver } from '@/components/ai-tools/MathSolver';
 import { MindMapCreator } from '@/components/ai-tools/MindMapCreator';
 import { SummaryGenerator } from '@/components/ai-tools/SummaryGenerator';
 import { LanguagePractice } from '@/components/ai-tools/LanguagePractice';
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary';
 import { toast } from 'sonner';
 
 type ToolType = 'notes' | 'flashcards' | 'roadmap' | 'quiz' | 'essay' | 'math' | 'mindmap' | 'summary' | 'language' | null;
@@ -613,57 +614,79 @@ export default function NewAIToolsPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {selectedTool === 'notes' && <NotesViewer content={notesResult} />}
-                    {selectedTool === 'flashcards' && !isStudyMode && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {flashcards.map((card, index) => (
-                          <FlipCard key={index} question={card.question} answer={card.answer} index={index} />
-                        ))}
-                      </div>
-                    )}
-                    {selectedTool === 'flashcards' && isStudyMode && (
-                      <FlashcardStudyMode flashcards={flashcards} onExit={() => setIsStudyMode(false)} />
-                    )}
-                    {selectedTool === 'roadmap' && (
-                      showRoadmapGraph ? (
-                        <RoadmapGraph content={roadmapResult} />
-                      ) : (
-                        <MarkdownRenderer content={roadmapResult} />
-                      )
-                    )}
-                    {selectedTool === 'quiz' && quizResult && (
-                      <QuizGenerator 
-                        questions={quizResult.questions || []} 
-                        topic={prompt}
-                        onRetake={() => {}}
-                        onNewQuiz={() => setQuizResult(null)}
-                      />
-                    )}
-                    {selectedTool === 'essay' && essayResult && (
-                      <EssayChecker feedback={essayResult} originalText={prompt} />
-                    )}
-                    {selectedTool === 'math' && mathResult && (
-                      <MathSolver solution={mathResult} />
-                    )}
-                    {selectedTool === 'mindmap' && mindmapResult && (
-                      <MindMapCreator content={mindmapResult} topic={prompt} />
-                    )}
-                    {selectedTool === 'summary' && summaryResult && (
-                      <SummaryGenerator result={summaryResult} originalText={prompt} />
-                    )}
+                    <SectionErrorBoundary 
+                      fallbackTitle="Failed to display results"
+                      fallbackMessage="There was an error displaying the AI-generated content. Try generating again."
+                      onRetry={() => {
+                        // Clear results to allow regeneration
+                        setNotesResult('');
+                        setFlashcards([]);
+                        setRoadmapResult('');
+                        setQuizResult(null);
+                        setEssayResult(null);
+                        setMathResult(null);
+                        setMindmapResult('');
+                        setSummaryResult(null);
+                      }}
+                    >
+                      {selectedTool === 'notes' && <NotesViewer content={notesResult} />}
+                      {selectedTool === 'flashcards' && !isStudyMode && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {flashcards.map((card, index) => (
+                            <FlipCard key={index} question={card.question} answer={card.answer} index={index} />
+                          ))}
+                        </div>
+                      )}
+                      {selectedTool === 'flashcards' && isStudyMode && (
+                        <FlashcardStudyMode flashcards={flashcards} onExit={() => setIsStudyMode(false)} />
+                      )}
+                      {selectedTool === 'roadmap' && (
+                        showRoadmapGraph ? (
+                          <RoadmapGraph content={roadmapResult} />
+                        ) : (
+                          <MarkdownRenderer content={roadmapResult} />
+                        )
+                      )}
+                      {selectedTool === 'quiz' && quizResult && (
+                        <QuizGenerator 
+                          questions={quizResult.questions || []} 
+                          topic={prompt}
+                          onRetake={() => {}}
+                          onNewQuiz={() => setQuizResult(null)}
+                        />
+                      )}
+                      {selectedTool === 'essay' && essayResult && (
+                        <EssayChecker feedback={essayResult} originalText={prompt} />
+                      )}
+                      {selectedTool === 'math' && mathResult && (
+                        <MathSolver solution={mathResult} />
+                      )}
+                      {selectedTool === 'mindmap' && mindmapResult && (
+                        <MindMapCreator content={mindmapResult} topic={prompt} />
+                      )}
+                      {selectedTool === 'summary' && summaryResult && (
+                        <SummaryGenerator result={summaryResult} originalText={prompt} />
+                      )}
+                    </SectionErrorBoundary>
                   </CardContent>
                 </Card>
               )}
 
               {/* Language Practice - Special handling with chat interface */}
               {selectedTool === 'language' && (
-                <LanguagePractice
-                  messages={languageMessages}
-                  onSendMessage={handleLanguageSend}
-                  isLoading={isGenerating}
-                  selectedLanguage={selectedLanguage}
-                  onLanguageChange={setSelectedLanguage}
-                />
+                <SectionErrorBoundary
+                  fallbackTitle="Language Practice Error"
+                  fallbackMessage="There was an error with the language practice feature."
+                  onRetry={() => setLanguageMessages([])}
+                >
+                  <LanguagePractice
+                    messages={languageMessages}
+                    onSendMessage={handleLanguageSend}
+                    isLoading={isGenerating}
+                    selectedLanguage={selectedLanguage}
+                    onLanguageChange={setSelectedLanguage}
+                  />
+                </SectionErrorBoundary>
               )}
             </div>
           )}

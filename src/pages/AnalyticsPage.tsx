@@ -6,6 +6,7 @@ import { WeekView } from '@/components/analytics/WeekView';
 import { MonthView } from '@/components/analytics/MonthView';
 import { YearView } from '@/components/analytics/YearView';
 import { AnalyticsGuide } from '@/components/analytics/AnalyticsGuide';
+import { SectionErrorBoundary } from '@/components/ui/section-error-boundary';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { useHabits } from '@/hooks/useHabits';
 import { Loader2 } from 'lucide-react';
@@ -203,38 +204,46 @@ const AnalyticsPage = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           todayView={
-            <TodayView data={todayData} />
+            <SectionErrorBoundary fallbackMessage="Unable to load today's analytics">
+              <TodayView data={todayData} />
+            </SectionErrorBoundary>
           }
           weekView={
-            <WeekView
-              dailyData={weekViewData.dailyData}
-              comparison={weekViewData.comparison}
-              insights={weekViewData.insights}
-              loading={loading}
-            />
+            <SectionErrorBoundary fallbackMessage="Unable to load weekly analytics">
+              <WeekView
+                dailyData={weekViewData.dailyData}
+                comparison={weekViewData.comparison}
+                insights={weekViewData.insights}
+                loading={loading}
+              />
+            </SectionErrorBoundary>
           }
           monthView={
-            <MonthView
-              currentMonth={currentMonth}
-              onMonthChange={setCurrentMonth}
-              dailyData={monthViewData.dailyData}
-              weeklyData={monthViewData.weeklyData}
-              comparison={monthViewData.comparison}
-              insights={monthViewData.insights}
-              loading={loading}
-            />
+            <SectionErrorBoundary fallbackMessage="Unable to load monthly analytics">
+              <MonthView
+                currentMonth={currentMonth}
+                onMonthChange={setCurrentMonth}
+                dailyData={monthViewData.dailyData}
+                weeklyData={monthViewData.weeklyData}
+                comparison={monthViewData.comparison}
+                insights={monthViewData.insights}
+                loading={loading}
+              />
+            </SectionErrorBoundary>
           }
           yearView={
-            <YearView
-              currentYear={currentYear}
-              onYearChange={setCurrentYear}
-              monthlyData={yearViewData.monthlyData}
-              quarterlyData={yearViewData.quarterlyData}
-              comparison={yearViewData.comparison}
-              insights={yearViewData.insights}
-              loading={loading}
-              onMonthDrillDown={handleMonthDrillDown}
-            />
+            <SectionErrorBoundary fallbackMessage="Unable to load yearly analytics">
+              <YearView
+                currentYear={currentYear}
+                onYearChange={setCurrentYear}
+                monthlyData={yearViewData.monthlyData}
+                quarterlyData={yearViewData.quarterlyData}
+                comparison={yearViewData.comparison}
+                insights={yearViewData.insights}
+                loading={loading}
+                onMonthDrillDown={handleMonthDrillDown}
+              />
+            </SectionErrorBoundary>
           }
         />
       </div>
