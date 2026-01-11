@@ -1,12 +1,16 @@
 interface CharacterCountProps {
-  current: number;
+  current: number | string;
   max?: number;
   showWords?: boolean;
 }
 
 export function CharacterCount({ current, max, showWords = true }: CharacterCountProps) {
-  const words = current > 0 ? current.split(/\s+/).filter(word => word.length > 0).length : 0;
-  const percentage = max ? (current / max) * 100 : 0;
+  // Ensure current is treated as a string for word counting, and as number for character count
+  const currentStr = typeof current === 'string' ? current : '';
+  const currentLength = typeof current === 'number' ? current : current.length;
+  
+  const words = currentStr.length > 0 ? currentStr.split(/\s+/).filter(word => word.length > 0).length : 0;
+  const percentage = max ? (currentLength / max) * 100 : 0;
   const isNearLimit = percentage > 80;
   const isAtLimit = percentage >= 100;
 
@@ -18,7 +22,7 @@ export function CharacterCount({ current, max, showWords = true }: CharacterCoun
         </span>
       )}
       <span className={isAtLimit ? 'text-destructive' : isNearLimit ? 'text-orange-500' : ''}>
-        {current}
+        {currentLength}
         {max && ` / ${max}`} characters
       </span>
       {max && (

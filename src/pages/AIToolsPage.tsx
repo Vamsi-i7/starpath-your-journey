@@ -494,7 +494,7 @@ export default function NewAIToolsPage() {
                       maxLength={5000}
                       className="resize-none"
                     />
-                    <CharacterCount current={prompt.length} max={5000} />
+                    <CharacterCount current={prompt} max={5000} />
                   </div>
 
                   {/* File Upload - Supports images and PDFs for multimodal AI */}
