@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/safeClient';
 import { getRedirectUrl } from '@/lib/supabaseAuthConfig';
 
 const LoginPage = () => {
+  const location = useLocation();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +23,14 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn } = useAuth();
+
+  // Pre-fill email if coming from AuthEntryPage
+  useEffect(() => {
+    const state = location.state as { email?: string; userInfo?: any };
+    if (state?.email) {
+      setIdentifier(state.email);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +66,8 @@ const LoginPage = () => {
       // Check if user doesn't exist (might have mistyped email)
       if (errorMsg.includes('invalid login credentials')) {
         toast({
-          title: 'Login failed',
-          description: 'Invalid email or password. Please check your credentials or sign up if you don\'t have an account.',
+          title: 'Incorrect password',
+          description: 'Please check your password and try again.',
           variant: 'destructive',
         });
         setIsLoading(false);
@@ -270,8 +279,8 @@ const LoginPage = () => {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <Link to="/signup" className="text-primary hover:underline font-medium">
-              Sign up
+            <Link to="/auth" className="text-primary hover:underline font-medium">
+              Get started
             </Link>
           </p>
         </div>

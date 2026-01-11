@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,8 @@ import { logError } from '@/lib/errorLogger';
 import { getDisplayErrorMessage } from '@/lib/errorMessages';
 
 const SignupPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +23,14 @@ const SignupPage = () => {
   const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
   const { signUp } = useAuth();
+
+  // Pre-fill email if coming from AuthEntryPage
+  useEffect(() => {
+    const state = location.state as { email?: string };
+    if (state?.email) {
+      setEmail(state.email);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react";
 
 // Lazy load pages for code splitting
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const AuthEntryPage = lazy(() => import("./pages/AuthEntryPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SignupPage = lazy(() => import("./pages/SignupPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
@@ -50,6 +51,10 @@ const router = createBrowserRouter(
     {
       path: "/",
       element: <Suspense fallback={<PageLoader />}><LandingPage /></Suspense>,
+    },
+    {
+      path: "/auth",
+      element: <Suspense fallback={<PageLoader />}><AuthEntryPage /></Suspense>,
     },
     {
       path: "/login",
