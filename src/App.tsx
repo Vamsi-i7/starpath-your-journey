@@ -35,6 +35,9 @@ const AIToolsPage = lazy(() => import("./pages/AIToolsPage"));
 const SubscriptionPage = lazy(() => import("./pages/SubscriptionPage"));
 const LibraryPage = lazy(() => import("./pages/LibraryPage"));
 const AIMentorPage = lazy(() => import("./pages/AIMentorPage"));
+const ContactUsPage = lazy(() => import("./pages/ContactUsPage"));
+const ShippingPolicyPage = lazy(() => import("./pages/ShippingPolicyPage"));
+const CancellationRefundPage = lazy(() => import("./pages/CancellationRefundPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -85,6 +88,18 @@ const router = createBrowserRouter(
       element: <Suspense fallback={<PageLoader />}><TermsOfServicePage /></Suspense>,
     },
     {
+      path: "/contact",
+      element: <Suspense fallback={<PageLoader />}><ContactUsPage /></Suspense>,
+    },
+    {
+      path: "/shipping-policy",
+      element: <Suspense fallback={<PageLoader />}><ShippingPolicyPage /></Suspense>,
+    },
+    {
+      path: "/cancellation-refund",
+      element: <Suspense fallback={<PageLoader />}><CancellationRefundPage /></Suspense>,
+    },
+    {
       path: "/app",
       element: (
         <ProtectedRoute>
@@ -106,6 +121,9 @@ const router = createBrowserRouter(
         { path: "ai-mentor", element: <Suspense fallback={<PageLoader />}><AIMentorPage /></Suspense> },
         { path: "library", element: <Suspense fallback={<PageLoader />}><LibraryPage /></Suspense> },
         { path: "subscription", element: <Suspense fallback={<PageLoader />}><SubscriptionPage /></Suspense> },
+        { path: "contact", element: <Suspense fallback={<PageLoader />}><ContactUsPage /></Suspense> },
+        { path: "shipping-policy", element: <Suspense fallback={<PageLoader />}><ShippingPolicyPage /></Suspense> },
+        { path: "cancellation-refund", element: <Suspense fallback={<PageLoader />}><CancellationRefundPage /></Suspense> },
       ],
     },
     {
