@@ -8,7 +8,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 
 interface CreditDisplayProps {
   showDetails?: boolean;
-  toolType?: 'notes' | 'flashcards' | 'roadmap' | 'mentor';
+  toolType?: 'notes' | 'flashcards' | 'roadmap' | 'mentor' | 'quiz' | 'essay' | 'math' | 'mindmap' | 'summary' | 'language';
 }
 
 export function CreditDisplay({ showDetails = true, toolType }: CreditDisplayProps) {

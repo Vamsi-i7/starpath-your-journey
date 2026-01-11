@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRateLimiter } from './useRateLimiter';
 import { useErrorRecovery } from './useErrorRecovery';
 
-type GenerationType = 'notes' | 'flashcards' | 'roadmap' | 'mentor' | 'habit_suggestion' | 'affirmation' | 'coach' | 'notes_from_file' | 'flashcards_from_file' | 'roadmap_from_file';
+type GenerationType = 'notes' | 'flashcards' | 'roadmap' | 'mentor' | 'habit_suggestion' | 'affirmation' | 'coach' | 'notes_from_file' | 'flashcards_from_file' | 'roadmap_from_file' | 'quiz' | 'essay' | 'math' | 'mindmap' | 'summary' | 'language';
 
 export function useAIGenerate() {
   const { user } = useAuth();

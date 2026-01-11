@@ -114,6 +114,163 @@ Format the response in markdown with clear sections.`;
       case "coach":
         systemPrompt = `You are an AI life coach focused on productivity and habit formation. Provide motivation, tips, and guidance based on the user's progress. Be supportive, practical, and encouraging.`;
         break;
+
+      case "quiz":
+        systemPrompt = `You are an expert quiz creator for students. Generate a quiz with 10 multiple choice questions about the topic: ${prompt}
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "questions": [
+    {
+      "question": "Question text here?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": 0,
+      "explanation": "Brief explanation of why this is correct"
+    }
+  ]
+}
+
+Make questions progressively harder. Ensure correctAnswer is the index (0-3) of the correct option.`;
+        break;
+
+      case "essay":
+        systemPrompt = `You are an expert essay analyzer and writing coach. Analyze the following essay and provide detailed feedback.
+
+Essay to analyze:
+${prompt}
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "overallScore": 85,
+  "grammar": {
+    "score": 90,
+    "issues": [
+      {
+        "line": 1,
+        "text": "problematic text",
+        "suggestion": "corrected text",
+        "type": "grammar"
+      }
+    ]
+  },
+  "structure": {
+    "score": 80,
+    "feedback": "Detailed feedback on essay structure"
+  },
+  "clarity": {
+    "score": 85,
+    "feedback": "Feedback on clarity and coherence"
+  },
+  "tone": "Academic",
+  "suggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"],
+  "strengths": ["Strength 1", "Strength 2"],
+  "wordCount": 500,
+  "sentenceCount": 25,
+  "paragraphCount": 5
+}
+
+Be constructive and helpful. Issue types can be: grammar, spelling, punctuation, style.`;
+        break;
+
+      case "math":
+        systemPrompt = `You are an expert math tutor. Solve this math problem step by step: ${prompt}
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "problem": "${prompt}",
+  "steps": [
+    {
+      "step": 1,
+      "description": "What we're doing in this step",
+      "equation": "The mathematical expression",
+      "explanation": "Why we're doing this"
+    }
+  ],
+  "finalAnswer": "x = 5",
+  "verification": "Verification showing the answer is correct"
+}
+
+Show all steps clearly. Include verification by substituting the answer back.`;
+        break;
+
+      case "mindmap":
+        systemPrompt = `You are an expert mind map creator. Create a hierarchical mind map for the topic: ${prompt}
+
+Return the mind map in markdown format using headers and bullet points:
+# Central Topic
+
+## Main Branch 1
+- Sub-point 1.1
+- Sub-point 1.2
+  - Detail 1.2.1
+
+## Main Branch 2
+- Sub-point 2.1
+- Sub-point 2.2
+
+Create 4-6 main branches with 2-4 sub-points each. Make it comprehensive but organized.`;
+        break;
+
+      case "summary":
+        systemPrompt = `You are an expert text summarizer. Summarize the following text:
+
+${prompt}
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "summary": {
+    "short": "1-2 sentence summary",
+    "medium": "One paragraph summary with key details",
+    "long": "Detailed multi-paragraph summary"
+  },
+  "keyPoints": [
+    "Key point 1",
+    "Key point 2",
+    "Key point 3",
+    "Key point 4",
+    "Key point 5"
+  ],
+  "originalWordCount": 1500,
+  "summaryWordCount": {
+    "short": 30,
+    "medium": 100,
+    "long": 250
+  }
+}
+
+Calculate actual word counts. Extract 5-7 key points.`;
+        break;
+
+      case "language":
+        const targetLanguage = context || "Spanish";
+        systemPrompt = `You are a friendly ${targetLanguage} language practice partner. The user wants to practice ${targetLanguage}.
+
+User message: ${prompt}
+
+Respond naturally in ${targetLanguage}, then provide helpful feedback.
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "aiResponse": "Your response in ${targetLanguage}",
+  "corrections": [
+    {
+      "userText": "What user wrote (if any errors)",
+      "corrected": "Corrected version",
+      "feedback": "Explanation of the correction",
+      "alternativePhrases": ["Alternative 1", "Alternative 2"]
+    }
+  ],
+  "vocabulary": [
+    {
+      "word": "New word from your response",
+      "meaning": "English meaning",
+      "example": "Example sentence"
+    }
+  ]
+}
+
+If user wrote correctly, set corrections to empty array. Always include 1-3 vocabulary words from your response.`;
+        break;
         
       default:
         throw new Error("Invalid generation type");

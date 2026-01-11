@@ -28,6 +28,12 @@ const TOOL_COSTS: Record<string, number> = {
   flashcards: 10,
   roadmap: 15,
   mentor: 3,
+  quiz: 10,
+  essay: 15,
+  math: 5,
+  mindmap: 10,
+  summary: 5,
+  language: 5,
 };
 
 export function useCredits() {

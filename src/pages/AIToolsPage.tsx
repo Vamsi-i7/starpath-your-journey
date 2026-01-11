@@ -13,7 +13,12 @@ import {
   Upload,
   Loader2,
   ChevronLeft,
-  Wand2
+  Wand2,
+  Brain,
+  FileCheck,
+  Calculator,
+  Network,
+  MessageCircle
 } from 'lucide-react';
 import { useAIGenerate } from '@/hooks/useAIGenerate';
 import { useCredits } from '@/hooks/useCredits';
@@ -30,9 +35,15 @@ import { CharacterCount } from '@/components/ai-tools/CharacterCount';
 import { LoadingProgress } from '@/components/ai-tools/LoadingProgress';
 import { FileUploadZone } from '@/components/ai-tools/FileUploadZone';
 import { AIUsageTerms, AILimitationsBanner, useAITermsAcceptance } from '@/components/ai-tools/AIUsageTerms';
+import { QuizGenerator } from '@/components/ai-tools/QuizGenerator';
+import { EssayChecker } from '@/components/ai-tools/EssayChecker';
+import { MathSolver } from '@/components/ai-tools/MathSolver';
+import { MindMapCreator } from '@/components/ai-tools/MindMapCreator';
+import { SummaryGenerator } from '@/components/ai-tools/SummaryGenerator';
+import { LanguagePractice } from '@/components/ai-tools/LanguagePractice';
 import { toast } from 'sonner';
 
-type ToolType = 'notes' | 'flashcards' | 'roadmap' | null;
+type ToolType = 'notes' | 'flashcards' | 'roadmap' | 'quiz' | 'essay' | 'math' | 'mindmap' | 'summary' | 'language' | null;
 
 const TOOLS = [
   {
@@ -65,6 +76,66 @@ const TOOLS = [
     placeholder: 'Enter a skill (e.g., "Machine Learning", "Full-stack development")',
     emoji: '🗺️',
   },
+  {
+    id: 'quiz',
+    name: 'Quiz Generator',
+    description: 'Create interactive quizzes to test your knowledge',
+    icon: Brain,
+    gradient: 'from-green-500 to-emerald-500',
+    cost: 10,
+    placeholder: 'Enter a topic (e.g., "World History", "Python basics", "Biology")',
+    emoji: '🎯',
+  },
+  {
+    id: 'essay',
+    name: 'Essay Checker',
+    description: 'Get detailed feedback on grammar, structure, and clarity',
+    icon: FileCheck,
+    gradient: 'from-indigo-500 to-purple-500',
+    cost: 15,
+    placeholder: 'Paste your essay here for analysis...',
+    emoji: '📊',
+  },
+  {
+    id: 'math',
+    name: 'Math Problem Solver',
+    description: 'Solve math problems with step-by-step explanations',
+    icon: Calculator,
+    gradient: 'from-yellow-500 to-amber-500',
+    cost: 5,
+    placeholder: 'Enter a math problem (e.g., "2x + 5 = 15", "integrate x^2 dx")',
+    emoji: '🧮',
+  },
+  {
+    id: 'mindmap',
+    name: 'Mind Map Creator',
+    description: 'Generate visual mind maps for any topic',
+    icon: Network,
+    gradient: 'from-pink-500 to-rose-500',
+    cost: 10,
+    placeholder: 'Enter a topic to create a mind map (e.g., "Climate Change", "Marketing Strategy")',
+    emoji: '🎨',
+  },
+  {
+    id: 'summary',
+    name: 'Summary Generator',
+    description: 'Summarize long texts into key points',
+    icon: FileText,
+    gradient: 'from-teal-500 to-cyan-500',
+    cost: 5,
+    placeholder: 'Paste the text you want to summarize...',
+    emoji: '📖',
+  },
+  {
+    id: 'language',
+    name: 'Language Practice',
+    description: 'Practice any language with AI conversation',
+    icon: MessageCircle,
+    gradient: 'from-violet-500 to-purple-500',
+    cost: 5,
+    placeholder: 'Type a message in your target language...',
+    emoji: '🗣️',
+  },
 ];
 
 export default function NewAIToolsPage() {
@@ -77,12 +148,21 @@ export default function NewAIToolsPage() {
   const [fileData, setFileData] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   
-  // Results
+  // Results for existing tools
   const [notesResult, setNotesResult] = useState('');
   const [flashcards, setFlashcards] = useState<{ question: string; answer: string }[]>([]);
   const [roadmapResult, setRoadmapResult] = useState('');
   const [isStudyMode, setIsStudyMode] = useState(false);
   const [showRoadmapGraph, setShowRoadmapGraph] = useState(false);
+  
+  // Results for new tools
+  const [quizResult, setQuizResult] = useState<any>(null);
+  const [essayResult, setEssayResult] = useState<any>(null);
+  const [mathResult, setMathResult] = useState<any>(null);
+  const [mindmapResult, setMindmapResult] = useState('');
+  const [summaryResult, setSummaryResult] = useState<any>(null);
+  const [languageMessages, setLanguageMessages] = useState<any[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState('spanish');
 
   const handleToolSelect = (toolId: ToolType) => {
     setSelectedTool(toolId);
@@ -93,6 +173,12 @@ export default function NewAIToolsPage() {
     setNotesResult('');
     setFlashcards([]);
     setRoadmapResult('');
+    setQuizResult(null);
+    setEssayResult(null);
+    setMathResult(null);
+    setMindmapResult('');
+    setSummaryResult(null);
+    // Don't clear language messages to maintain conversation
   };
 
   const performGeneration = async () => {
@@ -102,14 +188,14 @@ export default function NewAIToolsPage() {
     }
 
     // Deduct credits
-    if (!await deductCredits(selectedTool, `Generated ${selectedTool}`)) {
+    if (!await deductCredits(selectedTool as any, `Generated ${selectedTool}`)) {
       return;
     }
 
     const result = await generate(
-      fileData ? `${selectedTool}_from_file` as any : selectedTool,
+      fileData ? `${selectedTool}_from_file` as any : selectedTool as any,
       prompt,
-      undefined,
+      selectedTool === 'language' ? selectedLanguage : undefined,
       fileData || undefined
     );
 
@@ -125,6 +211,107 @@ export default function NewAIToolsPage() {
         }
       } else if (selectedTool === 'roadmap') {
         setRoadmapResult(result);
+      } else if (selectedTool === 'quiz') {
+        try {
+          const parsed = JSON.parse(result);
+          setQuizResult(parsed);
+        } catch {
+          toast.error('Failed to parse quiz data');
+        }
+      } else if (selectedTool === 'essay') {
+        try {
+          const parsed = JSON.parse(result);
+          setEssayResult(parsed);
+        } catch {
+          toast.error('Failed to parse essay feedback');
+        }
+      } else if (selectedTool === 'math') {
+        try {
+          const parsed = JSON.parse(result);
+          setMathResult(parsed);
+        } catch {
+          toast.error('Failed to parse math solution');
+        }
+      } else if (selectedTool === 'mindmap') {
+        setMindmapResult(result);
+      } else if (selectedTool === 'summary') {
+        try {
+          const parsed = JSON.parse(result);
+          setSummaryResult(parsed);
+        } catch {
+          toast.error('Failed to parse summary');
+        }
+      } else if (selectedTool === 'language') {
+        try {
+          const parsed = JSON.parse(result);
+          const newMessage = {
+            id: Date.now().toString(),
+            role: 'assistant' as const,
+            content: parsed.aiResponse,
+            corrections: parsed.corrections,
+            vocabulary: parsed.vocabulary,
+            timestamp: new Date(),
+          };
+          setLanguageMessages(prev => [...prev, newMessage]);
+        } catch {
+          // If not JSON, treat as plain text response
+          const newMessage = {
+            id: Date.now().toString(),
+            role: 'assistant' as const,
+            content: result,
+            timestamp: new Date(),
+          };
+          setLanguageMessages(prev => [...prev, newMessage]);
+        }
+      }
+    }
+  };
+
+  const handleLanguageSend = async (message: string, language: string) => {
+    if (!message.trim()) return;
+    
+    // Add user message
+    const userMessage = {
+      id: Date.now().toString(),
+      role: 'user' as const,
+      content: message,
+      timestamp: new Date(),
+    };
+    setLanguageMessages(prev => [...prev, userMessage]);
+    
+    // Deduct credits
+    if (!await deductCredits('language' as any, `Language practice`)) {
+      return;
+    }
+
+    const result = await generate(
+      'language' as any,
+      message,
+      language,
+      undefined
+    );
+
+    if (result) {
+      try {
+        const parsed = JSON.parse(result);
+        const newMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant' as const,
+          content: parsed.aiResponse,
+          corrections: parsed.corrections,
+          vocabulary: parsed.vocabulary,
+          timestamp: new Date(),
+        };
+        setLanguageMessages(prev => [...prev, newMessage]);
+      } catch {
+        // If not JSON, treat as plain text response
+        const newMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant' as const,
+          content: result,
+          timestamp: new Date(),
+        };
+        setLanguageMessages(prev => [...prev, newMessage]);
       }
     }
   };
@@ -148,7 +335,7 @@ export default function NewAIToolsPage() {
   };
 
   const currentTool = TOOLS.find(t => t.id === selectedTool);
-  const hasResult = notesResult || flashcards.length > 0 || roadmapResult;
+  const hasResult = notesResult || flashcards.length > 0 || roadmapResult || quizResult || essayResult || mathResult || mindmapResult || summaryResult || (selectedTool === 'language' && languageMessages.length > 0);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
@@ -350,7 +537,7 @@ export default function NewAIToolsPage() {
                       ) : (
                         <>
                           <Sparkles className="w-5 h-5 mr-2" />
-                          Generate {currentTool?.name.split(' ')[0]}
+                          Generate {currentTool?.name?.split(' ')[0] || 'Content'}
                         </>
                       )}
                     </Button>
@@ -362,7 +549,7 @@ export default function NewAIToolsPage() {
               {isGenerating && <LoadingProgress message={`Creating your ${selectedTool}...`} />}
 
               {/* Results */}
-              {hasResult && !isGenerating && (
+              {hasResult && !isGenerating && selectedTool !== 'language' && (
                 <Card className="border-2 border-primary/20">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
@@ -406,6 +593,23 @@ export default function NewAIToolsPage() {
                           <ExportMenu content={roadmapResult} title="Roadmap" type="roadmap" />
                         </>
                       )}
+                      {selectedTool === 'mindmap' && (
+                        <>
+                          <SaveButton content={mindmapResult} rawContent={mindmapResult} toolType="mindmap" defaultTitle="My Mind Map" />
+                          <CopyButton content={mindmapResult} />
+                          <ExportMenu content={mindmapResult} title="Mind Map" type="mindmap" />
+                        </>
+                      )}
+                      {selectedTool === 'summary' && summaryResult && (
+                        <>
+                          <CopyButton content={summaryResult.summary?.medium || ''} />
+                        </>
+                      )}
+                      {selectedTool === 'math' && mathResult && (
+                        <>
+                          <CopyButton content={`${mathResult.problem}\nAnswer: ${mathResult.finalAnswer}`} />
+                        </>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -427,8 +631,39 @@ export default function NewAIToolsPage() {
                         <MarkdownRenderer content={roadmapResult} />
                       )
                     )}
+                    {selectedTool === 'quiz' && quizResult && (
+                      <QuizGenerator 
+                        questions={quizResult.questions || []} 
+                        topic={prompt}
+                        onRetake={() => {}}
+                        onNewQuiz={() => setQuizResult(null)}
+                      />
+                    )}
+                    {selectedTool === 'essay' && essayResult && (
+                      <EssayChecker feedback={essayResult} originalText={prompt} />
+                    )}
+                    {selectedTool === 'math' && mathResult && (
+                      <MathSolver solution={mathResult} />
+                    )}
+                    {selectedTool === 'mindmap' && mindmapResult && (
+                      <MindMapCreator content={mindmapResult} topic={prompt} />
+                    )}
+                    {selectedTool === 'summary' && summaryResult && (
+                      <SummaryGenerator result={summaryResult} originalText={prompt} />
+                    )}
                   </CardContent>
                 </Card>
+              )}
+
+              {/* Language Practice - Special handling with chat interface */}
+              {selectedTool === 'language' && (
+                <LanguagePractice
+                  messages={languageMessages}
+                  onSendMessage={handleLanguageSend}
+                  isLoading={isGenerating}
+                  selectedLanguage={selectedLanguage}
+                  onLanguageChange={setSelectedLanguage}
+                />
               )}
             </div>
           )}
