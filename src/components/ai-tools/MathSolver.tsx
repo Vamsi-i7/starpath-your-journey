@@ -24,6 +24,17 @@ interface MathSolverProps {
 }
 
 export function MathSolver({ solution }: MathSolverProps) {
+  // Safety check for solution data
+  if (!solution || !solution.problem) {
+    return (
+      <Card className="p-8 text-center">
+        <CardContent>
+          <p className="text-muted-foreground">No solution available. Please try again.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard!');

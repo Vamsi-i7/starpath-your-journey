@@ -54,6 +54,24 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedIssue, setSelectedIssue] = useState<GrammarIssue | null>(null);
 
+  // Safety check for feedback data
+  if (!feedback) {
+    return (
+      <Card className="p-8 text-center">
+        <CardContent>
+          <p className="text-muted-foreground">No feedback available. Please try again.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Ensure all required fields have defaults
+  const safeGrammar = feedback.grammar || { score: 0, issues: [] };
+  const safeStructure = feedback.structure || { score: 0, feedback: '' };
+  const safeClarity = feedback.clarity || { score: 0, feedback: '' };
+  const safeSuggestions = feedback.suggestions || [];
+  const safeStrengths = feedback.strengths || [];
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-500';
     if (score >= 60) return 'text-yellow-500';
@@ -102,14 +120,14 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
     <div className="space-y-6">
       {/* Overall Score Card */}
       <Card className={cn("border-2 overflow-hidden")}>
-        <div className={cn("h-2 bg-gradient-to-r", getScoreBgColor(feedback.overallScore))} />
+        <div className={cn("h-2 bg-gradient-to-r", getScoreBgColor(feedback.overallScore || 0))} />
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Overall Score</p>
               <div className="flex items-baseline gap-2">
-                <span className={cn("text-5xl font-bold", getScoreColor(feedback.overallScore))}>
-                  {feedback.overallScore}
+                <span className={cn("text-5xl font-bold", getScoreColor(feedback.overallScore || 0))}>
+                  {feedback.overallScore || 0}
                 </span>
                 <span className="text-2xl text-muted-foreground">/100</span>
               </div>
@@ -117,10 +135,10 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
             <div className="text-right space-y-1">
               <Badge variant="outline" className="gap-1">
                 <MessageSquare className="w-3 h-3" />
-                {feedback.tone}
+                {feedback.tone || 'N/A'}
               </Badge>
               <div className="text-xs text-muted-foreground">
-                {feedback.wordCount} words • {feedback.sentenceCount} sentences • {feedback.paragraphCount} paragraphs
+                {feedback.wordCount || 0} words • {feedback.sentenceCount || 0} sentences • {feedback.paragraphCount || 0} paragraphs
               </div>
             </div>
           </div>
@@ -128,20 +146,20 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
           {/* Score Breakdown */}
           <div className="grid grid-cols-3 gap-4 mt-6">
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <p className={cn("text-2xl font-bold", getScoreColor(feedback.grammar.score))}>
-                {feedback.grammar.score}
+              <p className={cn("text-2xl font-bold", getScoreColor(safeGrammar.score))}>
+                {safeGrammar.score}
               </p>
               <p className="text-xs text-muted-foreground">Grammar</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <p className={cn("text-2xl font-bold", getScoreColor(feedback.structure.score))}>
-                {feedback.structure.score}
+              <p className={cn("text-2xl font-bold", getScoreColor(safeStructure.score))}>
+                {safeStructure.score}
               </p>
               <p className="text-xs text-muted-foreground">Structure</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <p className={cn("text-2xl font-bold", getScoreColor(feedback.clarity.score))}>
-                {feedback.clarity.score}
+              <p className={cn("text-2xl font-bold", getScoreColor(safeClarity.score))}>
+                {safeClarity.score}
               </p>
               <p className="text-xs text-muted-foreground">Clarity</p>
             </div>
@@ -154,7 +172,7 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
         <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="issues">
-            Issues ({feedback.grammar.issues.length})
+            Issues ({safeGrammar.issues.length})
           </TabsTrigger>
           <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
           <TabsTrigger value="text">Annotated Text</TabsTrigger>
@@ -171,7 +189,7 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {feedback.strengths.map((strength, index) => (
+                {safeStrengths.map((strength, index) => (
                   <li key={index} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                     {strength}
@@ -191,8 +209,8 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Progress value={feedback.structure.score} className="h-2 mb-3" />
-                <p className="text-sm text-muted-foreground">{feedback.structure.feedback}</p>
+                <Progress value={safeStructure.score} className="h-2 mb-3" />
+                <p className="text-sm text-muted-foreground">{safeStructure.feedback}</p>
               </CardContent>
             </Card>
 
@@ -204,8 +222,8 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Progress value={feedback.clarity.score} className="h-2 mb-3" />
-                <p className="text-sm text-muted-foreground">{feedback.clarity.feedback}</p>
+                <Progress value={safeClarity.score} className="h-2 mb-3" />
+                <p className="text-sm text-muted-foreground">{safeClarity.feedback}</p>
               </CardContent>
             </Card>
           </div>
@@ -218,7 +236,7 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
               <CardDescription>Click on an issue to see the suggestion</CardDescription>
             </CardHeader>
             <CardContent>
-              {feedback.grammar.issues.length === 0 ? (
+              {safeGrammar.issues.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <CheckCircle2 className="w-12 h-12 mx-auto mb-3 text-green-500" />
                   <p>No issues found! Great job!</p>
@@ -226,7 +244,7 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
               ) : (
                 <ScrollArea className="h-[400px] pr-4">
                   <div className="space-y-3">
-                    {feedback.grammar.issues.map((issue, index) => (
+                    {safeGrammar.issues.map((issue, index) => (
                       <div
                         key={index}
                         className={cn(
@@ -278,7 +296,7 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {feedback.suggestions.map((suggestion, index) => (
+                {safeSuggestions.map((suggestion, index) => (
                   <li 
                     key={index}
                     className="flex items-start gap-3 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20"
@@ -303,7 +321,7 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
             <CardContent>
               <ScrollArea className="h-[400px]">
                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <AnnotatedText text={originalText} issues={feedback.grammar.issues} />
+                  <AnnotatedText text={originalText} issues={safeGrammar.issues} />
                 </div>
               </ScrollArea>
             </CardContent>

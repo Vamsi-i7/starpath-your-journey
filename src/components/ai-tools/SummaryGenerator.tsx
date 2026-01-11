@@ -41,9 +41,20 @@ export function SummaryGenerator({ result, originalText }: SummaryGeneratorProps
   const [compareMode, setCompareMode] = useState(false);
   const [splitPosition, setSplitPosition] = useState(50);
 
-  const currentSummary = result.summary[activeLength];
-  const currentWordCount = result.summaryWordCount[activeLength];
-  const reductionPercentage = Math.round((1 - currentWordCount / result.originalWordCount) * 100);
+  // Safety check for result data
+  if (!result || !result.summary) {
+    return (
+      <Card className="p-8 text-center">
+        <CardContent>
+          <p className="text-muted-foreground">No summary available. Please try again.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const currentSummary = result.summary[activeLength] || '';
+  const currentWordCount = result.summaryWordCount?.[activeLength] || 0;
+  const reductionPercentage = result.originalWordCount ? Math.round((1 - currentWordCount / result.originalWordCount) * 100) : 0;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);

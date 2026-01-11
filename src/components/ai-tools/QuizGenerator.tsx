@@ -23,14 +23,38 @@ interface QuizGeneratorProps {
 export function QuizGenerator({ questions, topic, onRetake, onNewQuiz }: QuizGeneratorProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null));
+  const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions?.length || 0).fill(null));
   const [showResult, setShowResult] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30); // 30 seconds per question
   const [timerActive, setTimerActive] = useState(true);
 
+  // Safety check for empty questions array
+  if (!questions || questions.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <CardContent>
+          <p className="text-muted-foreground mb-4">No quiz questions were generated. Please try again.</p>
+          <Button onClick={onNewQuiz}>Generate New Quiz</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  
+  // Safety check for current question
+  if (!currentQuestion) {
+    return (
+      <Card className="p-8 text-center">
+        <CardContent>
+          <p className="text-muted-foreground mb-4">Error loading question. Please try again.</p>
+          <Button onClick={onNewQuiz}>Generate New Quiz</Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Timer effect
   useEffect(() => {
