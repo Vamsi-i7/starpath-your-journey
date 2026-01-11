@@ -16,16 +16,22 @@ import { useLibrary } from '@/hooks/useLibrary';
 interface SaveButtonProps {
   content: any;
   rawContent?: string;
-  toolType: 'notes' | 'flashcards' | 'roadmap' | 'mentor';
+  toolType: 'notes' | 'flashcards' | 'roadmap' | 'mentor' | 'quiz' | 'essay' | 'math' | 'mindmap' | 'summary' | 'language';
   defaultTitle?: string;
 }
 
 // Map toolType to content_type for the database
-const toolTypeToContentType: Record<string, 'notes' | 'flashcards' | 'roadmap' | 'chat'> = {
+const toolTypeToContentType: Record<string, 'notes' | 'flashcards' | 'roadmap' | 'chat' | 'quiz' | 'essay' | 'math' | 'mindmap' | 'summary' | 'language'> = {
   notes: 'notes',
   flashcards: 'flashcards',
   roadmap: 'roadmap',
   mentor: 'chat',
+  quiz: 'quiz',
+  essay: 'essay',
+  math: 'math',
+  mindmap: 'mindmap',
+  summary: 'summary',
+  language: 'language',
 };
 
 export function SaveButton({ content, rawContent, toolType, defaultTitle }: SaveButtonProps) {

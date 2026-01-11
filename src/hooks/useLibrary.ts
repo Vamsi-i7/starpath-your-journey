@@ -9,7 +9,7 @@ export interface LibraryItem {
   user_id: string;
   title: string;
   content: string;
-  content_type: 'notes' | 'flashcards' | 'roadmap' | 'chat';
+  content_type: 'notes' | 'flashcards' | 'roadmap' | 'chat' | 'quiz' | 'essay' | 'math' | 'mindmap' | 'summary' | 'language';
   tags: string[] | null;
   metadata: any;
   is_favorite: boolean;

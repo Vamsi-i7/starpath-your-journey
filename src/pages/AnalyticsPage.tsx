@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AppTopbar } from '@/components/app/AppTopbar';
 import { AnalyticsTabs } from '@/components/analytics/AnalyticsTabs';
 import { TodayView } from '@/components/analytics/TodayView';
@@ -9,9 +9,8 @@ import { AnalyticsGuide } from '@/components/analytics/AnalyticsGuide';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
 import { useHabits } from '@/hooks/useHabits';
 import { Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { useEffect, useState } from 'react';
 import { 
+  format,
   startOfWeek, 
   endOfWeek, 
   startOfMonth, 

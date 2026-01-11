@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ExportMenuProps {
   content: string;
   title: string;
-  type: 'notes' | 'flashcards' | 'roadmap' | 'mentor';
+  type: 'notes' | 'flashcards' | 'roadmap' | 'mentor' | 'quiz' | 'essay' | 'math' | 'mindmap' | 'summary' | 'language';
 }
 
 export function ExportMenu({ content, title, type }: ExportMenuProps) {

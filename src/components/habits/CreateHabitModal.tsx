@@ -172,23 +172,6 @@ export function CreateHabitModal({ open, onOpenChange }: CreateHabitModalProps) 
           </DialogFooter>
         </form>
       </DialogContent>
-
-      <TemplateBrowser
-        open={templateBrowserOpen}
-        onOpenChange={setTemplateBrowserOpen}
-        onSelectTemplate={(template) => {
-          setNewHabit({
-            name: template.name,
-            description: template.description || '',
-            frequency: template.frequency,
-            icon: template.icon,
-            color: template.color,
-            category_id: template.category_id,
-            difficulty: template.difficulty,
-            notes: ''
-          });
-        }}
-      />
     </Dialog>
   );
 }

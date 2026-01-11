@@ -45,17 +45,17 @@ const LandingPage = () => {
             </div>
             
             <p className="text-sm text-muted-foreground">
-              © 2025 StarPath. Built for students who dream big.
+              © {new Date().getFullYear()} StarPath. Built for students who dream big.
             </p>
             
             <div className="flex items-center gap-6">
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <a href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Privacy
               </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <a href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Terms
               </a>
-              <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <a href="mailto:support@starpath.app" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Contact
               </a>
             </div>
