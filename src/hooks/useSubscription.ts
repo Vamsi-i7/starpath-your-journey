@@ -6,10 +6,13 @@ import { useToast } from '@/hooks/use-toast';
 interface Subscription {
   id: string;
   user_id: string;
-  plan_type: 'free' | 'monthly' | 'yearly';
+  plan: 'free' | 'pro' | 'premium';
   status: 'active' | 'cancelled' | 'expired';
-  starts_at: string;
-  ends_at: string | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  razorpay_subscription_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export function useSubscription() {
@@ -25,101 +28,136 @@ export function useSubscription() {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    if (error) {
-      if (import.meta.env.DEV) {
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching subscription:', error);
       }
-    }
 
-    setSubscription(data as Subscription | null);
-    setIsLoading(false);
+      // If no subscription exists, create a free one
+      if (!data) {
+        const { data: newSub, error: insertError } = await supabase
+          .from('subscriptions')
+          .insert({
+            user_id: user.id,
+            plan: 'free',
+            status: 'active',
+          })
+          .select()
+          .single();
+
+        if (!insertError && newSub) {
+          setSubscription(newSub as Subscription);
+        }
+      } else {
+        setSubscription(data as Subscription);
+      }
+    } catch (err) {
+      console.error('Subscription fetch error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchSubscription();
   }, [user]);
 
-  const isPremium = subscription?.plan_type === 'monthly' || subscription?.plan_type === 'yearly';
+  const currentTier = subscription?.plan || 'free';
+  const isPremium = currentTier === 'premium' || currentTier === 'pro';
 
-  const subscribe = async (planType: 'monthly' | 'yearly') => {
-    if (!user) return;
+  const updateSubscription = async (plan: 'free' | 'pro' | 'premium', periodEnd?: Date) => {
+    if (!user) return false;
 
-    // Calculate end date
-    const endsAt = new Date();
-    if (planType === 'monthly') {
-      endsAt.setMonth(endsAt.getMonth() + 1);
-    } else {
-      endsAt.setFullYear(endsAt.getFullYear() + 1);
-    }
-
-    // For mock payments, we just create the subscription
-    const { error } = await supabase
-      .from('subscriptions')
-      .insert({
-        user_id: user.id,
-        plan_type: planType,
+    try {
+      const updateData: any = {
+        plan,
         status: 'active',
-        ends_at: endsAt.toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (periodEnd) {
+        updateData.current_period_start = new Date().toISOString();
+        updateData.current_period_end = periodEnd.toISOString();
+      }
+
+      if (subscription) {
+        const { error } = await supabase
+          .from('subscriptions')
+          .update(updateData)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('subscriptions')
+          .insert({
+            user_id: user.id,
+            ...updateData,
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: 'Subscription updated!',
+        description: `You now have access to ${plan} features.`,
       });
 
-    if (error) {
+      await fetchSubscription();
+      return true;
+    } catch (error: any) {
       toast({
         title: 'Subscription failed',
-        description: 'Could not process your subscription.',
+        description: error.message || 'Could not update subscription.',
         variant: 'destructive',
       });
       return false;
     }
-
-    toast({
-      title: 'Subscription activated!',
-      description: `You now have access to all premium features.`,
-    });
-    
-    fetchSubscription();
-    return true;
   };
 
   const cancelSubscription = async () => {
-    if (!subscription) return;
+    if (!subscription) return false;
 
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({ status: 'cancelled' })
-      .eq('id', subscription.id);
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ 
+          status: 'cancelled',
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user?.id);
 
-    if (error) {
+      if (error) throw error;
+
+      toast({
+        title: 'Subscription cancelled',
+        description: 'Your subscription has been cancelled.',
+      });
+
+      await fetchSubscription();
+      return true;
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Could not cancel subscription.',
+        description: error.message || 'Could not cancel subscription.',
         variant: 'destructive',
       });
       return false;
     }
-
-    toast({
-      title: 'Subscription cancelled',
-      description: 'Your subscription has been cancelled.',
-    });
-    
-    fetchSubscription();
-    return true;
   };
 
   return {
     subscription,
     isLoading,
     isPremium,
-    subscribe,
+    currentTier,
+    updateSubscription,
     cancelSubscription,
     refetch: fetchSubscription,
   };

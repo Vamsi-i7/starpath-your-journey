@@ -4,11 +4,11 @@ import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
 export function RecentAchievementsCard() {
-  const { earnedAchievements, getRarityColor, getRarityBg } = useAchievements();
+  const { earnedAchievements, getTierColor, getTierBg } = useAchievements();
 
   // Get the 3 most recent achievements
   const recentAchievements = [...earnedAchievements]
-    .sort((a, b) => new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime())
+    .sort((a, b) => new Date(b.unlocked_at).getTime() - new Date(a.unlocked_at).getTime())
     .slice(0, 3);
 
   return (
@@ -45,12 +45,12 @@ export function RecentAchievementsCard() {
               key={earned.id}
               className={cn(
                 "flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg sm:rounded-xl transition-all hover:scale-[1.02]",
-                getRarityBg(earned.achievement.rarity)
+                getTierBg(earned.achievement.tier)
               )}
             >
               <span className="text-xl sm:text-2xl flex-shrink-0">{earned.achievement.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className={cn("font-medium text-sm truncate", getRarityColor(earned.achievement.rarity))}>
+                <p className={cn("font-medium text-sm truncate", getTierColor(earned.achievement.tier))}>
                   {earned.achievement.name}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
@@ -58,7 +58,7 @@ export function RecentAchievementsCard() {
                 </p>
               </div>
               <div className="text-xs text-muted-foreground capitalize hidden sm:block">
-                {earned.achievement.rarity}
+                {earned.achievement.tier}
               </div>
             </div>
           ))}

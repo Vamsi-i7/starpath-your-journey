@@ -1,11 +1,16 @@
 import { useState, useMemo } from 'react';
 import { AppTopbar } from '@/components/app/AppTopbar';
 import { AnalyticsTabs } from '@/components/analytics/AnalyticsTabs';
+import { TodayView } from '@/components/analytics/TodayView';
 import { WeekView } from '@/components/analytics/WeekView';
 import { MonthView } from '@/components/analytics/MonthView';
 import { YearView } from '@/components/analytics/YearView';
+import { AnalyticsGuide } from '@/components/analytics/AnalyticsGuide';
 import { useAnalyticsData } from '@/hooks/useAnalyticsData';
+import { useHabits } from '@/hooks/useHabits';
 import { Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { useEffect, useState } from 'react';
 import { 
   startOfWeek, 
   endOfWeek, 
@@ -19,9 +24,24 @@ import {
 } from 'date-fns';
 
 const AnalyticsPage = () => {
-  const [activeTab, setActiveTab] = useState<'week' | 'month' | 'year'>('week');
+  const [activeTab, setActiveTab] = useState<'today' | 'week' | 'month' | 'year'>('today');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [showGuide, setShowGuide] = useState(false);
+  const { habits } = useHabits();
+
+  // Check if user has seen the analytics guide
+  useEffect(() => {
+    const hasSeenGuide = localStorage.getItem('analytics_guide_seen');
+    if (!hasSeenGuide) {
+      setShowGuide(true);
+    }
+  }, []);
+
+  const handleCloseGuide = () => {
+    setShowGuide(false);
+    localStorage.setItem('analytics_guide_seen', 'true');
+  };
   
   const {
     loading,
@@ -31,7 +51,28 @@ const AnalyticsPage = () => {
     calculateQuarterlyMetrics,
     compareMetrics,
     generateInsights,
+    habitCompletions,
   } = useAnalyticsData();
+
+  // Today view data
+  const todayData = useMemo(() => {
+    const today = new Date();
+    const todayStr = format(today, 'yyyy-MM-dd');
+    const dailyMetrics = calculateDailyMetrics(today, today);
+    const todayMetric = dailyMetrics[0] || {
+      date: todayStr,
+      habitsCompleted: 0,
+      xpEarned: 0,
+      sessionMinutes: 0,
+      goalsCompleted: 0,
+      completionRate: 0,
+    };
+
+    return {
+      ...todayMetric,
+      totalHabits: habits.length,
+    };
+  }, [calculateDailyMetrics, habits]);
 
   // Week view data
   const weekViewData = useMemo(() => {
@@ -150,6 +191,8 @@ const AnalyticsPage = () => {
     <div className="min-h-screen pb-20 bg-gradient-to-br from-background via-background to-primary/5">
       <AppTopbar title="Analytics" />
       
+      <AnalyticsGuide open={showGuide} onClose={handleCloseGuide} />
+      
       <div className="relative">
         {/* Background decoration */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -160,6 +203,9 @@ const AnalyticsPage = () => {
         <AnalyticsTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          todayView={
+            <TodayView data={todayData} />
+          }
           weekView={
             <WeekView
               dailyData={weekViewData.dailyData}

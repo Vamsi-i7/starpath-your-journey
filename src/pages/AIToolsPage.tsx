@@ -29,6 +29,7 @@ import { ExportMenu } from '@/components/ai-tools/ExportMenu';
 import { CharacterCount } from '@/components/ai-tools/CharacterCount';
 import { LoadingProgress } from '@/components/ai-tools/LoadingProgress';
 import { FileUploadZone } from '@/components/ai-tools/FileUploadZone';
+import { AIUsageTerms, AILimitationsBanner, useAITermsAcceptance } from '@/components/ai-tools/AIUsageTerms';
 import { toast } from 'sonner';
 
 type ToolType = 'notes' | 'flashcards' | 'roadmap' | null;
@@ -69,6 +70,7 @@ const TOOLS = [
 export default function NewAIToolsPage() {
   const { generate, isGenerating } = useAIGenerate();
   const { deductCredits, getCost } = useCredits();
+  const { showTerms, requireTermsAcceptance, handleAccept, handleDecline } = useAITermsAcceptance();
   
   const [selectedTool, setSelectedTool] = useState<ToolType>(null);
   const [prompt, setPrompt] = useState('');
@@ -93,7 +95,7 @@ export default function NewAIToolsPage() {
     setRoadmapResult('');
   };
 
-  const handleGenerate = async () => {
+  const performGeneration = async () => {
     if (!selectedTool || (!prompt.trim() && !fileData)) {
       toast.error('Please enter a prompt or upload a file');
       return;
@@ -127,6 +129,11 @@ export default function NewAIToolsPage() {
     }
   };
 
+  // Wrap generation with terms acceptance check
+  const handleGenerate = () => {
+    requireTermsAcceptance(performGeneration);
+  };
+
   const handleFileUpload = (data: string, name: string) => {
     setFileData(data);
     setFileName(name);
@@ -147,8 +154,18 @@ export default function NewAIToolsPage() {
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-purple-500/5 via-background to-blue-500/5">
       <AppTopbar title="AI Tools" />
 
+      {/* AI Terms Dialog */}
+      <AIUsageTerms 
+        open={showTerms} 
+        onAccept={handleAccept} 
+        onDecline={handleDecline} 
+      />
+
       <div className="p-4 sm:p-6 pb-20">
         <div className="max-w-7xl mx-auto space-y-6">
+          {/* AI Limitations Banner */}
+          <AILimitationsBanner />
+          
           {/* Credit Display */}
           <CreditDisplay showDetails={true} toolType={selectedTool || undefined} />
 
@@ -240,31 +257,39 @@ export default function NewAIToolsPage() {
             /* Tool Interface */
             <div className="space-y-6">
               {/* Back Button & Tool Header */}
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBack}
-                  className="gap-2"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back
-                </Button>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${currentTool?.gradient} flex items-center justify-center`}>
-                      <currentTool.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold">{currentTool?.name}</h2>
-                      <p className="text-sm text-muted-foreground">{currentTool?.description}</p>
+              <Card className="p-4 border-primary/20">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBack}
+                    className="gap-2"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Back
+                  </Button>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${currentTool?.gradient} flex items-center justify-center shadow-lg`}>
+                        <currentTool.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold">{currentTool?.name}</h2>
+                        <p className="text-sm text-muted-foreground">{currentTool?.description}</p>
+                      </div>
                     </div>
                   </div>
+                  <Badge className={`bg-gradient-to-r ${currentTool?.gradient} text-white border-0`}>
+                    {currentTool?.cost} credits
+                  </Badge>
                 </div>
-              </div>
+              </Card>
 
               {/* Input Card */}
-              <Card className={`border-2 bg-gradient-to-br ${currentTool?.gradient}/5`}>
+              <Card className={`border-2 bg-card`} style={{
+                borderImage: `linear-gradient(to right, var(--tw-gradient-stops)) 1`,
+                borderImageSlice: 1,
+              }}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Wand2 className="w-5 h-5" />
@@ -285,37 +310,51 @@ export default function NewAIToolsPage() {
                     <CharacterCount current={prompt.length} max={5000} />
                   </div>
 
-                  {/* File Upload */}
+                  {/* File Upload - Supports images and PDFs for multimodal AI */}
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">Or upload a file:</p>
+                    <p className="text-sm text-muted-foreground mb-2">Or upload an image/PDF to analyze:</p>
                     <FileUploadZone
-                      onFileUpload={handleFileUpload}
-                      currentFileName={fileName}
-                      onClearFile={() => {
-                        setFileData(null);
-                        setFileName(null);
-                      }}
+                      onFileContent={handleFileUpload}
+                      isProcessing={isGenerating}
+                      accept=".pdf,.png,.jpg,.jpeg,.webp,.gif"
                     />
+                    {fileName && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>📎 {fileName}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFileData(null);
+                            setFileName(null);
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Generate Button */}
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={isGenerating || (!prompt.trim() && !fileData)}
-                    className={`w-full h-12 text-lg bg-gradient-to-r ${currentTool?.gradient} hover:opacity-90 text-white border-0 shadow-lg`}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5 mr-2" />
-                        Generate {currentTool?.name.split(' ')[0]}
-                      </>
-                    )}
-                  </Button>
+                  <div className={`p-1 rounded-xl bg-gradient-to-r ${currentTool?.gradient}`}>
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={isGenerating || (!prompt.trim() && !fileData)}
+                      className="w-full h-12 text-lg bg-background hover:bg-transparent hover:text-white transition-all"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5 mr-2" />
+                          Generate {currentTool?.name.split(' ')[0]}
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -324,7 +363,7 @@ export default function NewAIToolsPage() {
 
               {/* Results */}
               {hasResult && !isGenerating && (
-                <Card className="border-2">
+                <Card className="border-2 border-primary/20">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                       <CardTitle className="flex items-center gap-2">

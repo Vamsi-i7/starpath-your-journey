@@ -6,18 +6,26 @@ import { logError } from '@/lib/errorLogger';
 
 export interface UserProfile {
   id: string;
-  username: string;
   email: string | null;
+  full_name: string | null;
+  username: string | null;
   avatar_url: string | null;
   bio: string | null;
   level: number;
   xp: number;
+  total_xp: number;
+  streak: number;
+  longest_streak: number;
+  last_activity_date: string | null;
+  theme: string;
+  notification_enabled: boolean;
+  is_public: boolean;
+  user_code: string | null;
   hearts: number;
   max_hearts: number;
   total_habits_completed: number;
-  longest_streak: number;
-  user_code: string | null;
-  notifications_enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Habit {
@@ -70,7 +78,7 @@ interface AuthContextType {
   session: Session | null;
   profile: UserProfile | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, username: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, username: string) => Promise<{ data: any; error: Error | null }>;
   signIn: (emailOrUserCode: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -240,20 +248,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, username: string) => {
-    const redirectUrl = `${window.location.origin}/app`;
+    const redirectUrl = `${window.location.origin}/auth/callback`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
         data: {
           username,
+          full_name: username,
         },
       },
     });
 
-    return { error: error as Error | null };
+    return { data, error: error as Error | null };
   };
 
   const signIn = async (emailOrUserCode: string, password: string) => {

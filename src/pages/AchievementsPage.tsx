@@ -9,21 +9,21 @@ const AchievementsPage = () => {
     achievements, 
     earnedAchievements, 
     isLoading, 
-    getRarityColor, 
-    getRarityBg 
+    getTierColor, 
+    getTierBg 
   } = useAchievements();
 
   const earnedIds = new Set(earnedAchievements.map(ea => ea.achievement_id));
   
   const categories = [
     { id: 'all', label: 'All' },
-    { id: 'streak', label: 'Streaks' },
-    { id: 'completion', label: 'Completion' },
-    { id: 'level', label: 'Levels' },
-    { id: 'special', label: 'Special' },
+    { id: 'habits', label: 'Habits' },
+    { id: 'goals', label: 'Goals' },
+    { id: 'progression', label: 'Progression' },
+    { id: 'social', label: 'Social' },
   ];
 
-  const rarityOrder = ['common', 'rare', 'epic', 'legendary'];
+  const tierOrder = ['bronze', 'silver', 'gold', 'platinum', 'diamond'];
 
   if (isLoading) {
     return (
@@ -37,11 +37,11 @@ const AchievementsPage = () => {
   }
 
   const sortedAchievements = [...achievements].sort((a, b) => {
-    // Sort by earned first, then by rarity
+    // Sort by earned first, then by tier
     const aEarned = earnedIds.has(a.id);
     const bEarned = earnedIds.has(b.id);
     if (aEarned !== bEarned) return bEarned ? 1 : -1;
-    return rarityOrder.indexOf(a.rarity) - rarityOrder.indexOf(b.rarity);
+    return tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier);
   });
 
   return (
@@ -84,13 +84,13 @@ const AchievementsPage = () => {
           
           <div className="p-4 rounded-xl bg-gradient-to-br from-star/20 to-streak/20 border border-star/30 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-star/20 flex items-center justify-center">
-              <span className="text-lg">👑</span>
+              <span className="text-lg">💎</span>
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {earnedAchievements.filter(ea => ea.achievement.rarity === 'legendary').length}
+                {earnedAchievements.filter(ea => ea.achievement.tier === 'diamond' || ea.achievement.tier === 'platinum').length}
               </p>
-              <p className="text-xs text-muted-foreground">Legendary</p>
+              <p className="text-xs text-muted-foreground">Premium</p>
             </div>
           </div>
         </div>
@@ -120,17 +120,17 @@ const AchievementsPage = () => {
                         className={cn(
                           "relative p-5 rounded-2xl border transition-all duration-300",
                           isEarned 
-                            ? cn(getRarityBg(achievement.rarity), "border-primary/30 hover:scale-[1.02]")
+                            ? cn(getTierBg(achievement.tier), "border-primary/30 hover:scale-[1.02]")
                             : "bg-card/30 border-border/20 opacity-60"
                         )}
                       >
-                        {/* Rarity Badge */}
+                        {/* Tier Badge */}
                         <div className={cn(
                           "absolute top-3 right-3 px-2 py-0.5 rounded-full text-xs font-medium capitalize",
-                          isEarned ? getRarityBg(achievement.rarity) : "bg-muted/20 text-muted-foreground"
+                          isEarned ? getTierBg(achievement.tier) : "bg-muted/20 text-muted-foreground"
                         )}>
-                          <span className={isEarned ? getRarityColor(achievement.rarity) : ""}>
-                            {achievement.rarity}
+                          <span className={isEarned ? getTierColor(achievement.tier) : ""}>
+                            {achievement.tier}
                           </span>
                         </div>
 
@@ -145,7 +145,7 @@ const AchievementsPage = () => {
                           <div className="flex-1 min-w-0">
                             <p className={cn(
                               "font-semibold",
-                              isEarned ? getRarityColor(achievement.rarity) : "text-muted-foreground"
+                              isEarned ? getTierColor(achievement.tier) : "text-muted-foreground"
                             )}>
                               {achievement.name}
                             </p>
@@ -157,7 +157,7 @@ const AchievementsPage = () => {
                               <span className="text-star">+{achievement.xp_reward} XP</span>
                               {isEarned && earnedData && (
                                 <span className="text-muted-foreground">
-                                  Earned {new Date(earnedData.earned_at).toLocaleDateString()}
+                                  Earned {new Date(earnedData.unlocked_at).toLocaleDateString()}
                                 </span>
                               )}
                             </div>

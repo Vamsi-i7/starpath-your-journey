@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
@@ -16,40 +14,109 @@ export type Database = {
     Tables: {
       achievements: {
         Row: {
-          category: string
-          created_at: string
-          description: string
-          icon: string
           id: string
+          key: string
           name: string
-          rarity: string
+          description: string | null
+          icon: string
+          category: string
+          tier: string
+          xp_reward: number
           requirement_type: string
           requirement_value: number
-          xp_reward: number
+          is_secret: boolean
+          created_at: string
         }
         Insert: {
-          category: string
-          created_at?: string
-          description: string
-          icon: string
           id?: string
+          key: string
           name: string
-          rarity?: string
+          description?: string | null
+          icon?: string
+          category: string
+          tier?: string
+          xp_reward?: number
           requirement_type: string
           requirement_value: number
-          xp_reward?: number
+          is_secret?: boolean
+          created_at?: string
         }
         Update: {
-          category?: string
-          created_at?: string
-          description?: string
-          icon?: string
           id?: string
+          key?: string
           name?: string
-          rarity?: string
+          description?: string | null
+          icon?: string
+          category?: string
+          tier?: string
+          xp_reward?: number
           requirement_type?: string
           requirement_value?: number
-          xp_reward?: number
+          is_secret?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      activity_feed: {
+        Row: {
+          id: string
+          user_id: string
+          activity_type: string
+          activity_data: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          activity_type: string
+          activity_data?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          activity_type?: string
+          activity_data?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      ai_library: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          content: string
+          content_type: string
+          tags: string[] | null
+          metadata: Json | null
+          is_favorite: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          content: string
+          content_type: string
+          tags?: string[] | null
+          metadata?: Json | null
+          is_favorite?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          content?: string
+          content_type?: string
+          tags?: string[] | null
+          metadata?: Json | null
+          is_favorite?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -80,217 +147,275 @@ export type Database = {
         }
         Relationships: []
       }
-      chat_groups: {
+      categories: {
         Row: {
-          avatar_url: string | null
-          created_at: string
-          created_by: string
-          description: string | null
           id: string
-          is_public: boolean
+          user_id: string
           name: string
+          icon: string
+          color: string
+          is_default: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          icon?: string
+          color?: string
+          is_default?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          icon?: string
+          color?: string
+          is_default?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      challenge_participants: {
+        Row: {
+          id: string
+          challenge_id: string
+          user_id: string
+          progress: number
+          completed: boolean
+          joined_at: string
+        }
+        Insert: {
+          id?: string
+          challenge_id: string
+          user_id: string
+          progress?: number
+          completed?: boolean
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          challenge_id?: string
+          user_id?: string
+          progress?: number
+          completed?: boolean
+          joined_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      challenges: {
+        Row: {
+          id: string
+          creator_id: string
+          title: string
+          description: string | null
+          challenge_type: string
+          target_value: number
+          duration_days: number
+          start_date: string
+          end_date: string | null
+          xp_reward: number
+          is_public: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          creator_id: string
+          title: string
+          description?: string | null
+          challenge_type: string
+          target_value: number
+          duration_days?: number
+          start_date?: string
+          end_date?: string | null
+          xp_reward?: number
+          is_public?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          creator_id?: string
+          title?: string
+          description?: string | null
+          challenge_type?: string
+          target_value?: number
+          duration_days?: number
+          start_date?: string
+          end_date?: string | null
+          xp_reward?: number
+          is_public?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      credits: {
+        Row: {
+          id: string
+          user_id: string
+          balance: number
+          total_earned: number
+          total_spent: number
+          last_daily_credit: string | null
+          created_at: string
           updated_at: string
         }
         Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          created_by: string
-          description?: string | null
           id?: string
-          is_public?: boolean
-          name: string
+          user_id: string
+          balance?: number
+          total_earned?: number
+          total_spent?: number
+          last_daily_credit?: string | null
+          created_at?: string
           updated_at?: string
         }
         Update: {
-          avatar_url?: string | null
-          created_at?: string
-          created_by?: string
-          description?: string | null
           id?: string
-          is_public?: boolean
-          name?: string
+          user_id?: string
+          balance?: number
+          total_earned?: number
+          total_spent?: number
+          last_daily_credit?: string | null
+          created_at?: string
           updated_at?: string
         }
         Relationships: []
       }
-      daily_challenges: {
+      credit_transactions: {
         Row: {
-          active_date: string
-          challenge_type: string
-          created_at: string
-          description: string
-          icon: string
           id: string
-          target_value: number
-          title: string
-          xp_reward: number
+          user_id: string
+          amount: number
+          type: string
+          reason: string
+          balance_after: number
+          created_at: string
         }
         Insert: {
-          active_date?: string
-          challenge_type: string
-          created_at?: string
-          description: string
-          icon: string
           id?: string
-          target_value: number
-          title: string
-          xp_reward?: number
+          user_id: string
+          amount: number
+          type: string
+          reason: string
+          balance_after: number
+          created_at?: string
         }
         Update: {
-          active_date?: string
-          challenge_type?: string
-          created_at?: string
-          description?: string
-          icon?: string
           id?: string
-          target_value?: number
-          title?: string
-          xp_reward?: number
+          user_id?: string
+          amount?: number
+          type?: string
+          reason?: string
+          balance_after?: number
+          created_at?: string
         }
         Relationships: []
       }
       friendships: {
         Row: {
-          created_at: string
-          friend_id: string
           id: string
-          status: string | null
           user_id: string
+          friend_id: string
+          status: string
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string
-          friend_id: string
           id?: string
-          status?: string | null
           user_id: string
+          friend_id: string
+          status?: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string
-          friend_id?: string
           id?: string
-          status?: string | null
           user_id?: string
+          friend_id?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
       goals: {
         Row: {
-          created_at: string
-          deadline: string | null
-          description: string | null
           id: string
-          progress: number
-          title: string
-          updated_at: string
           user_id: string
+          title: string
+          description: string | null
+          category: string | null
+          priority: string
+          deadline: string | null
+          progress: number
+          status: string
+          completed_at: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string
-          deadline?: string | null
-          description?: string | null
           id?: string
-          progress?: number
-          title: string
-          updated_at?: string
           user_id: string
+          title: string
+          description?: string | null
+          category?: string | null
+          priority?: string
+          deadline?: string | null
+          progress?: number
+          status?: string
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string
-          deadline?: string | null
-          description?: string | null
           id?: string
-          progress?: number
-          title?: string
-          updated_at?: string
           user_id?: string
+          title?: string
+          description?: string | null
+          category?: string | null
+          priority?: string
+          deadline?: string | null
+          progress?: number
+          status?: string
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
-      group_members: {
-        Row: {
-          group_id: string
-          id: string
-          joined_at: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          group_id: string
-          id?: string
-          joined_at?: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          group_id?: string
-          id?: string
-          joined_at?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_members_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "chat_groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      group_messages: {
-        Row: {
-          content: string
-          created_at: string
-          group_id: string
-          id: string
-          sender_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          group_id: string
-          id?: string
-          sender_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          group_id?: string
-          id?: string
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_messages_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "chat_groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       habit_completions: {
         Row: {
-          completed_date: string
-          created_at: string
-          habit_id: string
           id: string
           user_id: string
+          habit_id: string
+          completed_at: string
+          xp_earned: number
+          notes: string | null
         }
         Insert: {
-          completed_date: string
-          created_at?: string
-          habit_id: string
           id?: string
           user_id: string
+          habit_id: string
+          completed_at?: string
+          xp_earned?: number
+          notes?: string | null
         }
         Update: {
-          completed_date?: string
-          created_at?: string
-          habit_id?: string
           id?: string
           user_id?: string
+          habit_id?: string
+          completed_at?: string
+          xp_earned?: number
+          notes?: string | null
         }
         Relationships: [
           {
@@ -299,255 +424,326 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "habits"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       habits: {
         Row: {
-          color: string | null
-          created_at: string
+          id: string
+          user_id: string
+          category_id: string | null
+          name: string
           description: string | null
-          frequency: string | null
-          icon: string | null
-          id: string
-          name: string
-          streak: number
-          updated_at: string
-          user_id: string
+          icon: string
+          color: string
+          difficulty: string
+          frequency: string
+          target_count: number
           xp_reward: number
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          description?: string | null
-          frequency?: string | null
-          icon?: string | null
-          id?: string
-          name: string
-          streak?: number
-          updated_at?: string
-          user_id: string
-          xp_reward?: number
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          description?: string | null
-          frequency?: string | null
-          icon?: string | null
-          id?: string
-          name?: string
-          streak?: number
-          updated_at?: string
-          user_id?: string
-          xp_reward?: number
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          content: string
+          is_active: boolean
+          streak: number
+          best_streak: number
+          total_completions: number
           created_at: string
-          id: string
-          receiver_id: string
-          sender_id: string
+          updated_at: string
         }
         Insert: {
-          content: string
-          created_at?: string
           id?: string
-          receiver_id: string
-          sender_id: string
+          user_id: string
+          category_id?: string | null
+          name: string
+          description?: string | null
+          icon?: string
+          color?: string
+          difficulty?: string
+          frequency?: string
+          target_count?: number
+          xp_reward?: number
+          is_active?: boolean
+          streak?: number
+          best_streak?: number
+          total_completions?: number
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          content?: string
-          created_at?: string
           id?: string
-          receiver_id?: string
-          sender_id?: string
+          user_id?: string
+          category_id?: string | null
+          name?: string
+          description?: string | null
+          icon?: string
+          color?: string
+          difficulty?: string
+          frequency?: string
+          target_count?: number
+          xp_reward?: number
+          is_active?: boolean
+          streak?: number
+          best_streak?: number
+          total_completions?: number
+          created_at?: string
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "habits_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       notifications: {
         Row: {
-          created_at: string
           id: string
-          is_read: boolean
-          message: string
-          related_id: string | null
-          title: string
-          type: string
           user_id: string
+          title: string
+          message: string
+          type: string
+          link: string | null
+          read: boolean
+          created_at: string
         }
         Insert: {
-          created_at?: string
           id?: string
-          is_read?: boolean
-          message: string
-          related_id?: string | null
-          title: string
-          type: string
           user_id: string
+          title: string
+          message: string
+          type?: string
+          link?: string | null
+          read?: boolean
+          created_at?: string
         }
         Update: {
-          created_at?: string
           id?: string
-          is_read?: boolean
-          message?: string
-          related_id?: string | null
-          title?: string
-          type?: string
           user_id?: string
+          title?: string
+          message?: string
+          type?: string
+          link?: string | null
+          read?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          id: string
+          user_id: string
+          amount: number
+          currency: string
+          status: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          plan: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount: number
+          currency?: string
+          status?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          plan: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount?: number
+          currency?: string
+          status?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          plan?: string
+          created_at?: string
         }
         Relationships: []
       }
       profiles: {
         Row: {
+          id: string
+          email: string | null
+          full_name: string | null
+          username: string | null
           avatar_url: string | null
           bio: string | null
-          created_at: string
-          email: string | null
-          hearts: number
-          id: string
           level: number
-          longest_streak: number
-          max_hearts: number
-          notifications_enabled: boolean
-          total_habits_completed: number
-          updated_at: string
-          user_code: string | null
-          username: string
           xp: number
+          total_xp: number
+          streak: number
+          longest_streak: number
+          last_activity_date: string | null
+          theme: string
+          notification_enabled: boolean
+          is_public: boolean
+          user_code: string | null
+          hearts: number
+          max_hearts: number
+          total_habits_completed: number
+          created_at: string
+          updated_at: string
         }
         Insert: {
+          id: string
+          email?: string | null
+          full_name?: string | null
+          username?: string | null
           avatar_url?: string | null
           bio?: string | null
-          created_at?: string
-          email?: string | null
-          hearts?: number
-          id: string
           level?: number
-          longest_streak?: number
-          max_hearts?: number
-          notifications_enabled?: boolean
-          total_habits_completed?: number
-          updated_at?: string
-          user_code?: string | null
-          username: string
           xp?: number
+          total_xp?: number
+          streak?: number
+          longest_streak?: number
+          last_activity_date?: string | null
+          theme?: string
+          notification_enabled?: boolean
+          is_public?: boolean
+          user_code?: string | null
+          hearts?: number
+          max_hearts?: number
+          total_habits_completed?: number
+          created_at?: string
+          updated_at?: string
         }
         Update: {
+          id?: string
+          email?: string | null
+          full_name?: string | null
+          username?: string | null
           avatar_url?: string | null
           bio?: string | null
-          created_at?: string
-          email?: string | null
-          hearts?: number
-          id?: string
           level?: number
-          longest_streak?: number
-          max_hearts?: number
-          notifications_enabled?: boolean
-          total_habits_completed?: number
-          updated_at?: string
-          user_code?: string | null
-          username?: string
           xp?: number
+          total_xp?: number
+          streak?: number
+          longest_streak?: number
+          last_activity_date?: string | null
+          theme?: string
+          notification_enabled?: boolean
+          is_public?: boolean
+          user_code?: string | null
+          hearts?: number
+          max_hearts?: number
+          total_habits_completed?: number
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
-      session_history: {
+      sessions: {
         Row: {
-          created_at: string
-          duration_seconds: number
-          ended_at: string
           id: string
-          session_type: string
-          started_at: string
           user_id: string
+          title: string | null
+          duration_minutes: number
+          focus_area: string | null
+          notes: string | null
           xp_earned: number
+          started_at: string
+          ended_at: string | null
+          created_at: string
         }
         Insert: {
-          created_at?: string
-          duration_seconds: number
-          ended_at?: string
           id?: string
-          session_type?: string
-          started_at: string
           user_id: string
+          title?: string | null
+          duration_minutes?: number
+          focus_area?: string | null
+          notes?: string | null
           xp_earned?: number
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
         }
         Update: {
-          created_at?: string
-          duration_seconds?: number
-          ended_at?: string
           id?: string
-          session_type?: string
-          started_at?: string
           user_id?: string
+          title?: string | null
+          duration_minutes?: number
+          focus_area?: string | null
+          notes?: string | null
           xp_earned?: number
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
         }
         Relationships: []
       }
       subscriptions: {
         Row: {
-          created_at: string
-          ends_at: string | null
           id: string
-          plan_type: string
-          starts_at: string
-          status: string
-          updated_at: string
           user_id: string
+          plan: string
+          status: string
+          current_period_start: string | null
+          current_period_end: string | null
+          razorpay_subscription_id: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          created_at?: string
-          ends_at?: string | null
           id?: string
-          plan_type: string
-          starts_at?: string
-          status?: string
-          updated_at?: string
           user_id: string
+          plan?: string
+          status?: string
+          current_period_start?: string | null
+          current_period_end?: string | null
+          razorpay_subscription_id?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          created_at?: string
-          ends_at?: string | null
           id?: string
-          plan_type?: string
-          starts_at?: string
-          status?: string
-          updated_at?: string
           user_id?: string
+          plan?: string
+          status?: string
+          current_period_start?: string | null
+          current_period_end?: string | null
+          razorpay_subscription_id?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
       tasks: {
         Row: {
-          completed: boolean
-          created_at: string
-          due_date: string | null
-          goal_id: string
           id: string
-          title: string
           user_id: string
+          goal_id: string
+          title: string
+          completed: boolean
+          position: number
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          completed?: boolean
-          created_at?: string
-          due_date?: string | null
-          goal_id: string
           id?: string
-          title: string
           user_id: string
+          goal_id: string
+          title: string
+          completed?: boolean
+          position?: number
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          completed?: boolean
-          created_at?: string
-          due_date?: string | null
-          goal_id?: string
           id?: string
-          title?: string
           user_id?: string
+          goal_id?: string
+          title?: string
+          completed?: boolean
+          position?: number
+          created_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -556,27 +752,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "goals"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       user_achievements: {
         Row: {
-          achievement_id: string
-          earned_at: string
           id: string
           user_id: string
+          achievement_id: string
+          unlocked_at: string
         }
         Insert: {
-          achievement_id: string
-          earned_at?: string
           id?: string
           user_id: string
+          achievement_id: string
+          unlocked_at?: string
         }
         Update: {
-          achievement_id?: string
-          earned_at?: string
           id?: string
           user_id?: string
+          achievement_id?: string
+          unlocked_at?: string
         }
         Relationships: [
           {
@@ -585,45 +781,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "achievements"
             referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_challenge_progress: {
-        Row: {
-          challenge_id: string
-          completed: boolean
-          completed_at: string | null
-          created_at: string
-          id: string
-          progress: number
-          user_id: string
-        }
-        Insert: {
-          challenge_id: string
-          completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          progress?: number
-          user_id: string
-        }
-        Update: {
-          challenge_id?: string
-          completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          progress?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_challenge_progress_challenge_id_fkey"
-            columns: ["challenge_id"]
-            isOneToOne: false
-            referencedRelation: "daily_challenges"
-            referencedColumns: ["id"]
-          },
+          }
         ]
       }
     }
@@ -631,49 +789,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_user_code: { Args: never; Returns: string }
-      get_friend_profile: {
-        Args: { friend_id: string }
-        Returns: {
-          avatar_url: string
-          bio: string
-          hearts: number
-          id: string
-          level: number
-          longest_streak: number
-          max_hearts: number
-          total_habits_completed: number
-          user_code: string
-          username: string
-          xp: number
-        }[]
+      add_credits: {
+        Args: { 
+          p_user_id: string
+          p_amount: number
+          p_reason: string
+        }
+        Returns: number
       }
-      get_public_profile: {
-        Args: { profile_id: string }
-        Returns: {
-          avatar_url: string
-          bio: string
-          id: string
-          level: number
-          longest_streak: number
-          total_habits_completed: number
-          user_code: string
-          username: string
-          xp: number
-        }[]
+      deduct_credits: {
+        Args: { 
+          p_user_id: string
+          p_amount: number
+          p_reason: string
+        }
+        Returns: boolean
       }
-      is_friend_with: { Args: { _profile_id: string }; Returns: boolean }
-      search_user_by_code: {
-        Args: { search_code: string }
-        Returns: {
-          avatar_url: string
-          bio: string
-          id: string
-          level: number
-          user_code: string
-          username: string
-          xp: number
-        }[]
+      get_user_credits: {
+        Args: { p_user_id: string }
+        Returns: number
       }
     }
     Enums: {

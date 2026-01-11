@@ -1,22 +1,35 @@
-// Supabase client with hardcoded fallback values
-// This ensures the app works even if environment variables fail to load
+// Supabase client - YOUR OWN Supabase project
+// NO FALLBACKS - Only uses your environment variables
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Hardcoded fallback values (these are public/publishable, safe to include)
-const FALLBACK_PROJECT_ID = 'lfewszmkscodyyrhrlpf';
-const FALLBACK_URL = `https://${FALLBACK_PROJECT_ID}.supabase.co`;
-const FALLBACK_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmZXdzem1rc2NvZHl5cmhybHBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MjM4NjYsImV4cCI6MjA4MTk5OTg2Nn0.GREbPk1W_KTf-JOdbKr0cKrOdBwR8gazP416vKW7LBY';
+// Get credentials from environment variables ONLY
+// No fallback to Lovable Cloud - we own this database now!
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-// Try to get from environment, fall back to hardcoded values
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL;
-export const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || FALLBACK_ANON_KEY;
+// Validate that credentials exist
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Missing Supabase credentials! Check your .env file.');
+}
+
+// Validate correct Supabase URL in development
+if (import.meta.env.DEV) {
+  console.log('🔍 Supabase URL being used:', SUPABASE_URL);
+  console.log('✅ Expected:', 'https://ryzhsfmqopywoymghmdp.supabase.co');
+  if (SUPABASE_URL !== 'https://ryzhsfmqopywoymghmdp.supabase.co') {
+    console.error('❌ WRONG SUPABASE URL! Still using old Lovable credentials!');
+  }
+}
+
+export { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY };
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
 });

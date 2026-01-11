@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCredits } from '@/hooks/useCredits';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRazorpay } from '@/hooks/useRazorpay';
 import {
   Crown,
   Zap,
@@ -21,60 +22,56 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Subscription Plans - Monthly & Yearly options only
 const SUBSCRIPTION_PLANS = [
   {
     name: 'Free',
-    price: 0,
-    period: 'forever',
+    monthlyPrice: 0,
+    yearlyPrice: 0,
     tier: 'free',
-    credits: 0,
-    monthlyCredits: 0,
+    monthlyCredits: 10,
     badge: null,
     description: 'Perfect for getting started',
     features: [
+      '10 AI credits (one-time)',
       '10 saved items in library',
       'Basic AI Tools access',
       'Manual habit tracking',
       'Basic analytics',
-      'Community support',
     ],
     limitations: [
-      'No AI Mentor access',
+      'Limited AI Mentor access',
       'No PDF exports',
       'Library auto-deletes in 7 days',
-      'Purchase credits to use AI tools',
     ],
   },
   {
-    name: 'Basic',
-    price: 9.99,
-    period: 'month',
-    tier: 'basic',
-    credits: 50,
-    monthlyCredits: 50,
+    name: 'Pro',
+    monthlyPrice: 49,
+    yearlyPrice: 399, // ~₹33/month - Save 32%
+    tier: 'pro',
+    monthlyCredits: 100,
     badge: <Star className="w-4 h-4" />,
     description: 'Great for regular users',
     popular: false,
     features: [
-      '50 AI credits per month',
+      '100 AI credits per month',
       '50 saved items in library',
       'All AI Tools (Notes, Flashcards, Roadmap)',
+      'AI Mentor access',
       'Library auto-deletes in 30 days',
-      'Priority support',
       'Export to TXT/Markdown',
+      'Email support',
     ],
     limitations: [
-      'No AI Mentor access',
       'No PDF exports',
-      'Limited credits',
     ],
   },
   {
     name: 'Premium',
-    price: 19.99,
-    period: 'month',
+    monthlyPrice: 99,
+    yearlyPrice: 799, // ~₹67/month - Save 33%
     tier: 'premium',
-    credits: 500,
     monthlyCredits: 500,
     badge: <Crown className="w-4 h-4" />,
     description: 'For power users and students',
@@ -82,73 +79,52 @@ const SUBSCRIPTION_PLANS = [
     features: [
       '500 AI credits per month',
       'Unlimited library storage',
-      'AI Mentor - Full Access',
+      'AI Mentor - Unlimited access',
       'All AI Tools with priority',
-      'PDF Export (Premium)',
-      'Library auto-deletes in 90 days',
+      'PDF Export',
+      'Library never expires',
       'Advanced analytics',
       'Priority generation speed',
-      'Exclusive features',
-      'Premium support',
-    ],
-    limitations: [],
-  },
-  {
-    name: 'Lifetime',
-    price: 199.99,
-    period: 'one-time',
-    tier: 'lifetime',
-    credits: 1000,
-    monthlyCredits: 1000,
-    badge: <Infinity className="w-4 h-4" />,
-    description: 'Best value - Pay once, use forever',
-    popular: false,
-    features: [
-      '1000 AI credits per month',
-      'Everything in Premium',
-      'Lifetime access',
-      'All future updates',
-      'Never pay again',
-      'VIP support',
-      'Early access to features',
+      'Priority support',
     ],
     limitations: [],
   },
 ];
 
+// Credit Packages - Monthly & Yearly subscriptions
 const CREDIT_PACKAGES_DATA = [
   {
-    name: 'Starter Pack',
+    name: 'Starter',
     credits: 50,
-    bonus: 0,
-    price: 4.99,
+    monthlyPrice: 29,
+    yearlyPrice: 249, // ~₹21/month - Save 28%
     popular: false,
     icon: Coins,
     gradient: 'from-blue-500 to-cyan-500',
   },
   {
-    name: 'Popular Pack',
+    name: 'Popular',
     credits: 150,
-    bonus: 10,
-    price: 12.99,
+    monthlyPrice: 79,
+    yearlyPrice: 699, // ~₹58/month - Save 26%
     popular: true,
     icon: TrendingUp,
     gradient: 'from-purple-500 to-pink-500',
   },
   {
-    name: 'Power Pack',
+    name: 'Power',
     credits: 350,
-    bonus: 50,
-    price: 24.99,
+    monthlyPrice: 149,
+    yearlyPrice: 1299, // ~₹108/month - Save 27%
     popular: false,
     icon: Zap,
     gradient: 'from-orange-500 to-red-500',
   },
   {
-    name: 'Ultimate Pack',
+    name: 'Ultimate',
     credits: 1000,
-    bonus: 200,
-    price: 59.99,
+    monthlyPrice: 349,
+    yearlyPrice: 2999, // ~₹250/month - Save 28%
     popular: false,
     icon: Gift,
     gradient: 'from-green-500 to-emerald-500',
@@ -164,25 +140,40 @@ const AI_TOOL_COSTS = [
 
 export default function NewSubscriptionPage() {
   const { profile } = useAuth();
-  const { credits, packages, toolCosts } = useCredits();
+  const { credits } = useCredits();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
-  const currentTier = profile?.subscription_tier || 'free';
+  const currentTier = 'free'; // Will be fetched from subscription hook
 
-  const handleSubscribe = async (planTier: string) => {
+  const { purchaseSubscription, purchaseCredits, isProcessing } = useRazorpay();
+
+  const handleSubscribe = async (planTier: string, monthlyPrice: number, yearlyPrice: number) => {
+    if (planTier === 'free') return;
+    
     setSelectedPlan(planTier);
-    // Implement Stripe integration here
-    toast.info('Redirecting to payment...', {
-      description: 'This feature will be connected to Stripe soon!',
-    });
-    setTimeout(() => setSelectedPlan(null), 2000);
+    
+    const amount = billingCycle === 'yearly' ? yearlyPrice : monthlyPrice;
+    const duration = billingCycle === 'yearly' ? 12 : 1;
+    
+    await purchaseSubscription(planTier, amount, duration);
+    
+    setSelectedPlan(null);
   };
 
+  const [creditBillingCycle, setCreditBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
   const handleBuyCredits = async (packageData: any) => {
-    // Implement credit purchase
-    toast.info('Redirecting to payment...', {
-      description: 'Credit purchase will be integrated with Stripe!',
-    });
+    const amount = creditBillingCycle === 'yearly' ? packageData.yearlyPrice : packageData.monthlyPrice;
+    const duration = creditBillingCycle === 'yearly' ? 12 : 1;
+    
+    await purchaseCredits(
+      packageData.credits,
+      0, // No bonus - credits given every month
+      amount,
+      `${packageData.name} Credit Pack (${creditBillingCycle})`,
+      duration
+    );
   };
 
   return (
@@ -238,10 +229,41 @@ export default function NewSubscriptionPage() {
 
             {/* Subscription Plans */}
             <TabsContent value="subscriptions" className="space-y-8 mt-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Billing Cycle Toggle */}
+              <div className="flex items-center justify-center gap-4">
+                <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  Monthly
+                </span>
+                <button
+                  onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                    billingCycle === 'yearly' ? 'bg-purple-600' : 'bg-muted'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${
+                      billingCycle === 'yearly' ? 'translate-x-8' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className={`text-sm font-medium ${billingCycle === 'yearly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  Yearly
+                </span>
+                {billingCycle === 'yearly' && (
+                  <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                    Save up to 33%
+                  </Badge>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {SUBSCRIPTION_PLANS.map((plan) => {
                   const isCurrentPlan = currentTier === plan.tier;
                   const Icon = plan.badge;
+                  const displayPrice = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
+                  const monthlyEquivalent = billingCycle === 'yearly' && plan.yearlyPrice > 0 
+                    ? Math.round(plan.yearlyPrice / 12) 
+                    : null;
 
                   return (
                     <Card
@@ -267,9 +289,16 @@ export default function NewSubscriptionPage() {
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-bold">${plan.price}</span>
-                            <span className="text-muted-foreground">/{plan.period}</span>
+                            <span className="text-3xl font-bold">₹{displayPrice}</span>
+                            <span className="text-muted-foreground">
+                              /{billingCycle === 'yearly' ? 'year' : 'month'}
+                            </span>
                           </div>
+                          {monthlyEquivalent && (
+                            <p className="text-sm text-muted-foreground">
+                              ₹{monthlyEquivalent}/month billed yearly
+                            </p>
+                          )}
                           {plan.monthlyCredits > 0 && (
                             <Badge variant="outline" className="mt-2">
                               <Coins className="w-3 h-3 mr-1" />
@@ -296,12 +325,12 @@ export default function NewSubscriptionPage() {
                               ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
                               : ''
                           }`}
-                          disabled={isCurrentPlan || selectedPlan === plan.tier}
-                          onClick={() => handleSubscribe(plan.tier)}
+                          disabled={isCurrentPlan || selectedPlan === plan.tier || isProcessing}
+                          onClick={() => handleSubscribe(plan.tier, plan.monthlyPrice, plan.yearlyPrice)}
                         >
                           {isCurrentPlan ? (
                             'Current Plan'
-                          ) : selectedPlan === plan.tier ? (
+                          ) : selectedPlan === plan.tier || isProcessing ? (
                             'Processing...'
                           ) : (
                             <>
@@ -340,14 +369,44 @@ export default function NewSubscriptionPage() {
             {/* Credit Packages */}
             <TabsContent value="credits" className="space-y-8 mt-8">
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-2">Buy Credits Once, Use Anytime</h3>
-                <p className="text-muted-foreground">No subscription needed - credits never expire</p>
+                <h3 className="text-2xl font-bold mb-2">Credit Subscriptions</h3>
+                <p className="text-muted-foreground">Get credits every month - perfect if you need more than your plan offers</p>
+              </div>
+
+              {/* Billing Cycle Toggle for Credits */}
+              <div className="flex items-center justify-center gap-4">
+                <span className={`text-sm font-medium ${creditBillingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  Monthly
+                </span>
+                <button
+                  onClick={() => setCreditBillingCycle(creditBillingCycle === 'monthly' ? 'yearly' : 'monthly')}
+                  className={`relative w-14 h-7 rounded-full transition-colors ${
+                    creditBillingCycle === 'yearly' ? 'bg-purple-600' : 'bg-muted'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${
+                      creditBillingCycle === 'yearly' ? 'translate-x-8' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className={`text-sm font-medium ${creditBillingCycle === 'yearly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  Yearly
+                </span>
+                {creditBillingCycle === 'yearly' && (
+                  <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                    Save up to 28%
+                  </Badge>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {CREDIT_PACKAGES_DATA.map((pkg, index) => {
                   const Icon = pkg.icon;
-                  const totalCredits = pkg.credits + pkg.bonus;
+                  const displayPrice = creditBillingCycle === 'yearly' ? pkg.yearlyPrice : pkg.monthlyPrice;
+                  const monthlyEquivalent = creditBillingCycle === 'yearly' 
+                    ? Math.round(pkg.yearlyPrice / 12) 
+                    : null;
 
                   return (
                     <Card
@@ -368,21 +427,22 @@ export default function NewSubscriptionPage() {
                         </div>
                         <CardTitle className="text-center">{pkg.name}</CardTitle>
                         <div className="text-center space-y-2">
-                          <div className="text-3xl font-bold">${pkg.price}</div>
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-center gap-2">
-                              <Coins className="w-4 h-4 text-muted-foreground" />
-                              <span className="font-semibold">{pkg.credits} credits</span>
-                            </div>
-                            {pkg.bonus > 0 && (
-                              <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
-                                <Gift className="w-3 h-3 mr-1" />
-                                +{pkg.bonus} bonus
-                              </Badge>
-                            )}
+                          <div className="flex items-baseline justify-center gap-1">
+                            <span className="text-3xl font-bold">₹{displayPrice}</span>
+                            <span className="text-muted-foreground">
+                              /{creditBillingCycle === 'yearly' ? 'year' : 'month'}
+                            </span>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            Total: {totalCredits} credits
+                          {monthlyEquivalent && (
+                            <p className="text-sm text-muted-foreground">
+                              ₹{monthlyEquivalent}/month billed yearly
+                            </p>
+                          )}
+                          <div className="space-y-1">
+                            <Badge variant="outline" className="mt-2">
+                              <Coins className="w-3 h-3 mr-1" />
+                              {pkg.credits} credits/month
+                            </Badge>
                           </div>
                         </div>
                       </CardHeader>
@@ -391,8 +451,9 @@ export default function NewSubscriptionPage() {
                         <Button
                           className={`w-full bg-gradient-to-r ${pkg.gradient} hover:opacity-90 text-white border-0`}
                           onClick={() => handleBuyCredits(pkg)}
+                          disabled={isProcessing}
                         >
-                          Buy Now
+                          {isProcessing ? 'Processing...' : 'Subscribe'}
                           <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </CardContent>
@@ -406,19 +467,19 @@ export default function NewSubscriptionPage() {
                 <CardContent className="p-8">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                     <div>
-                      <Shield className="w-8 h-8 mx-auto mb-2 text-purple-500" />
-                      <h4 className="font-semibold mb-1">Never Expire</h4>
-                      <p className="text-sm text-muted-foreground">Use credits whenever you need them</p>
+                      <Coins className="w-8 h-8 mx-auto mb-2 text-purple-500" />
+                      <h4 className="font-semibold mb-1">Monthly Credits</h4>
+                      <p className="text-sm text-muted-foreground">Get fresh credits every month automatically</p>
                     </div>
                     <div>
                       <Sparkles className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                      <h4 className="font-semibold mb-1">Flexible Usage</h4>
-                      <p className="text-sm text-muted-foreground">Use on any AI tool you want</p>
+                      <h4 className="font-semibold mb-1">Stack with Plans</h4>
+                      <p className="text-sm text-muted-foreground">Add to your subscription plan credits</p>
                     </div>
                     <div>
                       <TrendingUp className="w-8 h-8 mx-auto mb-2 text-cyan-500" />
-                      <h4 className="font-semibold mb-1">Better Value</h4>
-                      <p className="text-sm text-muted-foreground">Bigger packs = bigger bonuses</p>
+                      <h4 className="font-semibold mb-1">Save with Yearly</h4>
+                      <p className="text-sm text-muted-foreground">Up to 28% off with yearly billing</p>
                     </div>
                   </div>
                 </CardContent>

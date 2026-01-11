@@ -55,19 +55,64 @@ const SignupPage = () => {
 
     setIsLoading(true);
     
-    const { error } = await signUp(email, password, username);
+    const { error, data } = await signUp(email, password, username);
     
     if (error) {
+      // Log detailed error for debugging
+      console.error('Signup Error Details:', {
+        message: error.message,
+        name: error.name,
+        fullError: JSON.stringify(error, null, 2)
+      });
       logError('Signup', error);
+      const errorMsg = error.message?.toLowerCase() || '';
+      
+      // Check if user already exists
+      if (errorMsg.includes('already registered') || 
+          errorMsg.includes('already exists') || 
+          errorMsg.includes('duplicate')) {
+        toast({
+          title: 'Account already exists',
+          description: 'This email is already registered. Please sign in instead.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Show the actual error message for debugging
       toast({
         title: 'Signup failed',
-        description: getDisplayErrorMessage(error, 'auth'),
+        description: error.message || getDisplayErrorMessage(error, 'auth'),
         variant: 'destructive',
       });
       setIsLoading(false);
       return;
     }
 
+    // Check if user needs email confirmation or is already confirmed
+    if (data?.user) {
+      if (data.user.confirmed_at || data.session) {
+        // User is auto-confirmed (email confirmation disabled in Supabase)
+        toast({
+          title: 'Account created!',
+          description: 'Welcome to StarPath! Redirecting to dashboard...',
+        });
+        // Navigate to app - the auth state change will handle the rest
+        setTimeout(() => {
+          navigate('/app');
+        }, 1000);
+        setIsLoading(false);
+        return;
+      } else {
+        // Email confirmation is required
+        setEmailSent(true);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // Fallback - show email confirmation screen
     setEmailSent(true);
     setIsLoading(false);
   };

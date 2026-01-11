@@ -1,35 +1,41 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { toast } from 'sonner';
 
 export interface LibraryItem {
   id: string;
   user_id: string;
-  tool_type: 'notes' | 'flashcards' | 'roadmap' | 'mentor';
   title: string;
-  content: any;
-  raw_content?: string;
-  tags: string[];
+  content: string;
+  content_type: 'notes' | 'flashcards' | 'roadmap' | 'chat';
+  tags: string[] | null;
+  metadata: any;
+  is_favorite: boolean;
   created_at: string;
   updated_at: string;
-  delete_at?: string;
-  is_pinned: boolean;
 }
 
 export function useLibrary() {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const [items, setItems] = useState<LibraryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchItems = async () => {
-    if (!user) return;
+    if (!user) {
+      setItems([]);
+      setIsLoading(false);
+      return;
+    }
     
     try {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('ai_library')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -47,7 +53,7 @@ export function useLibrary() {
   }, [user]);
 
   const saveItem = async (
-    toolType: LibraryItem['tool_type'],
+    contentType: LibraryItem['content_type'],
     title: string,
     content: any,
     rawContent?: string,
@@ -60,13 +66,6 @@ export function useLibrary() {
 
     try {
       // Check library limits
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .single();
-
-      const isPremium = profile?.subscription_tier === 'premium' || profile?.subscription_tier === 'lifetime';
       const currentCount = items.length;
       const limit = isPremium ? Infinity : 10;
 
@@ -79,15 +78,19 @@ export function useLibrary() {
         return null;
       }
 
+      // Convert content to string if it's an object
+      const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+
       const { data, error } = await supabase
         .from('ai_library')
         .insert({
           user_id: user.id,
-          tool_type: toolType,
+          content_type: contentType,
           title,
-          content,
-          raw_content: rawContent,
-          tags,
+          content: contentStr,
+          tags: tags.length > 0 ? tags : null,
+          metadata: rawContent ? { raw_content: rawContent } : null,
+          is_favorite: false,
         })
         .select()
         .single();
@@ -121,19 +124,19 @@ export function useLibrary() {
     }
   };
 
-  const togglePin = async (id: string, currentPinned: boolean) => {
+  const toggleFavorite = async (id: string, currentFavorite: boolean) => {
     try {
       const { error } = await supabase
         .from('ai_library')
-        .update({ is_pinned: !currentPinned })
+        .update({ is_favorite: !currentFavorite })
         .eq('id', id);
 
       if (error) throw error;
 
-      toast.success(currentPinned ? 'Unpinned' : 'Pinned');
+      toast.success(currentFavorite ? 'Removed from favorites' : 'Added to favorites');
       fetchItems();
     } catch (error: any) {
-      console.error('Error toggling pin:', error);
+      console.error('Error toggling favorite:', error);
       toast.error('Failed to update');
     }
   };
@@ -160,7 +163,7 @@ export function useLibrary() {
     isLoading,
     saveItem,
     deleteItem,
-    togglePin,
+    toggleFavorite,
     updateTags,
     refetch: fetchItems,
   };

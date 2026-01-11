@@ -8,31 +8,33 @@ import { format } from 'date-fns';
 function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
   
   if (hours > 0) {
     return `${hours}h ${mins}m`;
   }
-  return `${mins}m ${secs}s`;
+  return `${mins}m`;
 }
 
-function getSessionIcon(type: string) {
+function getSessionIcon(type: string | null) {
   switch (type) {
     case 'pomodoro_work':
       return <Timer className="w-3 h-3" />;
     case 'pomodoro_break':
+    case 'pomodoro_long_break':
       return <Coffee className="w-3 h-3" />;
     default:
       return <Clock className="w-3 h-3" />;
   }
 }
 
-function getSessionLabel(type: string) {
+function getSessionLabel(type: string | null) {
   switch (type) {
     case 'pomodoro_work':
       return 'Pomodoro';
     case 'pomodoro_break':
       return 'Break';
+    case 'pomodoro_long_break':
+      return 'Long Break';
     default:
       return 'Focus';
   }
@@ -73,14 +75,14 @@ export function SessionHistoryCard() {
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Badge variant={session.session_type === 'pomodoro_break' ? 'secondary' : 'default'} className="gap-1">
+                    <Badge variant={session.session_type?.includes('break') ? 'secondary' : 'default'} className="gap-1">
                       {getSessionIcon(session.session_type)}
                       {getSessionLabel(session.session_type)}
                     </Badge>
                     <div>
                       <p className="text-sm font-medium">{formatDuration(session.duration_seconds)}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(session.ended_at), 'MMM d, h:mm a')}
+                        {session.started_at ? format(new Date(session.started_at), 'MMM d, h:mm a') : 'Unknown'}
                       </p>
                     </div>
                   </div>

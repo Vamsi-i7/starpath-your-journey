@@ -5,6 +5,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// OpenRouter API endpoint (FREE models)
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+// FREE Models from OpenRouter - ordered by preference
+const FREE_MODELS = {
+  primary: "google/gemini-2.0-flash-exp:free",      // Best quality
+  secondary: "nvidia/nemotron-nano-12b-v2-vl:free", // Good backup
+  fallback: "xiaomi/mimo-v2-flash:free",            // Last resort
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -12,10 +22,12 @@ serve(async (req) => {
 
   try {
     const { type, context } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    // Use FREE OpenRouter API
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    
+    if (!OPENROUTER_API_KEY) {
+      throw new Error("OPENROUTER_API_KEY is not configured. Add your OpenRouter API key to Supabase secrets.");
     }
 
     let systemPrompt = "";
@@ -55,48 +67,98 @@ Keep responses concise, encouraging, and actionable. Use emojis sparingly. Never
         throw new Error("Invalid request type");
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        stream: type === "coach_chat",
-      }),
-    });
+    // Build messages array for OpenRouter (OpenAI-compatible format)
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ];
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits depleted. Please add funds." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error("AI gateway error");
-    }
-
+    // For streaming chat responses
     if (type === "coach_chat") {
+      const response = await fetch(OPENROUTER_API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://starpath.app",
+          "X-Title": "StarPath AI Mentor",
+        },
+        body: JSON.stringify({
+          model: FREE_MODELS.primary,
+          messages: messages,
+          temperature: 0.8,
+          max_tokens: 1024,
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("OpenRouter streaming error:", response.status, errorText);
+        throw new Error("AI streaming failed");
+      }
+
+      // Pass through the SSE stream (OpenRouter uses OpenAI-compatible format)
       return new Response(response.body, {
-        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive"
+        },
       });
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    // Non-streaming requests - try models with fallback
+    let content = "";
+    let lastError = null;
+    const modelsToTry = [FREE_MODELS.primary, FREE_MODELS.secondary, FREE_MODELS.fallback];
+    
+    for (const model of modelsToTry) {
+      try {
+        const response = await fetch(OPENROUTER_API_URL, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://starpath.app",
+            "X-Title": "StarPath AI Mentor",
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: messages,
+            temperature: 0.8,
+            max_tokens: 1024,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`${model} error:`, response.status, errorText);
+          
+          if (response.status === 429) {
+            lastError = "Rate limit exceeded. Please try again in a minute.";
+            continue;
+          }
+          
+          lastError = `Model ${model} failed`;
+          continue;
+        }
+
+        const data = await response.json();
+        content = data.choices?.[0]?.message?.content || "";
+        
+        if (content) break; // Success
+      } catch (e) {
+        console.error(`Error with ${model}:`, e);
+        lastError = e.message;
+        continue;
+      }
+    }
+
+    if (!content) {
+      throw new Error(lastError || "All AI models failed. Please try again later.");
+    }
 
     return new Response(JSON.stringify({ content }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

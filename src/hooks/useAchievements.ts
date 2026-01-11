@@ -5,20 +5,23 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface Achievement {
   id: string;
+  key: string;
   name: string;
-  description: string;
+  description: string | null;
   icon: string;
   category: string;
   requirement_type: string;
   requirement_value: number;
   xp_reward: number;
-  rarity: string;
+  tier: string;
+  is_secret: boolean;
+  created_at: string;
 }
 
 export interface UserAchievement {
   id: string;
   achievement_id: string;
-  earned_at: string;
+  unlocked_at: string;
   achievement: Achievement;
 }
 
@@ -68,7 +71,7 @@ export function useAchievements() {
         .select(`
           id,
           achievement_id,
-          earned_at,
+          unlocked_at,
           achievement:achievements(*)
         `)
         .eq('user_id', user.id);
@@ -80,28 +83,40 @@ export function useAchievements() {
   }, [user]);
 
   const fetchDailyChallenges = useCallback(async () => {
-    const today = new Date().toISOString().split('T')[0];
-    
-    const { data: challenges } = await supabase
-      .from('daily_challenges')
-      .select('*')
-      .eq('active_date', today);
-
-    if (challenges) {
-      setDailyChallenges(challenges);
-    }
-
-    // Fetch user's challenge progress
-    if (user && challenges) {
-      const { data: progress } = await supabase
-        .from('user_challenge_progress')
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: challenges, error } = await supabase
+        .from('daily_challenges')
         .select('*')
-        .eq('user_id', user.id)
-        .in('challenge_id', challenges.map(c => c.id));
+        .eq('active_date', today);
 
-      if (progress) {
-        setChallengeProgress(progress);
+      // Handle table not existing gracefully
+      if (error) {
+        console.log('Daily challenges table not available:', error.message);
+        setDailyChallenges([]);
+        return;
       }
+
+      if (challenges) {
+        setDailyChallenges(challenges);
+      }
+
+      // Fetch user's challenge progress
+      if (user && challenges && challenges.length > 0) {
+        const { data: progress } = await supabase
+          .from('user_challenge_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .in('challenge_id', challenges.map(c => c.id));
+
+        if (progress) {
+          setChallengeProgress(progress);
+        }
+      }
+    } catch (err) {
+      console.log('Error fetching daily challenges:', err);
+      setDailyChallenges([]);
     }
   }, [user]);
 
@@ -117,20 +132,23 @@ export function useAchievements() {
       let earned = false;
       
       switch (achievement.requirement_type) {
-        case 'habits_completed':
+        case 'habit_completions':
           earned = profile.total_habits_completed >= achievement.requirement_value;
           break;
-        case 'streak_days':
+        case 'streak':
           earned = profile.longest_streak >= achievement.requirement_value;
           break;
-        case 'level_reached':
+        case 'level':
           earned = profile.level >= achievement.requirement_value;
           break;
-        case 'hearts_earned':
-          earned = profile.hearts >= achievement.requirement_value;
+        case 'total_xp':
+          earned = profile.total_xp >= achievement.requirement_value;
           break;
         case 'goals_completed':
           // Would need to query goals table for this
+          break;
+        case 'friends':
+          // Would need to query friendships table for this
           break;
       }
 
@@ -257,24 +275,26 @@ export function useAchievements() {
     if (profile && achievements.length > 0) {
       checkAndAwardAchievements();
     }
-  }, [profile?.total_habits_completed, profile?.longest_streak, profile?.level, profile?.hearts]);
+  }, [profile?.total_habits_completed, profile?.longest_streak, profile?.level, profile?.total_xp]);
 
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'text-muted-foreground';
-      case 'rare': return 'text-primary';
-      case 'epic': return 'text-accent';
-      case 'legendary': return 'text-star';
+  const getTierColor = (tier: string) => {
+    switch (tier) {
+      case 'bronze': return 'text-orange-400';
+      case 'silver': return 'text-slate-400';
+      case 'gold': return 'text-yellow-500';
+      case 'platinum': return 'text-cyan-400';
+      case 'diamond': return 'text-purple-400';
       default: return 'text-muted-foreground';
     }
   };
 
-  const getRarityBg = (rarity: string) => {
-    switch (rarity) {
-      case 'common': return 'bg-muted/20';
-      case 'rare': return 'bg-primary/20';
-      case 'epic': return 'bg-accent/20';
-      case 'legendary': return 'bg-gradient-to-br from-star/30 to-streak/30';
+  const getTierBg = (tier: string) => {
+    switch (tier) {
+      case 'bronze': return 'bg-orange-500/20';
+      case 'silver': return 'bg-slate-400/20';
+      case 'gold': return 'bg-yellow-500/20';
+      case 'platinum': return 'bg-cyan-400/20';
+      case 'diamond': return 'bg-gradient-to-br from-purple-500/30 to-pink-500/30';
       default: return 'bg-muted/20';
     }
   };
@@ -287,8 +307,8 @@ export function useAchievements() {
     isLoading,
     updateChallengeProgress,
     checkAndAwardAchievements,
-    getRarityColor,
-    getRarityBg,
+    getTierColor,
+    getTierBg,
     refetch: () => Promise.all([fetchAchievements(), fetchDailyChallenges()]),
   };
 }

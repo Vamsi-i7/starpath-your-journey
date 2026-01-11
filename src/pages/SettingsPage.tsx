@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle, Palette, Check } from 'lucide-react';
+import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle, Palette, Check, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { validatePassword } from '@/lib/passwordValidation';
 import { useTutorial } from '@/components/onboarding/WelcomeTutorial';
+import { AnalyticsGuide } from '@/components/analytics/AnalyticsGuide';
+import { useState as useSettingsState } from 'react';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -45,6 +47,7 @@ const SettingsPage = () => {
   const { profile, theme, toggleTheme, accent, setAccent, updateProfile, signOut } = useAuth();
   const { toast } = useToast();
   const { resetTutorial } = useTutorial();
+  const [showAnalyticsGuide, setShowAnalyticsGuide] = useState(false);
   const [notifications, setNotifications] = useState(profile?.notifications_enabled ?? true);
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
   
@@ -301,6 +304,8 @@ const SettingsPage = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <AppTopbar title="Settings" />
+      
+      <AnalyticsGuide open={showAnalyticsGuide} onClose={() => setShowAnalyticsGuide(false)} />
       <div className="p-6 max-w-4xl mx-auto space-y-6">
         <div className="p-6 rounded-2xl bg-card border border-border/30">
           <h3 className="font-semibold text-foreground mb-4">Profile</h3>
@@ -415,19 +420,28 @@ const SettingsPage = () => {
 
         <div className="p-6 rounded-2xl bg-card border border-border/30">
           <h3 className="font-semibold text-foreground mb-4">Help</h3>
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={() => {
-              resetTutorial();
-              toast({
-                title: 'Tutorial reset',
-                description: 'Go to Dashboard to see the tutorial again.',
-              });
-            }}
-          >
-            <HelpCircle className="w-4 h-4" /> Replay Welcome Tutorial
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => {
+                resetTutorial();
+                toast({
+                  title: 'Tutorial reset',
+                  description: 'Go to Dashboard to see the tutorial again.',
+                });
+              }}
+            >
+              <HelpCircle className="w-4 h-4" /> Replay Welcome Tutorial
+            </Button>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => setShowAnalyticsGuide(true)}
+            >
+              <BarChart3 className="w-4 h-4" /> Replay Analytics Guide
+            </Button>
+          </div>
         </div>
 
         <div className="p-6 rounded-2xl bg-card border border-border/30">

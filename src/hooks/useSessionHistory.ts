@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SessionHistoryItem {
@@ -24,7 +24,7 @@ export function useSessionHistory(limit: number = 10) {
         .from('session_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('ended_at', { ascending: false })
+        .order('started_at', { ascending: false })
         .limit(limit);
 
       if (error) throw error;
@@ -50,8 +50,8 @@ export function useSessionStats() {
       if (error) throw error;
 
       const totalSessions = data?.length || 0;
-      const totalMinutes = Math.floor((data?.reduce((acc, s) => acc + s.duration_seconds, 0) || 0) / 60);
-      const totalXp = data?.reduce((acc, s) => acc + s.xp_earned, 0) || 0;
+      const totalMinutes = data?.reduce((acc, s) => acc + Math.floor((s.duration_seconds || 0) / 60), 0) || 0;
+      const totalXp = data?.reduce((acc, s) => acc + (s.xp_earned || 0), 0) || 0;
 
       return { totalSessions, totalMinutes, totalXp };
     },

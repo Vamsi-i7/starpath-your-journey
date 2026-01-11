@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useCredits } from '@/hooks/useCredits';
 import { Progress } from '@/components/ui/progress';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface CreditDisplayProps {
   showDetails?: boolean;
@@ -13,12 +13,12 @@ interface CreditDisplayProps {
 
 export function CreditDisplay({ showDetails = true, toolType }: CreditDisplayProps) {
   const navigate = useNavigate();
-  const { credits, getCost } = useCredits();
-  const { profile } = useAuth();
+  const { credits, getCost, userCredits } = useCredits();
+  const { currentTier, isPremium } = useSubscription();
 
   const cost = toolType ? getCost(toolType) : 0;
   const canAfford = !toolType || credits >= cost;
-  const usagePercent = profile?.subscription_tier === 'free' ? 0 : Math.min((credits / 500) * 100, 100);
+  const usagePercent = isPremium ? Math.min((credits / 500) * 100, 100) : 0;
 
   if (!showDetails) {
     return (
@@ -71,11 +71,11 @@ export function CreditDisplay({ showDetails = true, toolType }: CreditDisplayPro
           )}
 
           {/* Progress Bar (for subscription users) */}
-          {profile?.subscription_tier !== 'free' && (
+          {isPremium && userCredits && (
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Monthly Usage</span>
-                <span>{profile?.credits_used_this_month || 0} used</span>
+                <span>Credits Used</span>
+                <span>{userCredits.total_spent || 0} total spent</span>
               </div>
               <Progress value={usagePercent} className="h-2" />
             </div>

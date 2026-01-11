@@ -70,6 +70,8 @@ export const YearView = memo(({
     const totalXp = monthlyData.reduce((sum, m) => sum + m.totalXp, 0);
     const totalMinutes = monthlyData.reduce((sum, m) => sum + m.totalMinutes, 0);
     const totalGoals = monthlyData.reduce((sum, m) => sum + m.goalsCompleted, 0);
+    const totalGoalsCreated = monthlyData.reduce((sum, m) => sum + (m.goalsCreated || 0), 0);
+    const avgGoalCompletionRate = monthlyData.reduce((sum, m) => sum + (m.goalCompletionRate || 0), 0) / 12;
     
     const bestMonth = monthlyData.reduce((best, month) => 
       month.totalHabits > best.totalHabits ? month : best
@@ -95,6 +97,8 @@ export const YearView = memo(({
       totalXp,
       totalMinutes,
       totalGoals,
+      totalGoalsCreated,
+      avgGoalCompletionRate,
       avgMonthlyHabits,
       bestMonth,
       worstMonth,
@@ -416,6 +420,71 @@ export const YearView = memo(({
           </ResponsiveContainer>
         </Card>
       </div>
+
+      {/* Goal Completion Analytics */}
+      <Card className="p-6 border-border/40 bg-card/50 backdrop-blur-sm">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Target className="w-5 h-5 text-purple-500" />
+            Goal Completion Analytics
+          </h3>
+          <p className="text-xs text-muted-foreground">Track your goal achievement throughout the year</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+            <p className="text-xs text-muted-foreground mb-1">Goals Completed</p>
+            <p className="text-3xl font-bold text-purple-500">{yearSummary.totalGoals}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {yearSummary.totalGoalsCreated > 0 
+                ? `${((yearSummary.totalGoals / yearSummary.totalGoalsCreated) * 100).toFixed(0)}% success rate`
+                : 'No goals created yet'}
+            </p>
+          </div>
+          <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+            <p className="text-xs text-muted-foreground mb-1">Goals Created</p>
+            <p className="text-3xl font-bold text-blue-500">{yearSummary.totalGoalsCreated}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {(yearSummary.totalGoalsCreated / 12).toFixed(1)} per month
+            </p>
+          </div>
+          <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <p className="text-xs text-muted-foreground mb-1">Avg Completion Rate</p>
+            <p className="text-3xl font-bold text-amber-500">{yearSummary.avgGoalCompletionRate.toFixed(0)}%</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Monthly average
+            </p>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={monthlyChartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.1} />
+            <XAxis 
+              dataKey="name" 
+              stroke="#888"
+              style={{ fontSize: '12px' }}
+            />
+            <YAxis 
+              stroke="#888"
+              style={{ fontSize: '12px' }}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend 
+              wrapperStyle={{ fontSize: '12px' }}
+              iconType="circle"
+            />
+            <Line
+              type="monotone"
+              dataKey="goals"
+              stroke="#a855f7"
+              strokeWidth={3}
+              dot={{ r: 5, fill: '#a855f7' }}
+              activeDot={{ r: 7 }}
+              animationDuration={1500}
+              name="Goals Completed"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </Card>
 
       {/* Best & Worst Months */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

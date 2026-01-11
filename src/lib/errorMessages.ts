@@ -10,20 +10,46 @@ export const getDisplayErrorMessage = (error: unknown, context: ErrorContext): s
   
   // Authentication context
   if (context === 'auth') {
-    if (errorMessage.includes('invalid') || errorMessage.includes('credentials') || errorMessage.includes('password')) {
-      return 'Invalid email or password. Please try again.';
+    // Duplicate email/user already exists
+    if (errorMessage.includes('already registered') || 
+        errorMessage.includes('already exists') || 
+        errorMessage.includes('duplicate') ||
+        errorMessage.includes('user already registered') ||
+        errorMessage.includes('email address is already registered')) {
+      return 'This email is already registered. Please sign in instead, or use "Forgot Password" if you\'ve forgotten your password.';
     }
-    if (errorMessage.includes('email not confirmed')) {
-      return 'Please verify your email before signing in.';
+    // Invalid credentials
+    if (errorMessage.includes('invalid login credentials') || 
+        errorMessage.includes('invalid') && errorMessage.includes('password')) {
+      return 'Invalid email or password. Please check your credentials and try again.';
     }
-    if (errorMessage.includes('already registered') || errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
-      return 'An account with this email already exists.';
+    // Email not confirmed
+    if (errorMessage.includes('email not confirmed') || errorMessage.includes('confirm your email')) {
+      return 'Please verify your email before signing in. Check your inbox (and spam folder) for the verification link.';
     }
-    if (errorMessage.includes('rate limit') || errorMessage.includes('too many')) {
-      return 'Too many attempts. Please wait a moment and try again.';
+    // Signup disabled
+    if (errorMessage.includes('signups not allowed') || errorMessage.includes('signup disabled')) {
+      return 'New signups are currently disabled. Please try again later.';
     }
-    if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-      return 'Network error. Please check your connection and try again.';
+    // Rate limiting
+    if (errorMessage.includes('rate limit') || errorMessage.includes('too many') || errorMessage.includes('exceeded')) {
+      return 'Too many attempts. Please wait a few minutes and try again.';
+    }
+    // Network errors
+    if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('connection')) {
+      return 'Network error. Please check your internet connection and try again.';
+    }
+    // Weak password
+    if (errorMessage.includes('password') && (errorMessage.includes('weak') || errorMessage.includes('short') || errorMessage.includes('strong'))) {
+      return 'Password is too weak. Please use at least 8 characters with uppercase, lowercase, number, and special character.';
+    }
+    // Invalid email format
+    if (errorMessage.includes('invalid email') || errorMessage.includes('email format')) {
+      return 'Please enter a valid email address.';
+    }
+    // User not found
+    if (errorMessage.includes('user not found') || errorMessage.includes('no user')) {
+      return 'No account found with this email. Please check your email or sign up.';
     }
     return 'Authentication failed. Please try again.';
   }

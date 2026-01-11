@@ -115,7 +115,11 @@ export function HabitCard({ habit, onToggle, onDelete, today }: HabitCardProps) 
           style={{
             transform: `translateX(${translateX}px)`,
           }}
-          onClick={onToggle}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggle();
+          }}
         >
           <div className="flex items-start justify-between gap-2 mb-3">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">

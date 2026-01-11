@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 
 type TimerMode = 'focus' | 'pomodoro';
@@ -108,6 +108,7 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
     
     const xp = Math.floor(durationSeconds / 60) * XP_PER_MINUTE;
     
+    // Use 'session_history' table (matches our database schema)
     await supabase.from('session_history').insert({
       user_id: user.id,
       duration_seconds: durationSeconds,

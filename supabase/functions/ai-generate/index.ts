@@ -5,6 +5,35 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// OpenRouter API endpoint (FREE models)
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+// FREE Models from OpenRouter - ordered by preference
+const FREE_MODELS = {
+  primary: "google/gemini-2.0-flash-exp:free",      // Best quality, multimodal
+  secondary: "nvidia/nemotron-nano-12b-v2-vl:free", // Good for vision
+  fallback: "xiaomi/mimo-v2-flash:free",            // Backup
+};
+
+// Model capabilities
+const MODEL_CAPABILITIES = {
+  "google/gemini-2.0-flash-exp:free": {
+    multimodal: true,
+    maxTokens: 8192,
+    supportedMimes: ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"],
+  },
+  "nvidia/nemotron-nano-12b-v2-vl:free": {
+    multimodal: true,
+    maxTokens: 4096,
+    supportedMimes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+  },
+  "xiaomi/mimo-v2-flash:free": {
+    multimodal: true,
+    maxTokens: 2048,
+    supportedMimes: ["image/jpeg", "image/png"],
+  },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -12,11 +41,17 @@ serve(async (req) => {
 
   try {
     const { type, prompt, context, fileData } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    // Use FREE OpenRouter API
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    
+    if (!OPENROUTER_API_KEY) {
+      throw new Error("OPENROUTER_API_KEY is not configured. Add your OpenRouter API key to Supabase secrets.");
     }
+    
+    // Determine if this is a multimodal request
+    const hasImage = fileData && type.includes('_from_file');
+    let selectedModel = FREE_MODELS.primary; // Default to Gemini 2.0 Flash
 
     let systemPrompt = "";
     
@@ -84,16 +119,23 @@ Format the response in markdown with clear sections.`;
         throw new Error("Invalid generation type");
     }
 
-    // Build messages array
+    // Build messages array for OpenRouter (OpenAI-compatible format)
     const messages: any[] = [
       { role: "system", content: systemPrompt },
     ];
 
     // Handle file content for multimodal requests
-    if (fileData && (type.includes('_from_file'))) {
+    if (hasImage) {
       const { base64, mimeType, fileName } = JSON.parse(fileData);
       
-      // Use multimodal message format for Gemini
+      // Check if model supports this mime type
+      const modelCaps = MODEL_CAPABILITIES[selectedModel as keyof typeof MODEL_CAPABILITIES];
+      if (!modelCaps?.supportedMimes.includes(mimeType)) {
+        // Try secondary model
+        selectedModel = FREE_MODELS.secondary;
+      }
+      
+      // Build multimodal message with image
       messages.push({
         role: "user",
         content: [
@@ -110,44 +152,73 @@ Format the response in markdown with clear sections.`;
         ]
       });
     } else {
+      // Text-only request
+      const userMessage = context ? `${prompt}\n\nContext: ${context}` : prompt;
       messages.push({
         role: "user",
-        content: context ? `${prompt}\n\nContext: ${context}` : prompt
+        content: userMessage
       });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages,
-      }),
-    });
+    // Try primary model first, fallback to others if needed
+    let result = "";
+    let lastError = null;
+    const modelsToTry = [selectedModel, FREE_MODELS.secondary, FREE_MODELS.fallback];
+    
+    for (const model of modelsToTry) {
+      try {
+        console.log(`Trying model: ${model}`);
+        
+        const response = await fetch(OPENROUTER_API_URL, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://starpath.app",
+            "X-Title": "StarPath AI Tools",
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: messages,
+            temperature: 0.7,
+            max_tokens: MODEL_CAPABILITIES[model as keyof typeof MODEL_CAPABILITIES]?.maxTokens || 4096,
+          }),
+        });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`${model} error:`, response.status, errorText);
+          
+          if (response.status === 429) {
+            lastError = "Rate limit exceeded. Please try again in a minute.";
+            continue; // Try next model
+          }
+          if (response.status === 402) {
+            lastError = "API quota exceeded.";
+            continue;
+          }
+          
+          lastError = `Model ${model} failed`;
+          continue; // Try next model
+        }
+
+        const data = await response.json();
+        result = data.choices?.[0]?.message?.content || "";
+        
+        if (result) {
+          console.log(`Success with model: ${model}`);
+          break; // Success, exit loop
+        }
+      } catch (e) {
+        console.error(`Error with ${model}:`, e);
+        lastError = e.message;
+        continue; // Try next model
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const text = await response.text();
-      console.error("AI gateway error:", response.status, text);
-      throw new Error("AI generation failed");
     }
 
-    const data = await response.json();
-    const result = data.choices?.[0]?.message?.content;
+    if (!result) {
+      throw new Error(lastError || "All AI models failed. Please try again later.");
+    }
 
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

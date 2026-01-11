@@ -103,7 +103,6 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
 
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
           const showBadge = item.hasBadge && pendingRequestsCount > 0;
           const isPremium = item.isPremium;
           const hasPremiumAccess = profile?.subscription_tier === 'premium' || profile?.subscription_tier === 'lifetime';
@@ -113,17 +112,15 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
               key={item.path}
               to={item.path}
               onClick={handleNavClick}
-              className={({ isActive: navIsActive }) => {
-                // Use NavLink's isActive prop for accurate detection
-                const activeState = navIsActive || isActive;
-                
+              end={item.path === '/app'}
+              className={({ isActive }) => {
                 // Determine styling based on premium status and active state
                 let classes = "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 relative ";
                 
                 if (isPremium && !hasPremiumAccess) {
                   // Premium locked - gradient background
                   classes += "bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 hover:from-purple-500/20 hover:to-blue-500/20";
-                } else if (activeState) {
+                } else if (isActive) {
                   // Active state - primary background
                   classes += "bg-primary text-primary-foreground glow";
                 } else {
@@ -134,34 +131,38 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
                 return classes;
               }}
             >
-              <div className="relative">
-                <item.icon className={cn(
-                  "w-5 h-5 flex-shrink-0",
-                  isPremium && !hasPremiumAccess 
-                    ? "text-purple-500" 
-                    : isActive 
-                      ? "text-primary-foreground" 
-                      : ""
-                )} />
-                {showBadge && (isCollapsed && !isMobileOpen) && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1">
-                    {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
-                  </span>
-                )}
-              </div>
-              {(!isCollapsed || isMobileOpen) && (
-                <span className="font-medium flex-1">{item.label}</span>
-              )}
-              {isPremium && !hasPremiumAccess && (!isCollapsed || isMobileOpen) && (
-                <Crown className="w-4 h-4 text-purple-500" />
-              )}
-              {isPremium && hasPremiumAccess && (!isCollapsed || isMobileOpen) && (
-                <Crown className={cn("w-4 h-4", isActive ? "text-primary-foreground" : "text-purple-500")} />
-              )}
-              {(!isCollapsed || isMobileOpen) && showBadge && (
-                <span className="text-xs bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded-full">
-                  {pendingRequestsCount}
-                </span>
+              {({ isActive }) => (
+                <>
+                  <div className="relative">
+                    <item.icon className={cn(
+                      "w-5 h-5 flex-shrink-0",
+                      isPremium && !hasPremiumAccess 
+                        ? "text-purple-500" 
+                        : isActive 
+                          ? "text-primary-foreground" 
+                          : ""
+                    )} />
+                    {showBadge && (isCollapsed && !isMobileOpen) && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1">
+                        {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                      </span>
+                    )}
+                  </div>
+                  {(!isCollapsed || isMobileOpen) && (
+                    <span className="font-medium flex-1">{item.label}</span>
+                  )}
+                  {isPremium && !hasPremiumAccess && (!isCollapsed || isMobileOpen) && (
+                    <Crown className="w-4 h-4 text-purple-500" />
+                  )}
+                  {isPremium && hasPremiumAccess && (!isCollapsed || isMobileOpen) && (
+                    <Crown className={cn("w-4 h-4", isActive ? "text-primary-foreground" : "text-purple-500")} />
+                  )}
+                  {(!isCollapsed || isMobileOpen) && showBadge && (
+                    <span className="text-xs bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded-full">
+                      {pendingRequestsCount}
+                    </span>
+                  )}
+                </>
               )}
             </NavLink>
           );
@@ -220,15 +221,15 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
               )}>
                 <AvatarImage 
                   src={profile.avatar_url || undefined} 
-                  alt={profile.username} 
+                  alt={profile.full_name || profile.email || 'User'} 
                 />
                 <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-bold text-sm">
-                  {profile.username.charAt(0).toUpperCase()}
+                  {(profile.full_name || profile.email || 'U').charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {(!isCollapsed || isMobileOpen) && (
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground truncate text-sm">{profile.username}</p>
+                  <p className="font-medium text-foreground truncate text-sm">{profile.full_name || profile.email || 'User'}</p>
                   <p className="text-xs text-muted-foreground">Level {profile.level}</p>
                 </div>
               )}

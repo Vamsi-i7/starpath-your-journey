@@ -11,8 +11,9 @@ export interface Task {
   user_id: string;
   title: string;
   completed: boolean;
-  due_date: string | null;
+  position: number;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Goal {
@@ -20,12 +21,15 @@ export interface Goal {
   user_id: string;
   title: string;
   description: string | null;
-  progress: number;
+  category: string | null;
+  priority: 'low' | 'medium' | 'high';
   deadline: string | null;
+  progress: number;
+  status: 'active' | 'completed' | 'archived';
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
   tasks: Task[];
-  status: 'active' | 'completed' | 'at_risk';
   goal_type: 'short_term' | 'long_term';
 }
 
@@ -71,19 +75,10 @@ export function useGoals() {
       const completedCount = goalTasks.filter(t => t.completed).length;
       const progress = goalTasks.length > 0 ? Math.round((completedCount / goalTasks.length) * 100) : 0;
       
-      // Determine status
-      let status: Goal['status'] = 'active';
-      if (progress === 100) {
+      // Determine status based on database status or calculate it
+      let status: Goal['status'] = goal.status || 'active';
+      if (progress === 100 && status !== 'archived') {
         status = 'completed';
-      } else if (goal.deadline) {
-        const deadline = new Date(goal.deadline);
-        const now = new Date();
-        const daysUntilDeadline = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysUntilDeadline < 0) {
-          status = 'at_risk';
-        } else if (daysUntilDeadline <= 3 && progress < 75) {
-          status = 'at_risk';
-        }
       }
 
       // Determine goal type based on deadline

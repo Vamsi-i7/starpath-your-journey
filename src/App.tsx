@@ -2,8 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SpeedInsights } from "@vercel/speed-insights/react";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AppLayout } from "./components/app/AppLayout";
@@ -17,6 +16,7 @@ const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SignupPage = lazy(() => import("./pages/SignupPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const HabitsPage = lazy(() => import("./pages/HabitsPage"));
 const GoalsPage = lazy(() => import("./pages/GoalsPage"));
@@ -44,6 +44,82 @@ const PageLoader = () => (
 
 const queryClient = new QueryClient();
 
+// Create router with future flags to silence warnings
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <Suspense fallback={<PageLoader />}><LandingPage /></Suspense>,
+    },
+    {
+      path: "/login",
+      element: <Suspense fallback={<PageLoader />}><LoginPage /></Suspense>,
+    },
+    {
+      path: "/signup",
+      element: <Suspense fallback={<PageLoader />}><SignupPage /></Suspense>,
+    },
+    {
+      path: "/forgot-password",
+      element: <Suspense fallback={<PageLoader />}><ForgotPasswordPage /></Suspense>,
+    },
+    {
+      path: "/reset-password",
+      element: <Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense>,
+    },
+    {
+      path: "/auth/callback",
+      element: <Suspense fallback={<PageLoader />}><AuthCallbackPage /></Suspense>,
+    },
+    {
+      path: "/privacy",
+      element: <Suspense fallback={<PageLoader />}><PrivacyPolicyPage /></Suspense>,
+    },
+    {
+      path: "/terms",
+      element: <Suspense fallback={<PageLoader />}><TermsOfServicePage /></Suspense>,
+    },
+    {
+      path: "/app",
+      element: (
+        <ProtectedRoute>
+          <AppLayout />
+        </ProtectedRoute>
+      ),
+      children: [
+        { index: true, element: <Suspense fallback={<PageLoader />}><DashboardPage /></Suspense> },
+        { path: "habits", element: <Suspense fallback={<PageLoader />}><HabitsPage /></Suspense> },
+        { path: "goals", element: <Suspense fallback={<PageLoader />}><GoalsPage /></Suspense> },
+        { path: "constellation", element: <Suspense fallback={<PageLoader />}><ConstellationPage /></Suspense> },
+        { path: "analytics", element: <Suspense fallback={<PageLoader />}><AnalyticsPage /></Suspense> },
+        { path: "chats", element: <Suspense fallback={<PageLoader />}><ChatsPage /></Suspense> },
+        { path: "friends", element: <Suspense fallback={<PageLoader />}><FriendsPage /></Suspense> },
+        { path: "settings", element: <Suspense fallback={<PageLoader />}><SettingsPage /></Suspense> },
+        { path: "profile", element: <Suspense fallback={<PageLoader />}><ProfilePage /></Suspense> },
+        { path: "achievements", element: <Suspense fallback={<PageLoader />}><AchievementsPage /></Suspense> },
+        { path: "ai-tools", element: <Suspense fallback={<PageLoader />}><AIToolsPage /></Suspense> },
+        { path: "ai-mentor", element: <Suspense fallback={<PageLoader />}><AIMentorPage /></Suspense> },
+        { path: "library", element: <Suspense fallback={<PageLoader />}><LibraryPage /></Suspense> },
+        { path: "subscription", element: <Suspense fallback={<PageLoader />}><SubscriptionPage /></Suspense> },
+      ],
+    },
+    {
+      path: "*",
+      element: <Suspense fallback={<PageLoader />}><NotFound /></Suspense>,
+    },
+  ],
+  {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true,
+    },
+  }
+);
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -51,41 +127,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/privacy" element={<PrivacyPolicyPage />} />
-              <Route path="/terms" element={<TermsOfServicePage />} />
-              <Route path="/app" element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<DashboardPage />} />
-                <Route path="habits" element={<HabitsPage />} />
-                <Route path="goals" element={<GoalsPage />} />
-                <Route path="constellation" element={<ConstellationPage />} />
-                <Route path="analytics" element={<AnalyticsPage />} />
-                <Route path="chats" element={<ChatsPage />} />
-                <Route path="friends" element={<FriendsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="achievements" element={<AchievementsPage />} />
-                <Route path="ai-tools" element={<AIToolsPage />} />
-                <Route path="ai-mentor" element={<AIMentorPage />} />
-                <Route path="library" element={<LibraryPage />} />
-                <Route path="subscription" element={<SubscriptionPage />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            </Suspense>
-          </BrowserRouter>
-          <SpeedInsights />
+          <RouterProvider router={router} />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -20,6 +20,14 @@ interface SaveButtonProps {
   defaultTitle?: string;
 }
 
+// Map toolType to content_type for the database
+const toolTypeToContentType: Record<string, 'notes' | 'flashcards' | 'roadmap' | 'chat'> = {
+  notes: 'notes',
+  flashcards: 'flashcards',
+  roadmap: 'roadmap',
+  mentor: 'chat',
+};
+
 export function SaveButton({ content, rawContent, toolType, defaultTitle }: SaveButtonProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(defaultTitle || '');
@@ -32,7 +40,8 @@ export function SaveButton({ content, rawContent, toolType, defaultTitle }: Save
 
     setIsSaving(true);
     const tagArray = tags.split(',').map(t => t.trim()).filter(t => t);
-    await saveItem(toolType, title, content, rawContent, tagArray);
+    const contentType = toolTypeToContentType[toolType] || 'notes';
+    await saveItem(contentType, title, content, rawContent, tagArray);
     setIsSaving(false);
     setOpen(false);
     setTitle('');
