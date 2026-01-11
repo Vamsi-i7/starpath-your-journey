@@ -64,12 +64,12 @@ const FriendsPage = () => {
               <Avatar className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-primary/30">
                 <AvatarImage src={profile.avatar_url || undefined} />
                 <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-2xl sm:text-3xl font-bold text-primary-foreground">
-                  {profile.username.charAt(0).toUpperCase()}
+                  {profile.username?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h2 className="text-xl sm:text-2xl font-bold text-foreground">{profile.username}</h2>
-                <p className="text-muted-foreground text-sm sm:text-base">{profile.bio}</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground">{profile.username || 'User'}</h2>
+                <p className="text-muted-foreground text-sm sm:text-base">{profile.bio || ''}</p>
                 <p className="text-sm text-primary mt-1">Level {profile.level} • {profile.total_habits_completed} habits completed</p>
               </div>
               <div className="w-full sm:w-auto">
