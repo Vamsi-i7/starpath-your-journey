@@ -1,0 +1,53 @@
+═══════════════════════════════════════════════════════════════
+VERCEL ENVIRONMENT VARIABLES - COPY & PASTE THESE
+═══════════════════════════════════════════════════════════════
+
+Add these in Vercel Dashboard → Settings → Environment Variables
+Or use the CLI commands below
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variable 1:
+Name:  VITE_SUPABASE_URL
+Value: https://ryzhsfmqopywoymghmdp.supabase.co
+
+Variable 2:
+Name:  VITE_SUPABASE_PUBLISHABLE_KEY
+Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5emhzZm1xb3B5d295bWdobWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjIwMjIsImV4cCI6MjA4MzYzODAyMn0.DQADOrMNm3eT4iuo6_9AAVoKPuB-k9aUd7hg-2oIcBs
+
+Variable 3:
+Name:  VITE_SUPABASE_PROJECT_ID
+Value: ryzhsfmqopywoymghmdp
+
+Variable 4:
+Name:  VITE_RAZORPAY_KEY_ID
+Value: rzp_test_S2Ivb345JHSj6w
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DASHBOARD METHOD:
+1. Go to: https://vercel.com/dashboard
+2. Click "starpath-seven" project
+3. Settings → Environment Variables
+4. Add each variable above
+5. Select "Production" environment
+6. Save
+
+THEN REDEPLOY:
+vercel --prod
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CLI METHOD (Alternative):
+
+vercel env add VITE_SUPABASE_URL production
+vercel env add VITE_SUPABASE_PUBLISHABLE_KEY production
+vercel env add VITE_SUPABASE_PROJECT_ID production
+vercel env add VITE_RAZORPAY_KEY_ID production
+
+When prompted, paste the values above.
+
+THEN REDEPLOY:
+vercel --prod
+
+═══════════════════════════════════════════════════════════════
