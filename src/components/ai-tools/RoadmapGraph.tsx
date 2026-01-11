@@ -69,6 +69,11 @@ export function RoadmapGraph({ content, onNodeComplete }: RoadmapGraphProps) {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     
+    // Safety check for content
+    if (!content || typeof content !== 'string') {
+      return { initialNodes: nodes, initialEdges: edges };
+    }
+    
     // Parse markdown structure
     const lines = content.split('\n');
     let nodeId = 0;

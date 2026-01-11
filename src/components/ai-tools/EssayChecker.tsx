@@ -316,8 +316,10 @@ export function EssayChecker({ feedback, originalText }: EssayCheckerProps) {
 
 // Annotated Text Component
 function AnnotatedText({ text, issues }: { text: string; issues: GrammarIssue[] }) {
-  // Simple highlighting - in production, you'd want more sophisticated matching
-  let annotatedText = text;
+  // Safety check for text
+  if (!text || typeof text !== 'string') {
+    return <p className="text-muted-foreground">No text to display</p>;
+  }
   
   // Create a map of issues by their text for highlighting
   const issueMap = new Map<string, GrammarIssue>();

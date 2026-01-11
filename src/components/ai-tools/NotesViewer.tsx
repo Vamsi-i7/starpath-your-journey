@@ -20,6 +20,7 @@ export function NotesViewer({ content }: NotesViewerProps) {
   // Extract table of contents from markdown
   const toc = useMemo(() => {
     const items: TOCItem[] = [];
+    if (!content || typeof content !== 'string') return items;
     const lines = content.split('\n');
     
     lines.forEach((line, index) => {
@@ -37,6 +38,7 @@ export function NotesViewer({ content }: NotesViewerProps) {
 
   // Add IDs to headings in content for smooth scrolling
   const contentWithIds = useMemo(() => {
+    if (!content || typeof content !== 'string') return '';
     let result = content;
     const lines = content.split('\n');
     

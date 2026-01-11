@@ -69,6 +69,11 @@ export function MindMapCreator({ content, topic }: MindMapCreatorProps) {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     
+    // Safety check for content
+    if (!content || typeof content !== 'string') {
+      return { initialNodes: nodes, initialEdges: edges };
+    }
+    
     const lines = content.split('\n');
     let nodeId = 0;
     const nodeStack: { id: string; level: number }[] = [];

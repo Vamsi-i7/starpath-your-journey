@@ -178,23 +178,36 @@ export const useAnalyticsData = () => {
       // Goals completed on this day (when they reached 100% progress)
       const goalsCompleted = goals.filter(g => {
         if (!g.completed_at) return false;
-        const completedDate = g.completed_at.split('T')[0];
-        return completedDate === dayStr;
+        try {
+          const completedDate = g.completed_at.split('T')[0];
+          return completedDate === dayStr;
+        } catch {
+          return false;
+        }
       }).length;
 
       // Goals created on this day
       const goalsCreated = goals.filter(g => {
-        const createdDate = g.created_at.split('T')[0];
-        return createdDate === dayStr;
+        if (!g.created_at) return false;
+        try {
+          const createdDate = g.created_at.split('T')[0];
+          return createdDate === dayStr;
+        } catch {
+          return false;
+        }
       }).length;
 
       // Tasks completed on this day
       const tasksCompleted = tasks.filter(t => {
         if (!t.completed) return false;
-        // Check if task was completed on this day by checking updated_at
-        // (tasks don't have completed_at, so we use the last update time)
-        const taskDate = t.updated_at ? t.updated_at.split('T')[0] : t.created_at.split('T')[0];
-        return taskDate === dayStr;
+        try {
+          // Check if task was completed on this day by checking updated_at
+          // (tasks don't have completed_at, so we use the last update time)
+          const taskDate = t.updated_at ? t.updated_at.split('T')[0] : (t.created_at ? t.created_at.split('T')[0] : '');
+          return taskDate === dayStr;
+        } catch {
+          return false;
+        }
       }).length;
       
       return {
