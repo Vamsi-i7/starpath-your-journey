@@ -14,11 +14,11 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Configuration
-OPENROUTER_KEY="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"
-GOOGLE_CLIENT_ID="932343912874-k1psfctq1al0l8ev3f16k2om3h2rhcna.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="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"
-SUPABASE_URL="https://ryzhsfmqopywoymghmdp.supabase.co"
+# Configuration - REPLACE THESE WITH YOUR ACTUAL VALUES
+OPENROUTER_KEY="your_openrouter_api_key"
+GOOGLE_CLIENT_ID="your_google_client_id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+SUPABASE_URL="your_supabase_url"
 
 echo -e "${BLUE}📋 Step 1: Setting All Secrets in Supabase${NC}"
 echo ""
