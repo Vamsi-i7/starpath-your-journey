@@ -8,6 +8,18 @@
       "dest": "/assets/$1"
     },
     {
+      "src": "/registerSW.js",
+      "dest": "/registerSW.js"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/(.*\\.(ico|png|svg|jpg|jpeg|css|js))",
+      "dest": "/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
