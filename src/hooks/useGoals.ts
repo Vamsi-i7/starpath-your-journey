@@ -14,6 +14,9 @@ export interface Task {
   position: number;
   created_at: string;
   updated_at: string;
+  parent_task_id: string | null;
+  due_date: string | null;
+  subtasks: Task[];
 }
 
 export interface Goal {
@@ -70,10 +73,41 @@ export function useGoals() {
       logError('Tasks Fetch', tasksError);
     }
 
+    // Helper function to build nested task structure
+    const buildTaskTree = (tasks: any[], parentId: string | null = null): Task[] => {
+      return tasks
+        .filter(t => t.parent_task_id === parentId)
+        .sort((a, b) => (a.position || 0) - (b.position || 0))
+        .map(task => ({
+          ...task,
+          subtasks: buildTaskTree(tasks, task.id),
+        }));
+    };
+
+    // Helper function to count all tasks recursively (including subtasks)
+    const countAllTasks = (tasks: Task[]): { total: number; completed: number } => {
+      let total = 0;
+      let completed = 0;
+      
+      const countRecursive = (taskList: Task[]) => {
+        for (const task of taskList) {
+          total++;
+          if (task.completed) completed++;
+          if (task.subtasks && task.subtasks.length > 0) {
+            countRecursive(task.subtasks);
+          }
+        }
+      };
+      
+      countRecursive(tasks);
+      return { total, completed };
+    };
+
     const goalsWithTasks: Goal[] = (goalsData || []).map(goal => {
       const goalTasks = (tasksData || []).filter(t => t.goal_id === goal.id);
-      const completedCount = goalTasks.filter(t => t.completed).length;
-      const progress = goalTasks.length > 0 ? Math.round((completedCount / goalTasks.length) * 100) : 0;
+      const nestedTasks = buildTaskTree(goalTasks, null);
+      const { total, completed: completedCount } = countAllTasks(nestedTasks);
+      const progress = total > 0 ? Math.round((completedCount / total) * 100) : 0;
       
       // Determine status based on database status or calculate it
       let status: Goal['status'] = goal.status || 'active';
@@ -94,7 +128,7 @@ export function useGoals() {
 
       return {
         ...goal,
-        tasks: goalTasks,
+        tasks: nestedTasks,
         progress,
         status,
         goal_type: goalType,
@@ -264,7 +298,7 @@ export function useGoals() {
     }
   };
 
-  const addTask = async (goalId: string, title: string, dueDate?: string): Promise<boolean> => {
+  const addTask = async (goalId: string, title: string, dueDate?: string, parentTaskId?: string): Promise<boolean> => {
     if (!user) return false;
 
     const trimmedTitle = title?.trim() || '';
@@ -284,6 +318,7 @@ export function useGoals() {
         user_id: user.id,
         title: trimmedTitle,
         due_date: dueDate || null,
+        parent_task_id: parentTaskId || null,
       });
 
     if (error) {
@@ -298,6 +333,10 @@ export function useGoals() {
 
     await fetchGoals();
     return true;
+  };
+
+  const addSubtask = async (goalId: string, parentTaskId: string, title: string, dueDate?: string): Promise<boolean> => {
+    return addTask(goalId, title, dueDate, parentTaskId);
   };
 
   const updateTask = async (taskId: string, updates: {
@@ -405,6 +444,7 @@ export function useGoals() {
     updateGoal,
     deleteGoal,
     addTask,
+    addSubtask,
     updateTask,
     deleteTask,
     toggleTask,

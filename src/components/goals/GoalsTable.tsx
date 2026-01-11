@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format, startOfWeek, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
-import { Plus, Trash2, ChevronLeft, ChevronRight, Target, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown, Target, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,16 +11,51 @@ import { Badge } from '@/components/ui/badge';
 import { Goal, Task } from '@/hooks/useGoals';
 import { cn } from '@/lib/utils';
 
+// Helper type for flattened tasks with depth info
+interface FlattenedTask extends Task {
+  depth: number;
+}
+
+// Helper function to flatten nested tasks
+const flattenTasks = (tasks: Task[], depth: number = 0): FlattenedTask[] => {
+  const result: FlattenedTask[] = [];
+  for (const task of tasks) {
+    result.push({ ...task, depth });
+    if (task.subtasks && task.subtasks.length > 0) {
+      result.push(...flattenTasks(task.subtasks, depth + 1));
+    }
+  }
+  return result;
+};
+
+// Helper function to count all tasks recursively
+const countAllTasks = (tasks: Task[]): { total: number; completed: number } => {
+  let total = 0;
+  let completed = 0;
+  const count = (taskList: Task[]) => {
+    for (const task of taskList) {
+      total++;
+      if (task.completed) completed++;
+      if (task.subtasks && task.subtasks.length > 0) {
+        count(task.subtasks);
+      }
+    }
+  };
+  count(tasks);
+  return { total, completed };
+};
+
 interface GoalsTableProps {
   goals: Goal[];
   onAddGoal: (goalData: { title: string; description: string; deadline?: string; tasks: { title: string; due_date?: string }[] }) => Promise<boolean>;
   onDeleteGoal: (id: string) => void;
   onToggleTask: (goalId: string, taskId: string) => void;
-  onAddTask: (goalId: string, title: string, dueDate?: string) => Promise<boolean>;
+  onAddTask: (goalId: string, title: string, dueDate?: string, parentTaskId?: string) => Promise<boolean>;
+  onAddSubtask: (goalId: string, parentTaskId: string, title: string, dueDate?: string) => Promise<boolean>;
   onDeleteTask: (taskId: string) => Promise<boolean>;
 }
 
-export function GoalsTable({ goals, onAddGoal, onDeleteGoal, onToggleTask, onAddTask, onDeleteTask }: GoalsTableProps) {
+export function GoalsTable({ goals, onAddGoal, onDeleteGoal, onToggleTask, onAddTask, onAddSubtask, onDeleteTask }: GoalsTableProps) {
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [newGoalTitle, setNewGoalTitle] = useState('');
@@ -245,17 +280,29 @@ export function GoalsTable({ goals, onAddGoal, onDeleteGoal, onToggleTask, onAdd
                     </TableRow>
 
                     {/* Task Rows - Only show if expanded */}
-                    {expandedGoals.has(goal.id) && goal.tasks.map((task) => (
+                    {expandedGoals.has(goal.id) && flattenTasks(goal.tasks).map((task) => (
                       <TableRow key={task.id} className="hover:bg-muted/10">
-                        <TableCell className="pl-12 sticky left-0 bg-background z-10 py-2">
+                        <TableCell 
+                          className="sticky left-0 bg-background z-10 py-2"
+                          style={{ paddingLeft: `${48 + task.depth * 20}px` }}
+                        >
                           <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-border" />
+                            {task.subtasks && task.subtasks.length > 0 ? (
+                              <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                            ) : (
+                              <div className="w-1.5 h-1.5 rounded-full bg-border" />
+                            )}
                             <span className={cn(
                               "text-sm",
                               task.completed && "line-through text-muted-foreground"
                             )}>
                               {task.title}
                             </span>
+                            {task.subtasks && task.subtasks.length > 0 && (
+                              <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-muted rounded ml-1">
+                                {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
+                              </span>
+                            )}
                           </div>
                         </TableCell>
                         {days.map((day) => {
@@ -330,26 +377,33 @@ export function GoalsTable({ goals, onAddGoal, onDeleteGoal, onToggleTask, onAdd
       </div>
 
       {/* Summary Stats */}
-      {goals.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-card border rounded-lg p-4">
-            <div className="text-2xl font-bold text-foreground">{goals.length}</div>
-            <div className="text-sm text-muted-foreground">Total Goals</div>
+      {goals.length > 0 && (() => {
+        const allTaskStats = goals.reduce((acc, g) => {
+          const stats = countAllTasks(g.tasks);
+          return { total: acc.total + stats.total, completed: acc.completed + stats.completed };
+        }, { total: 0, completed: 0 });
+        
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-card border rounded-lg p-4">
+              <div className="text-2xl font-bold text-foreground">{goals.length}</div>
+              <div className="text-sm text-muted-foreground">Total Goals</div>
+            </div>
+            <div className="bg-card border rounded-lg p-4">
+              <div className="text-2xl font-bold text-primary">{goals.filter(g => g.progress === 100).length}</div>
+              <div className="text-sm text-muted-foreground">Completed</div>
+            </div>
+            <div className="bg-card border rounded-lg p-4">
+              <div className="text-2xl font-bold text-foreground">{allTaskStats.total}</div>
+              <div className="text-sm text-muted-foreground">Total Tasks</div>
+            </div>
+            <div className="bg-card border rounded-lg p-4">
+              <div className="text-2xl font-bold text-primary">{allTaskStats.completed}</div>
+              <div className="text-sm text-muted-foreground">Tasks Done</div>
+            </div>
           </div>
-          <div className="bg-card border rounded-lg p-4">
-            <div className="text-2xl font-bold text-primary">{goals.filter(g => g.progress === 100).length}</div>
-            <div className="text-sm text-muted-foreground">Completed</div>
-          </div>
-          <div className="bg-card border rounded-lg p-4">
-            <div className="text-2xl font-bold text-foreground">{goals.reduce((acc, g) => acc + g.tasks.length, 0)}</div>
-            <div className="text-sm text-muted-foreground">Total Tasks</div>
-          </div>
-          <div className="bg-card border rounded-lg p-4">
-            <div className="text-2xl font-bold text-primary">{goals.reduce((acc, g) => acc + g.tasks.filter(t => t.completed).length, 0)}</div>
-            <div className="text-sm text-muted-foreground">Tasks Done</div>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

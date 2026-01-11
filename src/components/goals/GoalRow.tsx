@@ -33,7 +33,8 @@ import {
 interface GoalRowProps {
   goal: Goal;
   onToggleTask: (goalId: string, taskId: string) => void;
-  onAddTask: (goalId: string, title: string, dueDate?: string) => Promise<boolean>;
+  onAddTask: (goalId: string, title: string, dueDate?: string, parentTaskId?: string) => Promise<boolean>;
+  onAddSubtask: (goalId: string, parentTaskId: string, title: string, dueDate?: string) => Promise<boolean>;
   onDeleteTask: (taskId: string) => Promise<boolean>;
   onDeleteGoal: (goalId: string) => void;
   onUpdateGoal: (goalId: string, updates: { title?: string; description?: string; deadline?: string | null }) => Promise<boolean>;
@@ -43,6 +44,7 @@ export function GoalRow({
   goal,
   onToggleTask,
   onAddTask,
+  onAddSubtask,
   onDeleteTask,
   onDeleteGoal,
   onUpdateGoal,
@@ -233,8 +235,13 @@ export function GoalRow({
                 <TaskRow
                   key={task.id}
                   task={task}
+                  goalId={goal.id}
                   onToggle={() => onToggleTask(goal.id, task.id)}
                   onDelete={() => onDeleteTask(task.id)}
+                  onAddSubtask={onAddSubtask}
+                  onToggleTask={onToggleTask}
+                  onDeleteTask={onDeleteTask}
+                  depth={0}
                 />
               ))}
 
@@ -301,40 +308,153 @@ export function GoalRow({
 
 function TaskRow({
   task,
+  goalId,
   onToggle,
   onDelete,
+  onAddSubtask,
+  onToggleTask,
+  onDeleteTask,
+  depth = 0,
 }: {
   task: Task;
+  goalId: string;
   onToggle: () => void;
   onDelete: () => void;
+  onAddSubtask: (goalId: string, parentTaskId: string, title: string, dueDate?: string) => Promise<boolean>;
+  onToggleTask: (goalId: string, taskId: string) => void;
+  onDeleteTask: (taskId: string) => Promise<boolean>;
+  depth?: number;
 }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+
+  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+  const maxDepth = 3; // Limit nesting depth
+
+  const handleAddSubtask = async () => {
+    if (!newSubtaskTitle.trim()) return;
+    const success = await onAddSubtask(goalId, task.id, newSubtaskTitle);
+    if (success) {
+      setNewSubtaskTitle('');
+      setIsAddingSubtask(false);
+    }
+  };
+
   return (
-    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors group">
-      <Checkbox
-        checked={task.completed}
-        onCheckedChange={onToggle}
-        className="data-[state=checked]:bg-xp data-[state=checked]:border-xp"
-      />
-      <span
-        className={`flex-1 text-sm ${
-          task.completed ? 'line-through text-muted-foreground' : 'text-foreground'
-        }`}
+    <div className="space-y-1">
+      <div 
+        className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors group"
+        style={{ paddingLeft: `${depth * 20 + 8}px` }}
       >
-        {task.title}
-      </span>
-      {task.due_date && (
-        <span className="text-xs text-muted-foreground">
-          {formatDistanceToNow(new Date(task.due_date), { addSuffix: true })}
+        {/* Expand/Collapse button for tasks with subtasks */}
+        {hasSubtasks ? (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="p-0.5 hover:bg-muted rounded transition-colors shrink-0"
+          >
+            {isExpanded ? (
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+          </button>
+        ) : (
+          <div className="w-4.5 shrink-0" />
+        )}
+
+        <Checkbox
+          checked={task.completed}
+          onCheckedChange={onToggle}
+          className="data-[state=checked]:bg-xp data-[state=checked]:border-xp shrink-0"
+        />
+        <span
+          className={`flex-1 text-sm ${
+            task.completed ? 'line-through text-muted-foreground' : 'text-foreground'
+          }`}
+        >
+          {task.title}
         </span>
+        
+        {hasSubtasks && (
+          <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-muted rounded">
+            {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length}
+          </span>
+        )}
+        
+        {task.due_date && (
+          <span className="text-xs text-muted-foreground">
+            {formatDistanceToNow(new Date(task.due_date), { addSuffix: true })}
+          </span>
+        )}
+        
+        {/* Add subtask button - only show if not at max depth */}
+        {depth < maxDepth && (
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setIsAddingSubtask(true)}
+            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:text-primary"
+            title="Add subtask"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </Button>
+        )}
+        
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onDelete}
+          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+
+      {/* Add subtask input */}
+      {isAddingSubtask && (
+        <div 
+          className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/50"
+          style={{ marginLeft: `${(depth + 1) * 20 + 8}px` }}
+        >
+          <Input
+            value={newSubtaskTitle}
+            onChange={(e) => setNewSubtaskTitle(e.target.value)}
+            placeholder="Subtask name"
+            className="flex-1 h-8 text-sm"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAddSubtask();
+              if (e.key === 'Escape') setIsAddingSubtask(false);
+            }}
+          />
+          <Button size="icon" variant="ghost" onClick={handleAddSubtask} className="h-7 w-7">
+            <Check className="w-4 h-4 text-xp" />
+          </Button>
+          <Button size="icon" variant="ghost" onClick={() => setIsAddingSubtask(false)} className="h-7 w-7">
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       )}
-      <Button
-        size="icon"
-        variant="ghost"
-        onClick={onDelete}
-        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </Button>
+
+      {/* Render subtasks recursively */}
+      {isExpanded && hasSubtasks && (
+        <div className="space-y-1">
+          {task.subtasks.map((subtask) => (
+            <TaskRow
+              key={subtask.id}
+              task={subtask}
+              goalId={goalId}
+              onToggle={() => onToggleTask(goalId, subtask.id)}
+              onDelete={() => onDeleteTask(subtask.id)}
+              onAddSubtask={onAddSubtask}
+              onToggleTask={onToggleTask}
+              onDeleteTask={onDeleteTask}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

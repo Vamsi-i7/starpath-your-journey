@@ -4,7 +4,7 @@ import { useGoals } from '@/hooks/useGoals';
 import { GoalsTable } from '@/components/goals/GoalsTable';
 
 const GoalsPage = () => {
-  const { goals, isLoading, addGoal, deleteGoal, toggleTask, addTask, deleteTask } = useGoals();
+  const { goals, isLoading, addGoal, deleteGoal, toggleTask, addTask, addSubtask, deleteTask } = useGoals();
 
   if (isLoading) {
     return (
@@ -60,6 +60,7 @@ const GoalsPage = () => {
           onDeleteGoal={deleteGoal}
           onToggleTask={toggleTask}
           onAddTask={addTask}
+          onAddSubtask={addSubtask}
           onDeleteTask={deleteTask}
         />
       </div>
