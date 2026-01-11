@@ -3,13 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle, Check, X } from 'lucide-react';
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { validatePassword } from '@/lib/passwordValidation';
+import { validatePasswordStrength, getPasswordStrengthColor, getPasswordStrengthText } from '@/lib/passwordStrength';
 import { logError } from '@/lib/errorLogger';
 import { getDisplayErrorMessage } from '@/lib/errorMessages';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const SignupPage = () => {
   const location = useLocation();
@@ -19,10 +20,16 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const { toast } = useToast();
   const { signUp } = useAuth();
+
+  // Real-time password strength validation
+  const passwordStrength = validatePasswordStrength(password);
+  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
   // Pre-fill email if coming from AuthEntryPage
   useEffect(() => {
@@ -53,11 +60,10 @@ const SignupPage = () => {
       return;
     }
 
-    const { valid, message } = validatePassword(password);
-    if (!valid) {
+    if (!passwordStrength.isValid) {
       toast({
-        title: 'Weak password',
-        description: message,
+        title: 'Password requirements not met',
+        description: 'Please ensure your password meets all requirements listed below',
         variant: 'destructive',
       });
       return;
@@ -217,7 +223,9 @@ const SignupPage = () => {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 bg-card/50 border-border/50 focus:border-primary"
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={() => setPasswordFocused(false)}
+                      className="pl-10 pr-10 bg-card/50 border-border/50 focus:border-primary transition-all"
                     />
                     <button
                       type="button"
@@ -227,6 +235,64 @@ const SignupPage = () => {
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
+
+                  {/* Password Strength Indicator */}
+                  <AnimatePresence>
+                    {password.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-3 mt-3"
+                      >
+                        {/* Strength Bar */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Password strength</span>
+                            <span className={`font-medium ${
+                              passwordStrength.level === 'weak' ? 'text-red-500' :
+                              passwordStrength.level === 'fair' ? 'text-orange-500' :
+                              passwordStrength.level === 'good' ? 'text-yellow-500' :
+                              passwordStrength.level === 'strong' ? 'text-blue-500' :
+                              'text-green-500'
+                            }`}>
+                              {getPasswordStrengthText(passwordStrength.level)}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-card/80 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${passwordStrength.score}%` }}
+                              transition={{ duration: 0.3 }}
+                              className={`h-full rounded-full ${getPasswordStrengthColor(passwordStrength.level)} transition-colors`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Requirements List */}
+                        <div className="space-y-2 p-3 bg-card/30 rounded-lg border border-border/30">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">Password must contain:</p>
+                          {passwordStrength.requirements.map((req) => (
+                            <motion.div
+                              key={req.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="flex items-center gap-2 text-xs"
+                            >
+                              {req.met ? (
+                                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              ) : (
+                                <X className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
+                              )}
+                              <span className={req.met ? 'text-green-500' : 'text-muted-foreground'}>
+                                {req.label}
+                              </span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="space-y-2">
@@ -235,13 +301,46 @@ const SignupPage = () => {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       id="confirmPassword"
-                      type={showPassword ? 'text' : 'password'}
+                      type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-10 bg-card/50 border-border/50 focus:border-primary"
+                      className={`pl-10 pr-10 bg-card/50 border-border/50 focus:border-primary transition-all ${
+                        confirmPassword.length > 0 ? (passwordsMatch ? 'border-green-500/50' : 'border-red-500/50') : ''
+                      }`}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
                   </div>
+
+                  {/* Password Match Indicator */}
+                  <AnimatePresence>
+                    {confirmPassword.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className="flex items-center gap-2 text-xs mt-2"
+                      >
+                        {passwordsMatch ? (
+                          <>
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span className="text-green-500">Passwords match</span>
+                          </>
+                        ) : (
+                          <>
+                            <X className="w-4 h-4 text-red-500" />
+                            <span className="text-red-500">Passwords don't match</span>
+                          </>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <Button 
