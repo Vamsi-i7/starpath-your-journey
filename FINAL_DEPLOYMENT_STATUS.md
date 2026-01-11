@@ -405,7 +405,7 @@ SUPABASE_SERVICE_ROLE_KEY ✅ (auto)
 
 ## 📞 SUPPORT RESOURCES
 
-- **Supabase Dashboard**: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp
+- **Supabase Dashboard**: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID
 - **Vercel Dashboard**: https://vercel.com/dashboard
 - **Live App**: https://starpath-seven.vercel.app
 - **Documentation**: See all .md files in project root

@@ -90,7 +90,7 @@
 
 ```bash
 # Razorpay
-VITE_RAZORPAY_KEY_ID=rzp_test_YOUR_KEY
+VITE_RAZORPAY_KEY_ID=YOUR_RAZORPAY_TEST_KEY_HERE_KEY
 RAZORPAY_KEY_SECRET=your_secret_here
 
 # Google OAuth

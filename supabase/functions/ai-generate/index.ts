@@ -1,46 +1,108 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreFlight } from "../_shared/corsHeaders.ts";
+import { checkRateLimit, addRateLimitHeaders, createRateLimitResponse } from "../_shared/rateLimiter.ts";
+import { verifyAuth, createUnauthorizedResponse } from "../_shared/auth.ts";
+import { validateRequest, aiGenerateSchema, createValidationErrorResponse } from "../_shared/validation.ts";
 
 // OpenRouter API endpoint (FREE models)
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// FREE Models from OpenRouter - ordered by preference
+// FREE Models from OpenRouter - Optimized for each task
 const FREE_MODELS = {
-  primary: "google/gemini-2.0-flash-exp:free",      // Best quality, multimodal
-  secondary: "nvidia/nemotron-nano-12b-v2-vl:free", // Good for vision
-  fallback: "xiaomi/mimo-v2-flash:free",            // Backup
+  // Text understanding & reasoning
+  reasoning: "deepseek/deepseek-r1-0528:free",      // Best reasoning (163K context)
+  // Math & structured output
+  structured: "qwen/qwen3-coder:free",               // Math & code (262K context)
+  // Creative & speed
+  creative: "mistralai/devstral-2512:free",          // Creative tasks (262K context)
+  // Fast responses
+  fast: "xiaomi/mimo-v2-flash:free",                 // Speed (262K context)
 };
 
-// Model capabilities
+// Model capabilities and optimal use cases
 const MODEL_CAPABILITIES = {
-  "google/gemini-2.0-flash-exp:free": {
-    multimodal: true,
-    maxTokens: 8192,
-    supportedMimes: ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"],
+  "deepseek/deepseek-r1-0528:free": {
+    maxTokens: 163840,
+    bestFor: ["notes", "quiz", "essay_check", "language_practice"],
   },
-  "nvidia/nemotron-nano-12b-v2-vl:free": {
-    multimodal: true,
-    maxTokens: 4096,
-    supportedMimes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+  "qwen/qwen3-coder:free": {
+    maxTokens: 262000,
+    bestFor: ["math_solve", "flashcards", "roadmap"],
+  },
+  "mistralai/devstral-2512:free": {
+    maxTokens: 262144,
+    bestFor: ["mindmap", "summary"],
   },
   "xiaomi/mimo-v2-flash:free": {
-    multimodal: true,
-    maxTokens: 2048,
-    supportedMimes: ["image/jpeg", "image/png"],
+    maxTokens: 262144,
+    bestFor: ["summary"], // Fallback for speed
   },
+};
+
+// Select best model for AI tool type
+function selectModelForType(type: string): string[] {
+  const modelPriority: Record<string, string[]> = {
+    notes: [FREE_MODELS.reasoning, FREE_MODELS.structured, FREE_MODELS.creative],
+    summary: [FREE_MODELS.fast, FREE_MODELS.creative, FREE_MODELS.reasoning],
+    flashcards: [FREE_MODELS.structured, FREE_MODELS.creative, FREE_MODELS.reasoning],
+    quiz: [FREE_MODELS.reasoning, FREE_MODELS.structured, FREE_MODELS.creative],
+    essay_check: [FREE_MODELS.reasoning, FREE_MODELS.creative, FREE_MODELS.structured],
+    math_solve: [FREE_MODELS.structured, FREE_MODELS.reasoning, FREE_MODELS.creative],
+    language_practice: [FREE_MODELS.reasoning, FREE_MODELS.fast, FREE_MODELS.structured],
+    roadmap: [FREE_MODELS.structured, FREE_MODELS.creative, FREE_MODELS.reasoning],
+    mindmap: [FREE_MODELS.creative, FREE_MODELS.structured, FREE_MODELS.reasoning],
+  };
+
+  return modelPriority[type] || [FREE_MODELS.reasoning, FREE_MODELS.structured, FREE_MODELS.creative];
+}
+
+// Rate limit configuration: 10 requests per minute per user
+const RATE_LIMIT_CONFIG = {
+  maxRequests: 10,
+  windowMs: 60 * 1000, // 1 minute
+  message: "AI generation rate limit exceeded. Please wait before making more requests.",
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
+  // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreFlight(req);
   }
 
   try {
-    const { type, prompt, context, fileData } = await req.json();
+    // 1. Verify authentication
+    const { userId, error: authError } = await verifyAuth(req);
+    if (authError || !userId) {
+      return createUnauthorizedResponse(authError || "Authentication required", corsHeaders);
+    }
+
+    // 2. Check rate limit
+    const rateLimitResult = checkRateLimit(userId, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      return createRateLimitResponse(
+        rateLimitResult.error || "Rate limit exceeded",
+        rateLimitResult.resetTime,
+        corsHeaders
+      );
+    }
+
+    // 3. Validate request
+    const { data: validatedData, error: validationError, details } = await validateRequest(
+      req,
+      aiGenerateSchema
+    );
+
+    if (validationError || !validatedData) {
+      return createValidationErrorResponse(
+        validationError || "Invalid request",
+        details,
+        corsHeaders
+      );
+    }
+
+    const { type, prompt, context, fileData } = validatedData;
     
     // Use FREE OpenRouter API
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
@@ -49,9 +111,8 @@ serve(async (req) => {
       throw new Error("OPENROUTER_API_KEY is not configured. Add your OpenRouter API key to Supabase secrets.");
     }
     
-    // Determine if this is a multimodal request
-    const hasImage = fileData && type.includes('_from_file');
-    let selectedModel = FREE_MODELS.primary; // Default to Gemini 2.0 Flash
+    // Select optimal models for this AI tool type
+    const selectedModels = selectModelForType(type);
 
     let systemPrompt = "";
     
@@ -317,10 +378,10 @@ If user wrote correctly, set corrections to empty array. Always include 1-3 voca
       });
     }
 
-    // Try primary model first, fallback to others if needed
+    // Try optimized models in order (all FREE)
     let result = "";
     let lastError = null;
-    const modelsToTry = [selectedModel, FREE_MODELS.secondary, FREE_MODELS.fallback];
+    const modelsToTry = selectedModels;
     
     for (const model of modelsToTry) {
       try {
@@ -338,7 +399,7 @@ If user wrote correctly, set corrections to empty array. Always include 1-3 voca
             model: model,
             messages: messages,
             temperature: 0.7,
-            max_tokens: MODEL_CAPABILITIES[model as keyof typeof MODEL_CAPABILITIES]?.maxTokens || 4096,
+            max_tokens: 4096, // Reasonable limit for all models
           }),
         });
 
@@ -377,14 +438,34 @@ If user wrote correctly, set corrections to empty array. Always include 1-3 voca
       throw new Error(lastError || "All AI models failed. Please try again later.");
     }
 
+    const responseHeaders = addRateLimitHeaders(
+      { ...corsHeaders, "Content-Type": "application/json" },
+      rateLimitResult
+    );
+
     return new Response(JSON.stringify({ result }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: responseHeaders,
     });
   } catch (error) {
-    console.error("AI generate error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Log error without exposing sensitive details
+    const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+    
+    // Don't expose internal errors to client
+    const publicMessage = errorMessage.includes("OPENROUTER_API_KEY")
+      ? "AI service configuration error. Please contact support."
+      : errorMessage.includes("quota") || errorMessage.includes("rate limit")
+      ? "AI service temporarily unavailable. Please try again later."
+      : "Failed to generate AI content. Please try again.";
+
+    return new Response(
+      JSON.stringify({ 
+        error: publicMessage,
+        retryable: !errorMessage.includes("configuration")
+      }), 
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 });

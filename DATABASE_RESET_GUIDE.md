@@ -35,7 +35,7 @@ This guide helps you reset your StarPath database to a completely fresh state.
 
 ### Step 1: Go to SQL Editor
 
-**URL:** https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/sql/new
+**URL:** https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/sql/new
 
 1. Click "New Query" if needed
 2. You'll see a blank SQL editor

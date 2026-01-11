@@ -9,19 +9,19 @@ Or use the CLI commands below
 
 Variable 1:
 Name:  VITE_SUPABASE_URL
-Value: https://ryzhsfmqopywoymghmdp.supabase.co
+Value: https://YOUR_SUPABASE_PROJECT_ID.supabase.co
 
 Variable 2:
 Name:  VITE_SUPABASE_PUBLISHABLE_KEY
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5emhzZm1xb3B5d295bWdobWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjIwMjIsImV4cCI6MjA4MzYzODAyMn0.DQADOrMNm3eT4iuo6_9AAVoKPuB-k9aUd7hg-2oIcBs
+Value: YOUR_SUPABASE_ANON_KEY_HERE
 
 Variable 3:
 Name:  VITE_SUPABASE_PROJECT_ID
-Value: ryzhsfmqopywoymghmdp
+Value: YOUR_SUPABASE_PROJECT_ID
 
 Variable 4:
 Name:  VITE_RAZORPAY_KEY_ID
-Value: rzp_test_S2Ivb345JHSj6w
+Value: YOUR_RAZORPAY_TEST_KEY_HERE
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

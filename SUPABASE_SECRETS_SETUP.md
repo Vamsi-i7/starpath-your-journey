@@ -11,14 +11,14 @@ Your edge functions **WILL NOT WORK** without these secrets configured in Supaba
 ### 1. OpenRouter API Key (AI Features)
 ```
 Secret Name: OPENROUTER_API_KEY
-Secret Value: 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
+Secret Value: YOUR_OPENROUTER_API_KEY_HERE
 ```
 ✅ **Already added to .env file**
 
 ### 2. Razorpay Keys (Payment Features)
 ```
 Secret Name: RAZORPAY_KEY_ID
-Secret Value: rzp_test_S2Ivb345JHSj6w
+Secret Value: YOUR_RAZORPAY_TEST_KEY_HERE
 
 Secret Name: RAZORPAY_KEY_SECRET
 Secret Value: [Get from Razorpay Dashboard]
@@ -34,7 +34,7 @@ Secret Value: [Get from Razorpay Dashboard after creating webhook]
 ### Method 1: Supabase Dashboard (Recommended)
 
 1. **Go to Edge Functions Settings**
-   - URL: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/settings/functions
+   - URL: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/settings/functions
    - Or navigate: Dashboard → Project Settings → Edge Functions
 
 2. **Add Each Secret**
@@ -54,12 +54,12 @@ Secret Value: [Get from Razorpay Dashboard after creating webhook]
 npx supabase login
 
 # Link to your project
-npx supabase link --project-ref ryzhsfmqopywoymghmdp
+npx supabase link --project-ref YOUR_SUPABASE_PROJECT_ID
 
 # Set secrets one by one
-npx supabase secrets set OPENROUTER_API_KEY=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
+npx supabase secrets set OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY_HERE
 
-npx supabase secrets set RAZORPAY_KEY_ID=rzp_test_S2Ivb345JHSj6w
+npx supabase secrets set RAZORPAY_KEY_ID=YOUR_RAZORPAY_TEST_KEY_HERE
 
 # Add Razorpay secret when you have it
 # npx supabase secrets set RAZORPAY_KEY_SECRET=your_secret_here
@@ -152,14 +152,14 @@ Once secrets are added and functions deployed, test:
 
 ```bash
 # Test AI Coach (should return an affirmation)
-curl -X POST https://ryzhsfmqopywoymghmdp.supabase.co/functions/v1/ai-coach \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5emhzZm1xb3B5d295bWdobWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjIwMjIsImV4cCI6MjA4MzYzODAyMn0.DQADOrMNm3eT4iuo6_9AAVoKPuB-k9aUd7hg-2oIcBs" \
+curl -X POST https://YOUR_SUPABASE_PROJECT_ID.supabase.co/functions/v1/ai-coach \
+  -H "Authorization: Bearer YOUR_SUPABASE_ANON_KEY_HERE" \
   -H "Content-Type: application/json" \
   -d '{"type":"affirmation","context":{"level":5,"xp":1000}}'
 
 # Test AI Generate (should return study notes)
-curl -X POST https://ryzhsfmqopywoymghmdp.supabase.co/functions/v1/ai-generate \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5emhzZm1xb3B5d295bWdobWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjIwMjIsImV4cCI6MjA4MzYzODAyMn0.DQADOrMNm3eT4iuo6_9AAVoKPuB-k9aUd7hg-2oIcBs" \
+curl -X POST https://YOUR_SUPABASE_PROJECT_ID.supabase.co/functions/v1/ai-generate \
+  -H "Authorization: Bearer YOUR_SUPABASE_ANON_KEY_HERE" \
   -H "Content-Type: application/json" \
   -d '{"type":"notes","prompt":"Explain React Hooks"}'
 ```

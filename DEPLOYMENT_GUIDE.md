@@ -21,7 +21,7 @@ This guide walks you through deploying Edge Functions, configuring secrets, and 
 
 2. **Your Supabase project reference ID**
    - Find it in: Supabase Dashboard → Project Settings → General → Reference ID
-   - It looks like: `ryzhsfmqopywoymghmdp`
+   - It looks like: `YOUR_SUPABASE_PROJECT_ID`
 
 ---
 
@@ -94,7 +94,7 @@ supabase functions deploy
 | Secret Name | Value | Description |
 |-------------|-------|-------------|
 | `OPENROUTER_API_KEY` | `sk-or-v1-xxxxx...` | Your OpenRouter API key for AI features |
-| `RAZORPAY_KEY_ID` | `rzp_test_xxxxx` or `rzp_live_xxxxx` | Razorpay Key ID |
+| `RAZORPAY_KEY_ID` | `YOUR_RAZORPAY_TEST_KEY_HERE` or `YOUR_RAZORPAY_LIVE_KEY_HERE` | Razorpay Key ID |
 | `RAZORPAY_KEY_SECRET` | `xxxxxxxxxxxxx` | Razorpay Key Secret |
 | `RAZORPAY_PLAN_ID_PRO_MONTHLY` | `plan_xxxxx` | Razorpay Plan ID for Pro Monthly |
 | `RAZORPAY_PLAN_ID_PRO_YEARLY` | `plan_xxxxx` | Razorpay Plan ID for Pro Yearly |
@@ -106,10 +106,10 @@ supabase functions deploy
 
 ```bash
 # AI Features
-supabase secrets set OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+supabase secrets set OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY_HERE
 
 # Razorpay (Test Mode)
-supabase secrets set RAZORPAY_KEY_ID=rzp_test_xxxxx
+supabase secrets set RAZORPAY_KEY_ID=YOUR_RAZORPAY_TEST_KEY_HERE
 supabase secrets set RAZORPAY_KEY_SECRET=your-secret-here
 
 # Razorpay Plan IDs (create these in Razorpay Dashboard first)

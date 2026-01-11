@@ -1,18 +1,38 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsPreFlight } from "../_shared/corsHeaders.ts";
+import { verifyAuth, createUnauthorizedResponse } from "../_shared/auth.ts";
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreFlight(req);
   }
 
   try {
+    // 1. Verify authentication
+    const { userId, error: authError } = await verifyAuth(req);
+    if (authError || !userId) {
+      return createUnauthorizedResponse(authError || "Authentication required", corsHeaders);
+    }
+
+    // 2. Parse request
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
+
+    // 3. Validate required fields
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return new Response(
+        JSON.stringify({ error: "Missing required payment verification fields" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Get user from auth
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -25,15 +45,20 @@ serve(async (req) => {
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
-      throw new Error('Not authenticated');
+      return createUnauthorizedResponse("Invalid session", corsHeaders);
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
-
-    // Verify signature
+    // 4. MANDATORY: Verify Razorpay signature
     const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
     if (!razorpayKeySecret) {
-      throw new Error('Razorpay secret not configured');
+      console.error('CRITICAL: RAZORPAY_KEY_SECRET not configured');
+      return new Response(
+        JSON.stringify({ error: 'Payment verification unavailable. Contact support.' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     const generatedSignature = createHmac('sha256', razorpayKeySecret)
@@ -41,7 +66,14 @@ serve(async (req) => {
       .digest('hex');
 
     if (generatedSignature !== razorpay_signature) {
-      throw new Error('Invalid payment signature');
+      console.error('SECURITY: Invalid payment signature detected for user:', userId);
+      return new Response(
+        JSON.stringify({ error: 'Payment verification failed. Invalid signature.' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Get order details
@@ -115,10 +147,21 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Payment verification error:', error);
+    
+    // Don't expose internal errors
+    const publicMessage = error instanceof Error && error.message.includes('signature')
+      ? 'Payment verification failed. Please contact support.'
+      : error instanceof Error && error.message.includes('not found')
+      ? 'Payment order not found. Please try again.'
+      : 'Payment verification error. Please contact support.';
+
+    return new Response(
+      JSON.stringify({ error: publicMessage }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });

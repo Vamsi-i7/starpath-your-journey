@@ -9,7 +9,7 @@ When Supabase password recovery emails fail and the dashboard reset doesn't work
 
 ### Step 1: Open SQL Editor
 
-Go to: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/sql/new
+Go to: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/sql/new
 
 Click "New Query" or use the SQL editor directly.
 

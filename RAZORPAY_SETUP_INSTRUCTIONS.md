@@ -15,20 +15,20 @@
 
 #### 1. Get Your Razorpay API Keys
 Visit: https://dashboard.razorpay.com/app/keys
-- Get **Key ID** (starts with "rzp_test_" or "rzp_live_")
+- Get **Key ID** (starts with "YOUR_RAZORPAY_TEST_KEY_HERE" or "YOUR_RAZORPAY_LIVE_KEY_HERE")
 - Get **Key Secret**
 
 #### 2. Add Keys to .env File
 ```bash
 # Add these to your .env file:
-VITE_RAZORPAY_KEY_ID=rzp_test_YOUR_KEY_ID
+VITE_RAZORPAY_KEY_ID=YOUR_RAZORPAY_TEST_KEY_HERE_KEY_ID
 RAZORPAY_KEY_SECRET=your_key_secret_here
 ```
 
 #### 3. Add Keys to Supabase Edge Functions
 ```bash
 # Set these in Supabase Dashboard > Edge Functions > Secrets:
-RAZORPAY_KEY_ID=rzp_test_YOUR_KEY_ID
+RAZORPAY_KEY_ID=YOUR_RAZORPAY_TEST_KEY_HERE_KEY_ID
 RAZORPAY_KEY_SECRET=your_key_secret_here
 ```
 

@@ -301,7 +301,7 @@ npx supabase functions list
 
 ### 3. Test Edge Function
 ```bash
-curl -X POST https://ryzhsfmqopywoymghmdp.supabase.co/functions/v1/check-user-exists \
+curl -X POST https://YOUR_SUPABASE_PROJECT_ID.supabase.co/functions/v1/check-user-exists \
   -H "Authorization: Bearer YOUR_ANON_KEY" \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com"}'
@@ -360,7 +360,7 @@ curl -X POST https://ryzhsfmqopywoymghmdp.supabase.co/functions/v1/check-user-ex
 
 ### Edge Function: check-user-exists
 
-**Endpoint**: `https://ryzhsfmqopywoymghmdp.supabase.co/functions/v1/check-user-exists`
+**Endpoint**: `https://YOUR_SUPABASE_PROJECT_ID.supabase.co/functions/v1/check-user-exists`
 
 **Method**: POST
 

@@ -56,12 +56,12 @@
 ### Frontend Environment Variables (.env)
 ```bash
 # Supabase (Already configured ✅)
-VITE_SUPABASE_URL="https://ryzhsfmqopywoymghmdp.supabase.co"
+VITE_SUPABASE_URL="https://YOUR_SUPABASE_PROJECT_ID.supabase.co"
 VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGc..."
-VITE_SUPABASE_PROJECT_ID="ryzhsfmqopywoymghmdp"
+VITE_SUPABASE_PROJECT_ID="YOUR_SUPABASE_PROJECT_ID"
 
 # Razorpay (Configured in .env ✅)
-VITE_RAZORPAY_KEY_ID="rzp_test_S2Ivb345JHSj6w"
+VITE_RAZORPAY_KEY_ID="YOUR_RAZORPAY_TEST_KEY_HERE"
 
 # OAuth (Pending - Not required for initial deployment)
 # VITE_GOOGLE_CLIENT_ID=your_google_client_id
@@ -73,10 +73,10 @@ VITE_RAZORPAY_KEY_ID="rzp_test_S2Ivb345JHSj6w"
 
 ```bash
 # AI Integration (REQUIRED for AI features)
-OPENROUTER_API_KEY=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
+OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY_HERE
 
 # Razorpay (REQUIRED for payments)
-RAZORPAY_KEY_ID=rzp_test_S2Ivb345JHSj6w
+RAZORPAY_KEY_ID=YOUR_RAZORPAY_TEST_KEY_HERE
 RAZORPAY_KEY_SECRET=<your_secret_key>
 RAZORPAY_WEBHOOK_SECRET=<your_webhook_secret>
 
@@ -108,7 +108,7 @@ SUPABASE_SERVICE_ROLE_KEY=<auto_provided>
 npx supabase login
 
 # Link to your project
-npx supabase link --project-ref ryzhsfmqopywoymghmdp
+npx supabase link --project-ref YOUR_SUPABASE_PROJECT_ID
 
 # Deploy all edge functions
 npx supabase functions deploy ai-coach
@@ -125,7 +125,7 @@ npx supabase functions list
 
 ### Step 2: Add Supabase Secrets
 **BEFORE deploying functions, add these secrets:**
-1. Go to: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/settings/functions
+1. Go to: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/settings/functions
 2. Add each secret from the list above
 3. Verify secrets are set
 
@@ -214,13 +214,13 @@ SELECT COUNT(*) FROM session_history;
 ### Edge Function Health Check
 ```bash
 # Test AI Coach
-curl -X POST https://ryzhsfmqopywoymghmdp.supabase.co/functions/v1/ai-coach \
+curl -X POST https://YOUR_SUPABASE_PROJECT_ID.supabase.co/functions/v1/ai-coach \
   -H "Authorization: Bearer <SUPABASE_ANON_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"type":"affirmation","context":{"level":5,"xp":1000}}'
 
 # Test AI Generate
-curl -X POST https://ryzhsfmqopywoymghmdp.supabase.co/functions/v1/ai-generate \
+curl -X POST https://YOUR_SUPABASE_PROJECT_ID.supabase.co/functions/v1/ai-generate \
   -H "Authorization: Bearer <SUPABASE_ANON_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"type":"notes","prompt":"React Hooks"}'

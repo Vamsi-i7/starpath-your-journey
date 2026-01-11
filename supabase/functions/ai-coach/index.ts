@@ -1,27 +1,65 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreFlight } from "../_shared/corsHeaders.ts";
+import { checkRateLimit, addRateLimitHeaders, createRateLimitResponse } from "../_shared/rateLimiter.ts";
+import { verifyAuth, createUnauthorizedResponse } from "../_shared/auth.ts";
+import { validateRequest, aiCoachSchema, createValidationErrorResponse } from "../_shared/validation.ts";
 
 // OpenRouter API endpoint (FREE models)
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// FREE Models from OpenRouter - ordered by preference
+// FREE Models from OpenRouter - Optimized for coaching
 const FREE_MODELS = {
-  primary: "google/gemini-2.0-flash-exp:free",      // Best quality
-  secondary: "nvidia/nemotron-nano-12b-v2-vl:free", // Good backup
-  fallback: "xiaomi/mimo-v2-flash:free",            // Last resort
+  primary: "deepseek/deepseek-r1-0528:free",      // Best for conversation & reasoning
+  secondary: "xiaomi/mimo-v2-flash:free",          // Fast responses
+  fallback: "qwen/qwen3-coder:free",               // Reliable backup
+};
+
+// Rate limit: 20 requests per minute (more lenient for chat)
+const RATE_LIMIT_CONFIG = {
+  maxRequests: 20,
+  windowMs: 60 * 1000,
+  message: "AI coach rate limit exceeded. Please slow down.",
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsPreFlight(req);
   }
 
   try {
-    const { type, context } = await req.json();
+    // 1. Verify authentication
+    const { userId, error: authError } = await verifyAuth(req);
+    if (authError || !userId) {
+      return createUnauthorizedResponse(authError || "Authentication required", corsHeaders);
+    }
+
+    // 2. Check rate limit
+    const rateLimitResult = checkRateLimit(userId, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      return createRateLimitResponse(
+        rateLimitResult.error || "Rate limit exceeded",
+        rateLimitResult.resetTime,
+        corsHeaders
+      );
+    }
+
+    // 3. Validate request
+    const { data: validatedData, error: validationError, details } = await validateRequest(
+      req,
+      aiCoachSchema
+    );
+
+    if (validationError || !validatedData) {
+      return createValidationErrorResponse(
+        validationError || "Invalid request",
+        details,
+        corsHeaders
+      );
+    }
+
+    const { type, context } = validatedData;
     
     // Use FREE OpenRouter API
     const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");

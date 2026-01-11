@@ -173,8 +173,8 @@ Check exact names (case-sensitive):
 
 **Fix:**
 Remove any spaces before/after values:
-- ❌ ` https://ryzhsfmqopywoymghmdp.supabase.co ` (spaces)
-- ✅ `https://ryzhsfmqopywoymghmdp.supabase.co` (no spaces)
+- ❌ ` https://YOUR_SUPABASE_PROJECT_ID.supabase.co ` (spaces)
+- ✅ `https://YOUR_SUPABASE_PROJECT_ID.supabase.co` (no spaces)
 
 ---
 

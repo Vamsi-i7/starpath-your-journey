@@ -7,10 +7,6 @@ export const getAuthConfig = () => {
       enabled: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
       clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
     },
-    github: {
-      enabled: !!import.meta.env.VITE_GITHUB_CLIENT_ID,
-      clientId: import.meta.env.VITE_GITHUB_CLIENT_ID,
-    },
   };
 };
 

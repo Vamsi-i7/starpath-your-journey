@@ -1,11 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createHmac } from 'https://deno.land/std@0.168.0/node/crypto.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-razorpay-signature',
-};
+import { getCorsHeaders, handleCorsPreFlight } from "../_shared/corsHeaders.ts";
 
 // Credit amounts for each plan
 const PLAN_CREDITS: Record<string, number> = {
@@ -32,8 +28,10 @@ const PLAN_TIERS: Record<string, string> = {
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreFlight(req);
   }
 
   try {
@@ -41,19 +39,43 @@ serve(async (req) => {
     const signature = req.headers.get('x-razorpay-signature');
     const body = await req.text();
 
-    // Verify webhook signature if secret is configured
-    if (webhookSecret && signature) {
-      const expectedSignature = createHmac('sha256', webhookSecret)
-        .update(body)
-        .digest('hex');
+    // MANDATORY: Webhook signature verification
+    if (!webhookSecret) {
+      console.error('CRITICAL: RAZORPAY_WEBHOOK_SECRET not configured');
+      return new Response(
+        JSON.stringify({ error: 'Webhook configuration error' }), 
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
-      if (signature !== expectedSignature) {
-        console.error('Invalid webhook signature');
-        return new Response(JSON.stringify({ error: 'Invalid signature' }), {
+    if (!signature) {
+      console.error('SECURITY: Missing webhook signature');
+      return new Response(
+        JSON.stringify({ error: 'Missing signature' }), 
+        {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+        }
+      );
+    }
+
+    // Verify the signature
+    const expectedSignature = createHmac('sha256', webhookSecret)
+      .update(body)
+      .digest('hex');
+
+    if (signature !== expectedSignature) {
+      console.error('SECURITY: Invalid webhook signature detected');
+      return new Response(
+        JSON.stringify({ error: 'Invalid signature' }), 
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     const event = JSON.parse(body);
@@ -239,10 +261,18 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Webhook error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Webhook processing error:', error);
+    
+    // Don't expose internal error details to external webhooks
+    return new Response(
+      JSON.stringify({ 
+        error: 'Webhook processing failed',
+        received: false
+      }), 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });

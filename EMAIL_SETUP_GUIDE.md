@@ -10,7 +10,7 @@
 ### Method 1: Manual Password Reset (Recommended - 2 minutes)
 
 1. **Go to Supabase Auth Users:**
-   https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/auth/users
+   https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/auth/users
 
 2. **Find your user:**
    - Look for your email in the list
@@ -32,7 +32,7 @@
 If you forgot your email:
 
 1. **Go to SQL Editor:**
-   https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/editor
+   https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/editor
 
 2. **Run this query:**
    ```sql
@@ -72,7 +72,7 @@ To enable forgot password, sign-up emails, etc., you need a custom email provide
    - Copy the key (starts with `re_`)
 
 3. **Configure in Supabase:**
-   - Go to: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/settings/auth
+   - Go to: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/settings/auth
    - Scroll to **"SMTP Settings"**
    - Toggle **"Enable Custom SMTP"**
    - Fill in:
@@ -111,7 +111,7 @@ To enable forgot password, sign-up emails, etc., you need a custom email provide
    - Copy the key (starts with `SG.`)
 
 3. **Configure in Supabase:**
-   - Go to: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/settings/auth
+   - Go to: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/settings/auth
    - Scroll to **"SMTP Settings"**
    - Toggle **"Enable Custom SMTP"**
    - Fill in:
@@ -166,7 +166,7 @@ To enable forgot password, sign-up emails, etc., you need a custom email provide
 After configuring SMTP, also check these settings:
 
 ### Go to Auth Settings:
-https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/settings/auth
+https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/settings/auth
 
 ### Enable These Features:
 
@@ -212,7 +212,7 @@ After configuration:
 3. Verify email confirmation works
 
 ### Test 3: Check Logs
-1. Go to: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/logs/edge-logs
+1. Go to: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/logs/edge-logs
 2. Filter for "auth" logs
 3. Look for email sending success/failure
 

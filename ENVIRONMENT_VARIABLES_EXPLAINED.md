@@ -10,7 +10,7 @@ These environment variables allow your frontend application to communicate with 
 ### 1. VITE_SUPABASE_URL
 ```
 Name: VITE_SUPABASE_URL
-Value: https://ryzhsfmqopywoymghmdp.supabase.co
+Value: https://YOUR_SUPABASE_PROJECT_ID.supabase.co
 ```
 
 **What it does:**
@@ -31,7 +31,7 @@ Value: https://ryzhsfmqopywoymghmdp.supabase.co
 ### 2. VITE_SUPABASE_PUBLISHABLE_KEY
 ```
 Name: VITE_SUPABASE_PUBLISHABLE_KEY
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5emhzZm1xb3B5d295bWdobWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjIwMjIsImV4cCI6MjA4MzYzODAyMn0.DQADOrMNm3eT4iuo6_9AAVoKPuB-k9aUd7hg-2oIcBs
+Value: YOUR_SUPABASE_ANON_KEY_HERE
 ```
 
 **What it does:**
@@ -59,7 +59,7 @@ Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5
   ```json
   {
     "iss": "supabase",
-    "ref": "ryzhsfmqopywoymghmdp",
+    "ref": "YOUR_SUPABASE_PROJECT_ID",
     "role": "anon",
     "iat": 1768062022,
     "exp": 2083638022
@@ -73,7 +73,7 @@ Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5
 ### 3. VITE_SUPABASE_PROJECT_ID
 ```
 Name: VITE_SUPABASE_PROJECT_ID
-Value: ryzhsfmqopywoymghmdp
+Value: YOUR_SUPABASE_PROJECT_ID
 ```
 
 **What it does:**
@@ -87,7 +87,7 @@ Value: ryzhsfmqopywoymghmdp
 
 **Why it's needed:**
 - Some parts of the app need to construct URLs dynamically
-- Example: Storage bucket URLs like `https://ryzhsfmqopywoymghmdp.supabase.co/storage/v1/object/public/avatars/...`
+- Example: Storage bucket URLs like `https://YOUR_SUPABASE_PROJECT_ID.supabase.co/storage/v1/object/public/avatars/...`
 - Helps with debugging (identifying which project is being used)
 
 **Security:**
@@ -99,7 +99,7 @@ Value: ryzhsfmqopywoymghmdp
 ### 4. VITE_RAZORPAY_KEY_ID
 ```
 Name: VITE_RAZORPAY_KEY_ID
-Value: rzp_test_S2Ivb345JHSj6w
+Value: YOUR_RAZORPAY_TEST_KEY_HERE
 ```
 
 **What it does:**
@@ -113,7 +113,7 @@ Value: rzp_test_S2Ivb345JHSj6w
 - Without it, users cannot make payments or subscribe
 
 **Current Status:**
-- 🧪 **TEST MODE** - You're using test credentials (see `rzp_test_` prefix)
+- 🧪 **TEST MODE** - You're using test credentials (see `YOUR_RAZORPAY_TEST_KEY_HERE` prefix)
 - Test mode means:
   - Real money is NOT processed
   - You can use test card numbers to simulate payments
@@ -121,7 +121,7 @@ Value: rzp_test_S2Ivb345JHSj6w
 
 **When to use LIVE keys:**
 - After testing is complete and you're ready to accept real payments
-- Replace `rzp_test_...` with `rzp_live_...`
+- Replace `YOUR_RAZORPAY_TEST_KEY_HERE...` with `YOUR_RAZORPAY_LIVE_KEY_HERE...`
 - Get live keys from Razorpay Dashboard
 
 **Security:**
@@ -180,7 +180,7 @@ Expiry: Any future date
 **Add Variable 1:**
 ```
 Name: VITE_SUPABASE_URL
-Value: https://ryzhsfmqopywoymghmdp.supabase.co
+Value: https://YOUR_SUPABASE_PROJECT_ID.supabase.co
 Environment: Production ✓
 Description: Supabase project URL - base endpoint for all backend API calls
 ```
@@ -188,7 +188,7 @@ Description: Supabase project URL - base endpoint for all backend API calls
 **Add Variable 2:**
 ```
 Name: VITE_SUPABASE_PUBLISHABLE_KEY
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5emhzZm1xb3B5d295bWdobWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjIwMjIsImV4cCI6MjA4MzYzODAyMn0.DQADOrMNm3eT4iuo6_9AAVoKPuB-k9aUd7hg-2oIcBs
+Value: YOUR_SUPABASE_ANON_KEY_HERE
 Environment: Production ✓
 Description: Supabase anonymous public key - authenticates frontend API requests
 ```
@@ -196,7 +196,7 @@ Description: Supabase anonymous public key - authenticates frontend API requests
 **Add Variable 3:**
 ```
 Name: VITE_SUPABASE_PROJECT_ID
-Value: ryzhsfmqopywoymghmdp
+Value: YOUR_SUPABASE_PROJECT_ID
 Environment: Production ✓
 Description: Supabase project identifier - used for storage URLs and logging
 ```
@@ -204,7 +204,7 @@ Description: Supabase project identifier - used for storage URLs and logging
 **Add Variable 4:**
 ```
 Name: VITE_RAZORPAY_KEY_ID
-Value: rzp_test_S2Ivb345JHSj6w
+Value: YOUR_RAZORPAY_TEST_KEY_HERE
 Environment: Production ✓
 Description: Razorpay test key - enables payment checkout (test mode)
 ```

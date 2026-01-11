@@ -317,16 +317,16 @@ All chunks under optimal size
 
 ### Frontend (.env) - ✅ Already Configured
 ```bash
-VITE_SUPABASE_URL=https://ryzhsfmqopywoymghmdp.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGc...
-VITE_SUPABASE_PROJECT_ID=ryzhsfmqopywoymghmdp
-VITE_RAZORPAY_KEY_ID=rzp_test_S2Ivb345JHSj6w
+VITE_SUPABASE_URL=https://YOUR_SUPABASE_PROJECT_ID.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_ANON_KEY_HERE
+VITE_SUPABASE_PROJECT_ID=YOUR_SUPABASE_PROJECT_ID
+VITE_RAZORPAY_KEY_ID=YOUR_RAZORPAY_TEST_KEY_HERE
 ```
 
 ### Supabase Secrets - ⚠️ PENDING (Add Before Deployment)
 ```bash
 # AI Features (REQUIRED)
-OPENROUTER_API_KEY=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
+OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY_HERE
 
 # Payment Features (REQUIRED)
 RAZORPAY_KEY_SECRET=<from_razorpay_dashboard>
@@ -379,14 +379,14 @@ SUPABASE_SERVICE_ROLE_KEY=<auto>
 
 **1. Add Supabase Secrets (5 min)**
 ```bash
-# Go to: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/settings/functions
+# Go to: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/settings/functions
 # Add secrets: OPENROUTER_API_KEY, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET
 ```
 
 **2. Deploy Edge Functions (5 min)**
 ```bash
 npx supabase login
-npx supabase link --project-ref ryzhsfmqopywoymghmdp
+npx supabase link --project-ref YOUR_SUPABASE_PROJECT_ID
 npx supabase functions deploy ai-coach
 npx supabase functions deploy ai-generate
 npx supabase functions deploy create-razorpay-order

@@ -1,17 +1,55 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getCorsHeaders, handleCorsPreFlight } from "../_shared/corsHeaders.ts";
+import { checkRateLimit, addRateLimitHeaders, createRateLimitResponse } from "../_shared/rateLimiter.ts";
+import { verifyAuth, createUnauthorizedResponse } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Rate limit: 5 payment orders per minute (prevent spam)
+const RATE_LIMIT_CONFIG = {
+  maxRequests: 5,
+  windowMs: 60 * 1000,
+  message: "Payment order creation rate limit exceeded. Please wait before retrying.",
 };
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreFlight(req);
   }
 
   try {
+    // 1. Verify authentication
+    const { userId, error: authError } = await verifyAuth(req);
+    if (authError || !userId) {
+      return createUnauthorizedResponse(authError || "Authentication required", corsHeaders);
+    }
+
+    // 2. Check rate limit
+    const rateLimitResult = checkRateLimit(userId, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      return createRateLimitResponse(
+        rateLimitResult.error || "Rate limit exceeded",
+        rateLimitResult.resetTime,
+        corsHeaders
+      );
+    }
+
+    // 3. Parse and validate request
+    const { amount, currency, type, metadata } = await req.json();
+
+    // Validate amount
+    if (!amount || amount <= 0 || amount > 100000) {
+      return new Response(
+        JSON.stringify({ error: "Invalid amount. Must be between 1 and 100000" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Get user from auth
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -24,10 +62,8 @@ serve(async (req) => {
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
-      throw new Error('Not authenticated');
+      return createUnauthorizedResponse("Invalid session", corsHeaders);
     }
-
-    const { amount, currency, type, metadata } = await req.json();
 
     // Create Razorpay order
     const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
@@ -78,15 +114,31 @@ serve(async (req) => {
       metadata: metadata,
     });
 
+    const responseHeaders = addRateLimitHeaders(
+      { ...corsHeaders, 'Content-Type': 'application/json' },
+      rateLimitResult
+    );
+
     return new Response(JSON.stringify(order), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: responseHeaders,
     });
 
   } catch (error) {
-    console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Payment order creation error:', error);
+    
+    // Don't expose internal errors
+    const publicMessage = error instanceof Error && error.message.includes('Razorpay')
+      ? 'Payment service temporarily unavailable. Please try again.'
+      : error instanceof Error && error.message.includes('credentials')
+      ? 'Payment service configuration error. Please contact support.'
+      : 'Failed to create payment order. Please try again.';
+
+    return new Response(
+      JSON.stringify({ error: publicMessage }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   }
 });

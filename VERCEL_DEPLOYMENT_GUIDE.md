@@ -72,10 +72,10 @@ git push -u origin main
 Click "Environment Variables" and add:
 
 ```
-VITE_SUPABASE_PROJECT_ID=ryzhsfmqopywoymghmdp
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5emhzZm1xb3B5d295bWdobWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNjIwMjIsImV4cCI6MjA4MzYzODAyMn0.DQADOrMNm3eT4iuo6_9AAVoKPuB-k9aUd7hg-2oIcBs
-VITE_SUPABASE_URL=https://ryzhsfmqopywoymghmdp.supabase.co
-VITE_RAZORPAY_KEY_ID=rzp_test_S2Ivb345JHSj6w
+VITE_SUPABASE_PROJECT_ID=YOUR_SUPABASE_PROJECT_ID
+VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_ANON_KEY_HERE
+VITE_SUPABASE_URL=https://YOUR_SUPABASE_PROJECT_ID.supabase.co
+VITE_RAZORPAY_KEY_ID=YOUR_RAZORPAY_TEST_KEY_HERE
 ```
 
 **Note**: Do NOT add `OPENROUTER_API_KEY` to Vercel - it's already in Supabase secrets
@@ -189,7 +189,7 @@ Open browser DevTools:
 
 ### Update Supabase Redirect URLs
 
-1. Go to: https://supabase.com/dashboard/project/ryzhsfmqopywoymghmdp/auth/url-configuration
+1. Go to: https://supabase.com/dashboard/project/YOUR_SUPABASE_PROJECT_ID/auth/url-configuration
 
 2. Add your Vercel URL to:
    - **Site URL**: `https://your-app.vercel.app`
