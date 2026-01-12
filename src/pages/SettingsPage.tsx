@@ -1,4 +1,5 @@
 import { AppTopbar } from '@/components/app/AppTopbar';
+import { ExportDataSection } from '@/components/settings/ExportDataSection';
 import { useAuth, AccentColor } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -562,6 +563,9 @@ const SettingsPage = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Export Data Section */}
+        <ExportDataSection />
 
         {/* Hidden Account Management - expandable section */}
         <details className="group">

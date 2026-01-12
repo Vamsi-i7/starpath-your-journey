@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from "@/contexts/AuthContext";
 import { AppTopbar } from '@/components/app/AppTopbar';
 import { HabitCard } from '@/components/habits/HabitCard';
 import { GamificationPanel } from '@/components/dashboard/GamificationPanel';

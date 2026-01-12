@@ -52,25 +52,54 @@ class ErrorTracker {
         Sentry.init({
           dsn: sentryDsn,
           environment,
+          
+          // Sentry's official recommended integrations
           integrations: [
             Sentry.browserTracingIntegration(),
             Sentry.replayIntegration({
               maskAllText: true,
               blockAllMedia: true,
             }),
+            // Automatically capture console errors and warnings
+            Sentry.consoleIntegration({ 
+              levels: ['error', 'warn'] 
+            }),
           ],
+          
           // Performance Monitoring
           tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
+          
           // Session Replay
           replaysSessionSampleRate: 0.1,
           replaysOnErrorSampleRate: 1.0,
-          // Don't send errors in development
-          enabled: environment === 'production',
+          
+          // Enable logging (Sentry's recommendation)
+          enableLogs: true,
+          
+          // Send default PII for better debugging (as per Sentry docs)
+          sendDefaultPii: true,
+          
+          // Enable in both dev and production for testing
+          enabled: true,
+          
           beforeSend(event, hint) {
-            // Filter out non-error issues
-            if (event.level === 'info' || event.level === 'debug') {
-              return null;
+            // Filter out browser noise
+            if (event.exception) {
+              const error = hint.originalException;
+              if (error instanceof Error) {
+                // Filter ResizeObserver errors (common browser noise)
+                if (error.message.includes('ResizeObserver')) {
+                  return null;
+                }
+              }
             }
+            
+            // Remove sensitive headers
+            if (event.request?.headers) {
+              delete event.request.headers['Authorization'];
+              delete event.request.headers['Cookie'];
+            }
+            
             return event;
           },
         });

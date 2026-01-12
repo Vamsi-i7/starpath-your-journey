@@ -7,53 +7,63 @@ import { validateRequest, aiGenerateSchema, createValidationErrorResponse } from
 // OpenRouter API endpoint (FREE models)
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// FREE Models from OpenRouter - Optimized for each task
+// FREE Models from OpenRouter - 100% Free, No Credits Needed
 const FREE_MODELS = {
-  // Text understanding & reasoning
-  reasoning: "deepseek/deepseek-r1-0528:free",      // Best reasoning (163K context)
-  // Math & structured output
-  structured: "qwen/qwen3-coder:free",               // Math & code (262K context)
-  // Creative & speed
-  creative: "mistralai/devstral-2512:free",          // Creative tasks (262K context)
-  // Fast responses
-  fast: "xiaomi/mimo-v2-flash:free",                 // Speed (262K context)
+  // Google Gemini Flash - BEST FREE MODEL (Fast, High Quality, 1M context)
+  gemini: "google/gemini-flash-1.5",                 // PRIMARY - Best all-around
+  // Backup free models
+  reasoning: "meta-llama/llama-3.1-8b-instruct:free",  // Good reasoning
+  structured: "qwen/qwq-32b-preview:free",            // Math & logic
+  creative: "mistralai/mistral-7b-instruct:free",     // Creative tasks
+  fast: "google/gemini-flash-1.5-8b",                 // Speed optimized
 };
 
-// Model capabilities and optimal use cases
+// Model capabilities - ALL 100% FREE
 const MODEL_CAPABILITIES = {
-  "deepseek/deepseek-r1-0528:free": {
-    maxTokens: 163840,
-    bestFor: ["notes", "quiz", "essay_check", "language_practice"],
+  "google/gemini-flash-1.5": {
+    maxTokens: 1000000,  // 1M tokens!
+    cost: "$0 - Completely FREE",
+    bestFor: ["all tasks - best quality/speed ratio"],
   },
-  "qwen/qwen3-coder:free": {
-    maxTokens: 262000,
-    bestFor: ["math_solve", "flashcards", "roadmap"],
+  "google/gemini-flash-1.5-8b": {
+    maxTokens: 1000000,
+    cost: "$0 - Completely FREE", 
+    bestFor: ["speed critical tasks"],
   },
-  "mistralai/devstral-2512:free": {
-    maxTokens: 262144,
-    bestFor: ["mindmap", "summary"],
+  "meta-llama/llama-3.1-8b-instruct:free": {
+    maxTokens: 131072,
+    cost: "$0 - Completely FREE",
+    bestFor: ["reasoning, essay checking"],
   },
-  "xiaomi/mimo-v2-flash:free": {
-    maxTokens: 262144,
-    bestFor: ["summary"], // Fallback for speed
+  "qwen/qwq-32b-preview:free": {
+    maxTokens: 32768,
+    cost: "$0 - Completely FREE",
+    bestFor: ["math, structured output"],
+  },
+  "mistralai/mistral-7b-instruct:free": {
+    maxTokens: 32768,
+    cost: "$0 - Completely FREE",
+    bestFor: ["creative writing, summaries"],
   },
 };
 
-// Select best model for AI tool type
+// Select best FREE model for each AI tool - ALL $0 COST
 function selectModelForType(type: string): string[] {
   const modelPriority: Record<string, string[]> = {
-    notes: [FREE_MODELS.reasoning, FREE_MODELS.structured, FREE_MODELS.creative],
-    summary: [FREE_MODELS.fast, FREE_MODELS.creative, FREE_MODELS.reasoning],
-    flashcards: [FREE_MODELS.structured, FREE_MODELS.creative, FREE_MODELS.reasoning],
-    quiz: [FREE_MODELS.reasoning, FREE_MODELS.structured, FREE_MODELS.creative],
-    essay_check: [FREE_MODELS.reasoning, FREE_MODELS.creative, FREE_MODELS.structured],
-    math_solve: [FREE_MODELS.structured, FREE_MODELS.reasoning, FREE_MODELS.creative],
-    language_practice: [FREE_MODELS.reasoning, FREE_MODELS.fast, FREE_MODELS.structured],
-    roadmap: [FREE_MODELS.structured, FREE_MODELS.creative, FREE_MODELS.reasoning],
-    mindmap: [FREE_MODELS.creative, FREE_MODELS.structured, FREE_MODELS.reasoning],
+    // Gemini Flash is BEST for most tasks - use it first!
+    notes: [FREE_MODELS.gemini, FREE_MODELS.reasoning, FREE_MODELS.creative],
+    summary: [FREE_MODELS.gemini, FREE_MODELS.fast, FREE_MODELS.creative],
+    flashcards: [FREE_MODELS.gemini, FREE_MODELS.structured, FREE_MODELS.creative],
+    quiz: [FREE_MODELS.gemini, FREE_MODELS.reasoning, FREE_MODELS.structured],
+    essay_check: [FREE_MODELS.gemini, FREE_MODELS.reasoning, FREE_MODELS.creative],
+    math_solve: [FREE_MODELS.structured, FREE_MODELS.gemini, FREE_MODELS.reasoning],
+    language_practice: [FREE_MODELS.gemini, FREE_MODELS.reasoning, FREE_MODELS.fast],
+    roadmap: [FREE_MODELS.gemini, FREE_MODELS.structured, FREE_MODELS.creative],
+    mindmap: [FREE_MODELS.gemini, FREE_MODELS.creative, FREE_MODELS.structured],
   };
 
-  return modelPriority[type] || [FREE_MODELS.reasoning, FREE_MODELS.structured, FREE_MODELS.creative];
+  // Default: Always try Gemini Flash first (it's the BEST free model!)
+  return modelPriority[type] || [FREE_MODELS.gemini, FREE_MODELS.reasoning, FREE_MODELS.creative];
 }
 
 // Rate limit configuration: 10 requests per minute per user

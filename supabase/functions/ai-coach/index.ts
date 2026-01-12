@@ -7,11 +7,12 @@ import { validateRequest, aiCoachSchema, createValidationErrorResponse } from ".
 // OpenRouter API endpoint (FREE models)
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// FREE Models from OpenRouter - Optimized for coaching
+// FREE Models from OpenRouter - BEST for AI Mentor/Coach
+// Using Google Gemini Flash for EXCELLENT conversational AI
 const FREE_MODELS = {
-  primary: "deepseek/deepseek-r1-0528:free",      // Best for conversation & reasoning
-  secondary: "xiaomi/mimo-v2-flash:free",          // Fast responses
-  fallback: "qwen/qwen3-coder:free",               // Reliable backup
+  primary: "google/gemini-flash-1.5",              // BEST for conversation! (1M context, $0)
+  secondary: "meta-llama/llama-3.1-8b-instruct:free",  // Backup (good reasoning)
+  fallback: "mistralai/mistral-7b-instruct:free",      // Reliable fallback
 };
 
 // Rate limit: 20 requests per minute (more lenient for chat)
