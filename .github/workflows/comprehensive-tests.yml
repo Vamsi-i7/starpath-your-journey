@@ -124,8 +124,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit tests
-        run: npm run test:run
+      - name: Run unit tests (skip integration)
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run test:run -- --exclude 'src/test/integration/**'
 
       - name: Upload coverage
         if: always()
@@ -134,11 +137,11 @@ jobs:
           files: ./coverage/coverage-final.json
           fail_ci_if_error: false
 
-  # Job 4: Integration Tests (Optional - requires test DB)
+  # Job 4: Integration Tests (Disabled - requires test user setup)
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' # Only on manual trigger
+    if: false # Disabled until test users are configured
     
     steps:
       - name: Checkout code

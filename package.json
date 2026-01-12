@@ -11,6 +11,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:unit": "vitest run --exclude='**/integration/**'",
+    "test:ci": "vitest run --exclude='**/integration/**'",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "schema:validate": "tsx scripts/validate-schema.ts",
