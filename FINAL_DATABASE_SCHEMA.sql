@@ -180,6 +180,8 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   title TEXT NOT NULL,
   completed BOOLEAN DEFAULT false,
   position INTEGER DEFAULT 0,
+  parent_task_id UUID REFERENCES public.tasks(id) ON DELETE CASCADE,
+  due_date DATE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

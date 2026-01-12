@@ -444,9 +444,15 @@ export function useGoals() {
 
       if (error) {
         logError('Task Add', error);
+        console.error('Task insertion error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
         toast({
           title: 'Error adding task',
-          description: getDisplayErrorMessage(error, 'task'),
+          description: error.message || getDisplayErrorMessage(error, 'task'),
           variant: 'destructive',
         });
         return false;
