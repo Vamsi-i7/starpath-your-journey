@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -86,49 +86,75 @@ export const useAnalyticsData = () => {
   const [goals, setGoals] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (!user) return;
-    fetchAllData();
-  }, [user]);
+  // Calculate the date range we need to fetch (current year + previous year for comparisons)
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    const currentYearStart = startOfYear(now);
+    const previousYearStart = subYears(currentYearStart, 1);
+    
+    return {
+      start: format(previousYearStart, 'yyyy-MM-dd'),
+      end: format(now, 'yyyy-MM-dd'),
+    };
+  }, []);
 
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
 
     try {
-      // Fetch habit completions
-      const { data: completionsData, error: completionsError } = await supabase
-        .from('habit_completions')
-        .select('*, habits(xp_reward)')
-        .eq('user_id', user.id)
-        .order('completed_at', { ascending: true });
+      // Fetch data with date range filters for better performance
+      const [completionsResult, sessionsResult, goalsResult, tasksResult] = await Promise.all([
+        // Habit completions with date filter
+        supabase
+          .from('habit_completions')
+          .select('*, habits(xp_reward)')
+          .eq('user_id', user.id)
+          .gte('completed_at', dateRange.start)
+          .lte('completed_at', dateRange.end)
+          .order('completed_at', { ascending: true }),
+        
+        // Sessions with date filter
+        supabase
+          .from('session_history')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('started_at', dateRange.start)
+          .lte('started_at', dateRange.end)
+          .order('started_at', { ascending: true }),
+        
+        // Goals (only fetch relevant fields)
+        supabase
+          .from('goals')
+          .select('id, user_id, status, completed_at, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        
+        // Tasks (only fetch completed ones for analytics)
+        supabase
+          .from('tasks')
+          .select('id, goal_id, user_id, completed, updated_at, created_at')
+          .eq('user_id', user.id)
+          .eq('completed', true)
+      ]);
+
+      const { data: completionsData, error: completionsError } = completionsResult;
+      const { data: sessionsData, error: sessionsError } = sessionsResult;
+      const { data: goalsData, error: goalsError } = goalsResult;
+      const { data: tasksData, error: tasksError } = tasksResult;
       
       if (completionsError) {
         console.error('Error fetching habit completions:', completionsError);
       }
-
-      // Fetch sessions (using session_history table)
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('session_history')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('started_at', { ascending: true });
-      
       if (sessionsError) {
         console.error('Error fetching sessions:', sessionsError);
       }
-
-      // Fetch goals
-      const { data: goalsData } = await supabase
-        .from('goals')
-        .select('*')
-        .eq('user_id', user.id);
-
-      // Fetch tasks
-      const { data: tasksData } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user.id);
+      if (goalsError) {
+        console.error('Error fetching goals:', goalsError);
+      }
+      if (tasksError) {
+        console.error('Error fetching tasks:', tasksError);
+      }
 
       setHabitCompletions(completionsData || []);
       setSessions(sessionsData || []);
@@ -141,10 +167,18 @@ export const useAnalyticsData = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, dateRange]);
 
-  // Calculate daily metrics for a date range
-  const calculateDailyMetrics = (startDate: Date, endDate: Date): DailyMetrics[] => {
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    fetchAllData();
+  }, [user, fetchAllData]);
+
+  // Calculate daily metrics for a date range - OPTIMIZED with memoization
+  const calculateDailyMetrics = useCallback((startDate: Date, endDate: Date): DailyMetrics[] => {
     const days = eachDayOfInterval({ start: startDate, end: endDate });
     
     return days.map(day => {
@@ -221,10 +255,10 @@ export const useAnalyticsData = () => {
         completionRate: habitsCompleted > 0 ? 100 : 0, // Simplified
       };
     });
-  };
+  }, [habitCompletions, sessions, goals, tasks]);
 
   // Calculate weekly metrics
-  const calculateWeeklyMetrics = (startDate: Date, endDate: Date): WeeklyMetrics[] => {
+  const calculateWeeklyMetrics = useCallback((startDate: Date, endDate: Date): WeeklyMetrics[] => {
     const weeks = eachWeekOfInterval(
       { start: startDate, end: endDate },
       { weekStartsOn: 1 } // Monday
@@ -243,10 +277,10 @@ export const useAnalyticsData = () => {
         avgDailyCompletion: dailyData.reduce((sum, d) => sum + d.habitsCompleted, 0) / 7,
       };
     });
-  };
+  }, [calculateDailyMetrics]);
 
   // Calculate monthly metrics
-  const calculateMonthlyMetrics = (startDate: Date, endDate: Date): MonthlyMetrics[] => {
+  const calculateMonthlyMetrics = useCallback((startDate: Date, endDate: Date): MonthlyMetrics[] => {
     const months = eachMonthOfInterval({ start: startDate, end: endDate });
     
     return months.map(month => {
@@ -270,10 +304,10 @@ export const useAnalyticsData = () => {
         avgDailyCompletion: dailyData.reduce((sum, d) => sum + d.habitsCompleted, 0) / daysInMonth,
       };
     });
-  };
+  }, [calculateDailyMetrics]);
 
   // Calculate quarterly metrics
-  const calculateQuarterlyMetrics = (year: number): QuarterlyMetrics[] => {
+  const calculateQuarterlyMetrics = useCallback((year: number): QuarterlyMetrics[] => {
     return [1, 2, 3, 4].map(quarter => {
       const quarterStart = startOfQuarter(new Date(year, (quarter - 1) * 3, 1));
       const quarterEnd = endOfQuarter(quarterStart);
@@ -294,10 +328,10 @@ export const useAnalyticsData = () => {
         goalSuccessRate,
       };
     });
-  };
+  }, [calculateDailyMetrics]);
 
   // Compare periods
-  const compareMetrics = (current: number, previous: number): ComparisonMetrics => {
+  const compareMetrics = useCallback((current: number, previous: number): ComparisonMetrics => {
     const percentageChange = previous === 0 
       ? (current > 0 ? 100 : 0)
       : ((current - previous) / previous) * 100;
@@ -312,10 +346,10 @@ export const useAnalyticsData = () => {
       percentageChange: Math.abs(percentageChange),
       direction,
     };
-  };
+  }, []);
 
   // Generate insights
-  const generateInsights = (data: DailyMetrics[]): AnalyticsInsight[] => {
+  const generateInsights = useCallback((data: DailyMetrics[]): AnalyticsInsight[] => {
     const insights: AnalyticsInsight[] = [];
     
     if (data.length === 0) return insights;
@@ -417,7 +451,7 @@ export const useAnalyticsData = () => {
     }
     
     return insights;
-  };
+  }, []);
 
   return {
     loading,

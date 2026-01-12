@@ -50,39 +50,53 @@ export function useHabits() {
 
     setIsLoading(true);
     
-    // Fetch habits
-    const { data: habitsData, error: habitsError } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+    try {
+      // Fetch only active habits and recent completions (last 90 days) for better performance
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      const dateFilter = ninetyDaysAgo.toISOString().split('T')[0];
 
-    if (habitsError) {
-      logError('Habits Fetch', habitsError);
+      const [habitsResult, completionsResult] = await Promise.all([
+        supabase
+          .from('habits')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        
+        supabase
+          .from('habit_completions')
+          .select('habit_id, completed_at')
+          .eq('user_id', user.id)
+          .gte('completed_at', dateFilter)
+      ]);
+
+      const { data: habitsData, error: habitsError } = habitsResult;
+      const { data: completionsData, error: completionsError } = completionsResult;
+
+      if (habitsError) {
+        logError('Habits Fetch', habitsError);
+        setIsLoading(false);
+        return;
+      }
+
+      if (completionsError) {
+        logError('Completions Fetch', completionsError);
+      }
+
+      // Map completions to habits
+      const habitsWithCompletions: Habit[] = (habitsData || []).map(habit => ({
+        ...habit,
+        completedDates: (completionsData || [])
+          .filter(c => c.habit_id === habit.id)
+          .map(c => c.completed_at ? new Date(c.completed_at).toISOString().split('T')[0] : ''),
+      }));
+
+      setHabits(habitsWithCompletions);
+    } catch (error) {
+      logError('Habits Fetch Unexpected', error);
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    // Fetch completions for all habits
-    const { data: completionsData, error: completionsError } = await supabase
-      .from('habit_completions')
-      .select('habit_id, completed_at')
-      .eq('user_id', user.id);
-
-    if (completionsError) {
-      logError('Completions Fetch', completionsError);
-    }
-
-    // Map completions to habits
-    const habitsWithCompletions: Habit[] = (habitsData || []).map(habit => ({
-      ...habit,
-      completedDates: (completionsData || [])
-        .filter(c => c.habit_id === habit.id)
-        .map(c => c.completed_at ? new Date(c.completed_at).toISOString().split('T')[0] : ''),
-    }));
-
-    setHabits(habitsWithCompletions);
-    setIsLoading(false);
   };
 
   useEffect(() => {

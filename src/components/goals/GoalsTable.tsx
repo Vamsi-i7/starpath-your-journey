@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format, startOfWeek, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameDay } from 'date-fns';
 import { Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown, Target, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -60,7 +60,24 @@ export function GoalsTable({ goals, onAddGoal, onDeleteGoal, onToggleTask, onAdd
   const [currentDate, setCurrentDate] = useState(new Date());
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newTaskInputs, setNewTaskInputs] = useState<Record<string, string>>({});
-  const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set(goals.map(g => g.id)));
+  const [expandedGoals, setExpandedGoals] = useState<Set<string>>(() => new Set(goals.map(g => g.id)));
+  const prevGoalIdsRef = useRef<Set<string>>(new Set(goals.map(g => g.id)));
+
+  // Auto-expand newly added goals
+  useEffect(() => {
+    const currentGoalIds = goals.map(g => g.id);
+    const newGoalIds = currentGoalIds.filter(id => !prevGoalIdsRef.current.has(id));
+    
+    if (newGoalIds.length > 0) {
+      setExpandedGoals(prev => {
+        const next = new Set(prev);
+        newGoalIds.forEach(id => next.add(id));
+        return next;
+      });
+    }
+    
+    prevGoalIdsRef.current = new Set(currentGoalIds);
+  }, [goals]);
 
   // Get days for the view
   const getDays = () => {
@@ -233,9 +250,9 @@ export function GoalsTable({ goals, onAddGoal, onDeleteGoal, onToggleTask, onAdd
                 </TableRow>
               ) : (
                 goals.map((goal) => (
-                  <>
+                  <React.Fragment key={goal.id}>
                     {/* Goal Row */}
-                    <TableRow key={goal.id} className="bg-muted/20 hover:bg-muted/30 border-t-2 border-border/50">
+                    <TableRow className="bg-muted/20 hover:bg-muted/30 border-t-2 border-border/50">
                       <TableCell className="font-medium sticky left-0 bg-muted/20 z-10 py-3">
                         <div 
                           className="flex items-center gap-3 cursor-pointer"
@@ -368,7 +385,7 @@ export function GoalsTable({ goals, onAddGoal, onDeleteGoal, onToggleTask, onAdd
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 ))
               )}
             </TableBody>
