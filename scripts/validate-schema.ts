@@ -187,26 +187,34 @@ class SchemaValidator {
   }
 
   private async getTableColumns(tableName: string): Promise<ColumnDefinition[]> {
-    const { data, error } = await this.supabase.rpc('get_table_columns', {
-      table_name: tableName,
-    });
+    // Try RPC function first (this may not exist in all databases)
+    try {
+      const { data, error } = await this.supabase.rpc('get_table_columns', {
+        table_name: tableName,
+      });
 
-    if (error) {
-      // Fallback: try direct query
-      const { data: fallbackData, error: fallbackError } = await this.supabase
-        .from(tableName)
-        .select('*')
-        .limit(0);
-
-      if (fallbackError) {
-        throw new Error(`Cannot fetch schema for ${tableName}: ${fallbackError.message}`);
+      if (!error && data) {
+        return data;
       }
+    } catch (rpcError) {
+      // RPC function doesn't exist, use fallback
+      console.log(`⚠️  RPC function 'get_table_columns' not available, using fallback for ${tableName}`);
+    }
 
-      // If we can query the table, return empty array (we'll check if insert works)
+    // Fallback: try direct query
+    const { data: fallbackData, error: fallbackError } = await this.supabase
+      .from(tableName)
+      .select('*')
+      .limit(0);
+
+    if (fallbackError) {
+      console.error(`⚠️  Cannot query ${tableName}:`, fallbackError.message);
+      // Don't throw - return empty and we'll test with dummy insert
       return [];
     }
 
-    return data || [];
+    // If we can query the table, return empty array (we'll check if insert works)
+    return [];
   }
 
   private async validateTable(expectation: TableExpectation): Promise<boolean> {

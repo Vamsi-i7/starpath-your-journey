@@ -7,6 +7,12 @@ on:
     branches: [main, develop]
   workflow_dispatch: # Allow manual trigger
 
+# Add permissions
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   # Job 1: Lint and Type Check
   lint-and-typecheck:
@@ -72,8 +78,10 @@ jobs:
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            github.rest.issues.createComment({
+            try {
+              await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -93,7 +101,10 @@ jobs:
               4. Push your fixes
               
               **Need help?** Check the [Schema Validation Guide](../SCHEMA_VALIDATION_GUIDE.md)`
-            })
+              });
+            } catch (error) {
+              console.log('Could not post comment:', error.message);
+            }
 
   # Job 3: Unit Tests
   unit-tests:

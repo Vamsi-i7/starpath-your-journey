@@ -1,0 +1,120 @@
+name: Schema Validation (Simplified)
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+# Add permissions for the workflow
+permissions:
+  contents: read
+  pull-requests: write  # Allows commenting on PRs
+  issues: write         # Allows creating issues
+
+jobs:
+  validate-schema:
+    name: Validate Database Schema
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check environment variables
+        run: |
+          echo "Checking Supabase credentials..."
+          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ]; then
+            echo "❌ VITE_SUPABASE_URL is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ]; then
+            echo "❌ VITE_SUPABASE_ANON_KEY is not set"
+            exit 1
+          fi
+          echo "✅ Credentials are set"
+          echo "URL length: ${#VITE_SUPABASE_URL}"
+          echo "Key length: ${#VITE_SUPABASE_ANON_KEY}"
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Run schema validation
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          echo "🔍 Running schema validation..."
+          npm run schema:validate 2>&1 | tee validation-output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Schema validation passed!"
+          else
+            echo "❌ Schema validation failed with exit code $EXIT_CODE"
+            echo ""
+            echo "Please check the output above for details."
+          fi
+          
+          exit $EXIT_CODE
+
+      - name: Upload validation output
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: validation-output
+          path: validation-output.txt
+
+      - name: Post results to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            let output = 'No output captured';
+            try {
+              output = fs.readFileSync('validation-output.txt', 'utf8');
+            } catch (error) {
+              output = 'Could not read validation output';
+            }
+            
+            const summary = output.includes('SCHEMA VALIDATION PASSED') 
+              ? '✅ Schema validation passed!' 
+              : '❌ Schema validation failed!';
+            
+            const body = `### ${summary}
+            
+            <details>
+            <summary>Click to see validation details</summary>
+            
+            \`\`\`
+            ${output.slice(0, 4000)}
+            \`\`\`
+            
+            </details>
+            
+            ${output.includes('FAILED') ? '\n**Action required:** Please fix the schema issues listed above before merging.' : ''}
+            `;
+            
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+              console.log('✅ Comment posted successfully');
+            } catch (error) {
+              console.log('⚠️ Could not post comment:', error.message);
+              console.log('This is not critical - the validation results are in the logs');
+            }
