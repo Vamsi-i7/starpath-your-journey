@@ -21,7 +21,7 @@ export function useSessionHistory(limit: number = 10) {
       if (!user) return [];
 
       const { data, error } = await supabase
-        .from('session_history')
+        .from('sessions')
         .select('*')
         .eq('user_id', user.id)
         .order('started_at', { ascending: false })
@@ -43,7 +43,7 @@ export function useSessionStats() {
       if (!user) return { totalSessions: 0, totalMinutes: 0, totalXp: 0 };
 
       const { data, error } = await supabase
-        .from('session_history')
+        .from('sessions')
         .select('duration_seconds, xp_earned')
         .eq('user_id', user.id);
 

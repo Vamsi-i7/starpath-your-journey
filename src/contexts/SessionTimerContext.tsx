@@ -108,8 +108,8 @@ export function SessionTimerProvider({ children }: { children: ReactNode }) {
     
     const xp = Math.floor(durationSeconds / 60) * XP_PER_MINUTE;
     
-    // Use 'session_history' table (matches our database schema)
-    await supabase.from('session_history').insert({
+    // Use 'sessions' table (matches our database schema)
+    await supabase.from('sessions').insert({
       user_id: user.id,
       duration_seconds: durationSeconds,
       xp_earned: xp,

@@ -116,7 +116,7 @@ export const useAnalyticsData = () => {
         
         // Sessions with date filter
         supabase
-          .from('session_history')
+          .from('sessions')
           .select('*')
           .eq('user_id', user.id)
           .gte('started_at', dateRange.start)
@@ -199,7 +199,7 @@ export const useAnalyticsData = () => {
         return sessionDate === dayStr;
       });
       const sessionMinutes = daySessions.reduce((sum, s) => {
-        // session_history stores duration_seconds, convert to minutes
+        // sessions table stores duration_seconds, convert to minutes
         if (s.duration_seconds) {
           return sum + Math.floor(s.duration_seconds / 60);
         }

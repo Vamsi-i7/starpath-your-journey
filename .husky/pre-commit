@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run schema validation
+echo "📋 Validating database schema..."
+npm run schema:validate || {
+  echo "❌ Schema validation failed!"
+  echo "Fix schema issues before committing."
+  echo "Run 'npm run schema:validate' to see details."
+  exit 1
+}
+
+# Run linting
+echo "🧹 Running linter..."
+npm run lint || {
+  echo "⚠️  Linting issues found. Please fix before committing."
+  exit 1
+}
+
+echo "✅ Pre-commit checks passed!"

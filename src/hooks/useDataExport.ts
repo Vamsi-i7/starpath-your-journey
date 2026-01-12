@@ -31,7 +31,7 @@ export function useDataExport() {
         supabase.from('goals').select('*, tasks(*)').eq('user_id', user.id),
         supabase.from('user_achievements').select('*, achievements(*)').eq('user_id', user.id),
         supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase.from('session_history').select('*').eq('user_id', user.id).order('start_time', { ascending: false }).limit(100),
+        supabase.from('sessions').select('*').eq('user_id', user.id).order('started_at', { ascending: false }).limit(100),
       ]);
 
       const exportData = {
@@ -45,7 +45,7 @@ export function useDataExport() {
         habits: habits || [],
         goals: goals || [],
         achievements: achievements || [],
-        session_history: sessionHistory || [],
+        sessions: sessionHistory || [],
       };
 
       // Create blob and download
