@@ -1,9 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logError } from '@/lib/errorLogger';
 import { getDisplayErrorMessage } from '@/lib/errorMessages';
+
+// Constants for validation
+const MAX_TITLE_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 1000;
+const MAX_TASKS_PER_GOAL = 50;
+const MAX_SUBTASK_DEPTH = 3;
 
 export interface Task {
   id: string;
@@ -42,7 +48,7 @@ export function useGoals() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     if (!user) {
       setGoals([]);
       setIsLoading(false);
@@ -51,27 +57,35 @@ export function useGoals() {
 
     setIsLoading(true);
     
-    const { data: goalsData, error: goalsError } = await supabase
-      .from('goals')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+    try {
+      const { data: goalsData, error: goalsError } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (goalsError) {
-      logError('Goals Fetch', goalsError);
-      setIsLoading(false);
-      return;
-    }
+      if (goalsError) {
+        logError('Goals Fetch', goalsError);
+        toast({
+          title: 'Error loading goals',
+          description: getDisplayErrorMessage(goalsError, 'goal'),
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
 
-    const { data: tasksData, error: tasksError } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true });
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('position', { ascending: true });
 
-    if (tasksError) {
-      logError('Tasks Fetch', tasksError);
-    }
+      if (tasksError) {
+        logError('Tasks Fetch', tasksError);
+        // Continue with empty tasks rather than failing completely
+        console.warn('Failed to fetch tasks, continuing with goals only');
+      }
 
     // Helper function to build nested task structure
     const buildTaskTree = (tasks: any[], parentId: string | null = null): Task[] => {
@@ -135,13 +149,22 @@ export function useGoals() {
       };
     });
 
-    setGoals(goalsWithTasks);
-    setIsLoading(false);
-  };
+      setGoals(goalsWithTasks);
+    } catch (error) {
+      logError('Goals Fetch Unexpected', error);
+      toast({
+        title: 'Error loading goals',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast]);
 
   useEffect(() => {
     fetchGoals();
-  }, [user]);
+  }, [fetchGoals]);
 
   const addGoal = async (goalData: {
     title: string;
@@ -298,41 +321,153 @@ export function useGoals() {
     }
   };
 
+  // Helper function to calculate task depth
+  const getTaskDepth = (taskId: string, allTasks: Task[]): number => {
+    const findDepth = (id: string | null, depth: number): number => {
+      if (!id) return depth;
+      const task = allTasks.find(t => t.id === id);
+      if (!task || !task.parent_task_id) return depth;
+      return findDepth(task.parent_task_id, depth + 1);
+    };
+    return findDepth(taskId, 0);
+  };
+
+  // Helper to count tasks for a goal
+  const countTasksForGoal = (goalId: string): number => {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return 0;
+    
+    const countRecursive = (tasks: Task[]): number => {
+      return tasks.reduce((count, task) => {
+        return count + 1 + (task.subtasks ? countRecursive(task.subtasks) : 0);
+      }, 0);
+    };
+    
+    return countRecursive(goal.tasks);
+  };
+
   const addTask = async (goalId: string, title: string, dueDate?: string, parentTaskId?: string): Promise<boolean> => {
     if (!user) return false;
 
+    // Validate title
     const trimmedTitle = title?.trim() || '';
-    if (!trimmedTitle || trimmedTitle.length > 200) {
+    if (!trimmedTitle) {
       toast({
         title: 'Invalid task title',
-        description: 'Title must be between 1 and 200 characters.',
+        description: 'Task title cannot be empty.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+    
+    if (trimmedTitle.length > MAX_TITLE_LENGTH) {
+      toast({
+        title: 'Title too long',
+        description: `Title must be less than ${MAX_TITLE_LENGTH} characters.`,
         variant: 'destructive',
       });
       return false;
     }
 
-    const { error } = await supabase
-      .from('tasks')
-      .insert({
-        goal_id: goalId,
-        user_id: user.id,
-        title: trimmedTitle,
-        due_date: dueDate || null,
-        parent_task_id: parentTaskId || null,
+    // Validate goal exists
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) {
+      toast({
+        title: 'Goal not found',
+        description: 'The goal you are trying to add a task to does not exist.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    // Check task limit per goal
+    const currentTaskCount = countTasksForGoal(goalId);
+    if (currentTaskCount >= MAX_TASKS_PER_GOAL) {
+      toast({
+        title: 'Task limit reached',
+        description: `Maximum ${MAX_TASKS_PER_GOAL} tasks per goal. Consider breaking this into multiple goals.`,
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    // Check subtask depth if this is a subtask
+    if (parentTaskId) {
+      const allFlatTasks = goal.tasks.flatMap(function flatten(t: Task): Task[] {
+        return [t, ...(t.subtasks ? t.subtasks.flatMap(flatten) : [])];
+      });
+      
+      const parentTask = allFlatTasks.find(t => t.id === parentTaskId);
+      if (!parentTask) {
+        toast({
+          title: 'Parent task not found',
+          description: 'The parent task does not exist.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      const parentDepth = getTaskDepth(parentTaskId, allFlatTasks);
+      if (parentDepth >= MAX_SUBTASK_DEPTH) {
+        toast({
+          title: 'Subtask depth limit',
+          description: `Maximum subtask depth is ${MAX_SUBTASK_DEPTH} levels. Try organizing differently.`,
+          variant: 'destructive',
+        });
+        return false;
+      }
+    }
+
+    // Validate due date if provided
+    if (dueDate) {
+      const dueDateObj = new Date(dueDate);
+      if (isNaN(dueDateObj.getTime())) {
+        toast({
+          title: 'Invalid due date',
+          description: 'Please provide a valid date.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .insert({
+          goal_id: goalId,
+          user_id: user.id,
+          title: trimmedTitle,
+          due_date: dueDate || null,
+          parent_task_id: parentTaskId || null,
+        });
+
+      if (error) {
+        logError('Task Add', error);
+        toast({
+          title: 'Error adding task',
+          description: getDisplayErrorMessage(error, 'task'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      toast({
+        title: 'Task added!',
+        description: parentTaskId ? 'Subtask created successfully.' : 'Task created successfully.',
       });
 
-    if (error) {
-      logError('Task Add', error);
+      await fetchGoals();
+      return true;
+    } catch (error) {
+      logError('Task Add Unexpected', error);
       toast({
         title: 'Error adding task',
-        description: getDisplayErrorMessage(error, 'goal'),
+        description: 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
       return false;
     }
-
-    await fetchGoals();
-    return true;
   };
 
   const addSubtask = async (goalId: string, parentTaskId: string, title: string, dueDate?: string): Promise<boolean> => {
@@ -368,73 +503,185 @@ export function useGoals() {
   const deleteTask = async (taskId: string): Promise<boolean> => {
     if (!user) return false;
 
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', taskId)
-      .eq('user_id', user.id);
-
-    if (error) {
-      logError('Task Delete', error);
+    if (!taskId) {
       toast({
         title: 'Error deleting task',
-        description: getDisplayErrorMessage(error, 'goal'),
+        description: 'Invalid task ID.',
         variant: 'destructive',
       });
       return false;
     }
 
-    await fetchGoals();
-    return true;
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        logError('Task Delete', error);
+        toast({
+          title: 'Error deleting task',
+          description: getDisplayErrorMessage(error, 'task'),
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      toast({
+        title: 'Task deleted',
+        description: 'Task and any subtasks have been removed.',
+      });
+
+      await fetchGoals();
+      return true;
+    } catch (error) {
+      logError('Task Delete Unexpected', error);
+      toast({
+        title: 'Error deleting task',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    }
   };
 
   const toggleTask = async (goalId: string, taskId: string) => {
+    if (!user) return;
+    
     const goal = goals.find(g => g.id === goalId);
-    if (!goal) return;
-
-    const task = goal.tasks.find(t => t.id === taskId);
-    if (!task) return;
-
-    const newCompleted = !task.completed;
-
-    // Optimistic update
-    setGoals(prevGoals => prevGoals.map(g => {
-      if (g.id !== goalId) return g;
-      const updatedTasks = g.tasks.map(t => 
-        t.id === taskId ? { ...t, completed: newCompleted } : t
-      );
-      const completedCount = updatedTasks.filter(t => t.completed).length;
-      const progress = updatedTasks.length > 0 ? Math.round((completedCount / updatedTasks.length) * 100) : 0;
-      return { ...g, tasks: updatedTasks, progress };
-    }));
-
-    const { error } = await supabase
-      .from('tasks')
-      .update({ completed: newCompleted })
-      .eq('id', taskId);
-
-    if (error) {
-      logError('Task Toggle', error);
+    if (!goal) {
       toast({
         title: 'Error',
-        description: getDisplayErrorMessage(error, 'goal'),
+        description: 'Goal not found.',
         variant: 'destructive',
       });
-      await fetchGoals();
       return;
     }
 
-    // Update goal progress in DB
-    const updatedTasks = goal.tasks.map(t => 
-      t.id === taskId ? { ...t, completed: newCompleted } : t
-    );
-    const completedCount = updatedTasks.filter(t => t.completed).length;
-    const progress = Math.round((completedCount / updatedTasks.length) * 100);
+    // Find task in nested structure
+    const findTaskRecursive = (tasks: Task[]): Task | undefined => {
+      for (const task of tasks) {
+        if (task.id === taskId) return task;
+        if (task.subtasks) {
+          const found = findTaskRecursive(task.subtasks);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    };
 
-    await supabase
-      .from('goals')
-      .update({ progress })
-      .eq('id', goalId);
+    const task = findTaskRecursive(goal.tasks);
+    if (!task) {
+      toast({
+        title: 'Error',
+        description: 'Task not found.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newCompleted = !task.completed;
+    const previousGoals = [...goals];
+
+    // Optimistic update with recursive task update
+    const updateTaskRecursive = (tasks: Task[]): Task[] => {
+      return tasks.map(t => {
+        if (t.id === taskId) {
+          return { ...t, completed: newCompleted };
+        }
+        if (t.subtasks) {
+          return { ...t, subtasks: updateTaskRecursive(t.subtasks) };
+        }
+        return t;
+      });
+    };
+
+    setGoals(prevGoals => prevGoals.map(g => {
+      if (g.id !== goalId) return g;
+      const updatedTasks = updateTaskRecursive(g.tasks);
+      
+      // Calculate progress including subtasks
+      const countTasks = (tasks: Task[]): { total: number; completed: number } => {
+        return tasks.reduce((acc, t) => {
+          acc.total += 1;
+          if (t.completed || (t.id === taskId && newCompleted)) acc.completed += 1;
+          else if (t.id === taskId && !newCompleted) { /* already not counted */ }
+          else if (t.completed) acc.completed += 1;
+          
+          if (t.subtasks) {
+            const subCount = countTasks(t.subtasks);
+            acc.total += subCount.total;
+            acc.completed += subCount.completed;
+          }
+          return acc;
+        }, { total: 0, completed: 0 });
+      };
+      
+      const { total, completed } = countTasks(updatedTasks);
+      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+      return { ...g, tasks: updatedTasks, progress };
+    }));
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed: newCompleted })
+        .eq('id', taskId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        logError('Task Toggle', error);
+        toast({
+          title: 'Error updating task',
+          description: getDisplayErrorMessage(error, 'task'),
+          variant: 'destructive',
+        });
+        // Rollback optimistic update
+        setGoals(previousGoals);
+        return;
+      }
+
+      // Update goal progress in DB
+      const currentGoal = goals.find(g => g.id === goalId);
+      if (currentGoal) {
+        const countAllTasks = (tasks: Task[]): { total: number; completed: number } => {
+          return tasks.reduce((acc, t) => {
+            acc.total += 1;
+            if (t.id === taskId) {
+              if (newCompleted) acc.completed += 1;
+            } else if (t.completed) {
+              acc.completed += 1;
+            }
+            if (t.subtasks) {
+              const sub = countAllTasks(t.subtasks);
+              acc.total += sub.total;
+              acc.completed += sub.completed;
+            }
+            return acc;
+          }, { total: 0, completed: 0 });
+        };
+        
+        const { total, completed } = countAllTasks(currentGoal.tasks);
+        const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        await supabase
+          .from('goals')
+          .update({ progress })
+          .eq('id', goalId)
+          .eq('user_id', user.id);
+      }
+    } catch (error) {
+      logError('Task Toggle Unexpected', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
+      // Rollback optimistic update
+      setGoals(previousGoals);
+    }
   };
 
   return {

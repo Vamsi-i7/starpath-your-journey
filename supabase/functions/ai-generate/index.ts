@@ -352,33 +352,39 @@ If user wrote correctly, set corrections to empty array. Always include 1-3 voca
       { role: "system", content: systemPrompt },
     ];
 
+    // Check if this is a multimodal request with file data
+    const hasFileData = fileData && typeof fileData === 'string' && fileData.length > 0;
+
     // Handle file content for multimodal requests
-    if (hasImage) {
-      const { base64, mimeType, fileName } = JSON.parse(fileData);
-      
-      // Check if model supports this mime type
-      const modelCaps = MODEL_CAPABILITIES[selectedModel as keyof typeof MODEL_CAPABILITIES];
-      if (!modelCaps?.supportedMimes.includes(mimeType)) {
-        // Try secondary model
-        selectedModel = FREE_MODELS.secondary;
-      }
-      
-      // Build multimodal message with image
-      messages.push({
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: prompt || `Please analyze this ${fileName} and generate content based on it.`
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:${mimeType};base64,${base64}`
+    if (hasFileData) {
+      try {
+        const { base64, mimeType, fileName } = JSON.parse(fileData);
+        
+        // Build multimodal message with image
+        messages.push({
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: prompt || `Please analyze this ${fileName} and generate content based on it.`
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${mimeType};base64,${base64}`
+              }
             }
-          }
-        ]
-      });
+          ]
+        });
+      } catch (parseError) {
+        console.error("Error parsing file data:", parseError);
+        // Fall back to text-only if file data parsing fails
+        const userMessage = context ? `${prompt}\n\nContext: ${context}` : prompt;
+        messages.push({
+          role: "user",
+          content: userMessage
+        });
+      }
     } else {
       // Text-only request
       const userMessage = context ? `${prompt}\n\nContext: ${context}` : prompt;

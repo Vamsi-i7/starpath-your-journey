@@ -722,6 +722,8 @@ export type Database = {
           title: string
           completed: boolean
           position: number
+          due_date: string | null
+          parent_task_id: string | null
           created_at: string
           updated_at: string
         }
@@ -732,6 +734,8 @@ export type Database = {
           title: string
           completed?: boolean
           position?: number
+          due_date?: string | null
+          parent_task_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -742,6 +746,8 @@ export type Database = {
           title?: string
           completed?: boolean
           position?: number
+          due_date?: string | null
+          parent_task_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -751,6 +757,13 @@ export type Database = {
             columns: ["goal_id"]
             isOneToOne: false
             referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           }
         ]
