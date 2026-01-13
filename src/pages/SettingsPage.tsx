@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle, Palette, Check, BarChart3, Mail, Package, RefreshCw, ExternalLink } from 'lucide-react';
+import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle, Palette, Check, BarChart3, Mail, Package, RefreshCw, ExternalLink, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { validatePassword } from '@/lib/passwordValidation';
@@ -14,6 +14,8 @@ import { useTutorial } from '@/components/onboarding/WelcomeTutorial';
 import { AnalyticsGuide } from '@/components/analytics/AnalyticsGuide';
 import { useState as useSettingsState } from 'react';
 import { cn } from '@/lib/utils';
+import { isAdmin } from '@/lib/adminAuth';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,9 +50,13 @@ const SettingsPage = () => {
   const { profile, theme, toggleTheme, accent, setAccent, updateProfile, signOut } = useAuth();
   const { toast } = useToast();
   const { resetTutorial } = useTutorial();
+  const navigate = useNavigate();
   const [showAnalyticsGuide, setShowAnalyticsGuide] = useState(false);
   const [notifications, setNotifications] = useState(profile?.notifications_enabled ?? true);
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+  
+  // Check if user is admin
+  const userIsAdmin = isAdmin(profile);
   
   // Profile form state
   const [username, setUsername] = useState('');
@@ -444,6 +450,28 @@ const SettingsPage = () => {
             </Button>
           </div>
         </div>
+
+        {/* Admin Access - Only visible to admin users */}
+        {userIsAdmin && (
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 border-2 border-primary/30">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-primary/20 rounded-lg">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Developer / Admin Access</h3>
+                <p className="text-xs text-muted-foreground">Administrative control panel</p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => navigate('/app/admin/verify')}
+              className="w-full bg-primary hover:bg-primary/90 gap-2"
+            >
+              <Shield className="w-4 h-4" />
+              Access Admin Dashboard
+            </Button>
+          </div>
+        )}
 
         <div className="p-6 rounded-2xl bg-card border border-border/30">
           <h3 className="font-semibold text-foreground mb-4">Support & Policies</h3>

@@ -206,6 +206,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logError('Profile Fetch', error);
       return null;
     }
+    
+    // If no profile exists yet, return null
+    if (!data) return null;
+    
+    // Get the current user to access metadata (Google profile picture)
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
+    // If user has Google profile picture but it's not in the database, update it
+    if (currentUser?.user_metadata) {
+      const googleAvatar = currentUser.user_metadata.avatar_url || currentUser.user_metadata.picture;
+      const googleFullName = currentUser.user_metadata.full_name || currentUser.user_metadata.name;
+      
+      // Update profile with Google data if missing
+      if (googleAvatar && !data.avatar_url) {
+        await supabase
+          .from('profiles')
+          .update({ avatar_url: googleAvatar })
+          .eq('id', userId);
+        data.avatar_url = googleAvatar;
+      }
+      
+      if (googleFullName && !data.full_name) {
+        await supabase
+          .from('profiles')
+          .update({ full_name: googleFullName })
+          .eq('id', userId);
+        data.full_name = googleFullName;
+      }
+      
+      // If username is missing, use email or full name
+      if (!data.username) {
+        const fallbackUsername = googleFullName?.split(' ')[0] || data.email?.split('@')[0] || 'User';
+        await supabase
+          .from('profiles')
+          .update({ username: fallbackUsername })
+          .eq('id', userId);
+        data.username = fallbackUsername;
+      }
+    }
+    
     return data as UserProfile | null;
   };
 

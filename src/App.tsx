@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { AdminRoute } from "./components/auth/AdminRoute";
 import { AppLayout } from "./components/app/AppLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { lazy, Suspense } from "react";
@@ -38,6 +39,9 @@ const AIMentorPage = lazy(() => import("./pages/AIMentorPage"));
 const ContactUsPage = lazy(() => import("./pages/ContactUsPage"));
 const ShippingPolicyPage = lazy(() => import("./pages/ShippingPolicyPage"));
 const CancellationRefundPage = lazy(() => import("./pages/CancellationRefundPage"));
+const AdminCreditsPage = lazy(() => import("./pages/AdminCreditsPage"));
+const AdminVerifyPage = lazy(() => import("./pages/AdminVerifyPage"));
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -98,6 +102,34 @@ const router = createBrowserRouter(
     {
       path: "/cancellation-refund",
       element: <Suspense fallback={<PageLoader />}><CancellationRefundPage /></Suspense>,
+    },
+    {
+      path: "/app/admin/verify",
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><AdminVerifyPage /></Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/app/admin/dashboard",
+      element: (
+        <ProtectedRoute>
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense>
+          </AdminRoute>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/app/admin/credits",
+      element: (
+        <ProtectedRoute>
+          <AdminRoute>
+            <Suspense fallback={<PageLoader />}><AdminCreditsPage /></Suspense>
+          </AdminRoute>
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/app",
