@@ -367,7 +367,14 @@ async function main() {
   process.exit(success ? 0 : 1);
 }
 
-if (require.main === module) {
+// Run if called directly (ES module compatible)
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 

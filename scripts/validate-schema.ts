@@ -434,8 +434,16 @@ async function main() {
   }
 }
 
-// Run if called directly
-if (require.main === module) {
+// Run if called directly (ES module compatible)
+// Check if this file is being run directly
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Only run main() if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
