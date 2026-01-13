@@ -323,7 +323,7 @@ const SettingsPage = () => {
       </div>
       
       <div className="px-6 max-w-4xl mx-auto space-y-6">
-        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300 animate-fade-in">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
               <User className="w-5 h-5" />
@@ -376,9 +376,9 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300 animate-fade-in stagger-1">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white animate-bounce-in">
               <Palette className="w-5 h-5" />
             </div>
             <div>
@@ -432,9 +432,9 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300 animate-fade-in stagger-2">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white animate-bounce-in stagger-1">
               <Bell className="w-5 h-5" />
             </div>
             <div>
@@ -458,9 +458,9 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300 animate-fade-in stagger-4">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white animate-bounce-in stagger-3">
               <HelpCircle className="w-5 h-5" />
             </div>
             <div>
@@ -494,11 +494,11 @@ const SettingsPage = () => {
 
         {/* Admin Access - Only visible to admin users */}
         {userIsAdmin && (
-          <div className="relative p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 border-2 border-primary/30 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group">
+          <div className="relative p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 border-2 border-primary/30 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group animate-bounce-in">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg animate-pulse-slow">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -520,9 +520,9 @@ const SettingsPage = () => {
           </div>
         )}
 
-        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300 animate-fade-in stagger-5">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white animate-bounce-in stagger-4">
               <Mail className="w-5 h-5" />
             </div>
             <div>
@@ -578,9 +578,9 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300 animate-fade-in stagger-3">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white animate-bounce-in stagger-2">
               <Lock className="w-5 h-5" />
             </div>
             <div>
