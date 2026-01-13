@@ -87,7 +87,38 @@ serve(async (req) => {
       throw new Error('Order not found');
     }
 
-    // Update order status
+    // IDEMPOTENCY CHECK: If already processed, return success
+    if (order.status === 'completed') {
+      console.log('Order already processed (idempotent):', razorpay_order_id);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Payment already processed',
+          order 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Prevent double-processing with atomic update
+    const { error: lockError } = await supabaseClient
+      .from('payment_orders')
+      .update({ status: 'processing' })
+      .eq('order_id', razorpay_order_id)
+      .eq('status', 'pending'); // Only update if still pending
+
+    if (lockError) {
+      console.log('Order already being processed:', razorpay_order_id);
+      return new Response(
+        JSON.stringify({ error: 'Payment is already being processed' }),
+        { 
+          status: 409, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Update order status to completed
     await supabaseClient
       .from('payment_orders')
       .update({

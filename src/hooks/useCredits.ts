@@ -37,101 +37,109 @@ const TOOL_COSTS: Record<string, number> = {
 };
 
 export function useCredits() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const [credits, setCredits] = useState(0);
   const [userCredits, setUserCredits] = useState<UserCredits | null>(null);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const credits = userCredits?.balance || 0;
+  // Check and grant daily credits on mount
+  const checkAndGrantDailyCredits = async () => {
+    if (!user?.id) return;
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    } else {
-      setUserCredits(null);
-      setTransactions([]);
-      setIsLoading(false);
+    try {
+      const { data, error } = await supabase.rpc('grant_daily_credits', {
+        p_user_id: user.id
+      });
+
+      if (error) {
+        console.error('Error granting daily credits:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        if (result.granted) {
+          toast.success(`🎉 ${result.message}`, {
+            description: `You received ${result.amount} credits. New balance: ${result.new_balance}`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in daily credits check:', error);
     }
-  }, [user]);
+  };
 
   const fetchData = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
+    if (!user?.id) return;
+
     try {
-      // Fetch user credits
-      const { data: creditsData, error: creditsError } = await supabase
-        .from('credits')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      setIsLoading(true);
 
-      if (creditsError && creditsError.code !== 'PGRST116') {
-        console.error('Error fetching credits:', creditsError);
-      }
+      // Fetch user credits from profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('ai_credits, last_daily_credit')
+        .eq('id', user.id)
+        .single();
 
-      // If no credits record exists, create one
-      if (!creditsData) {
-        const { data: newCredits, error: insertError } = await supabase
-          .from('credits')
-          .insert({ user_id: user.id, balance: 10, total_earned: 10 })
-          .select()
-          .single();
-        
-        if (!insertError && newCredits) {
-          setUserCredits(newCredits);
-        }
-      } else {
-        setUserCredits(creditsData);
-      }
+      if (profileError) throw profileError;
 
-      // Fetch recent transactions
+      setCredits(profileData?.ai_credits || 0);
+
+      // Fetch transactions
       const { data: transactionsData } = await supabase
         .from('credit_transactions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(20);
 
-      if (transactionsData) {
-        setTransactions(transactionsData);
-      }
+      setTransactions(transactionsData || []);
     } catch (error: any) {
-      console.error('Error fetching credit data:', error);
+      console.error('Error fetching credits:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const deductCredits = async (
-    toolType: 'notes' | 'flashcards' | 'roadmap' | 'mentor',
-    description?: string
-  ): Promise<boolean> => {
-    if (!user || !userCredits) return false;
+  useEffect(() => {
+    if (user?.id) {
+      // Check and grant daily credits first
+      checkAndGrantDailyCredits();
+      // Then fetch current data
+      fetchData();
+    }
+  }, [user?.id]);
+
+  const deductCredits = async (toolType: 'notes' | 'flashcards' | 'roadmap' | 'mentor', reason: string = ''): Promise<boolean> => {
+    if (!user?.id) return false;
 
     const cost = TOOL_COSTS[toolType] || 0;
 
-    // Check if user has enough credits
     if (credits < cost) {
       toast.error('Insufficient credits', {
-        description: `You need ${cost} credits but only have ${credits}.`,
+        description: `You need ${cost} credits to use this tool. Current balance: ${credits}`,
+        action: {
+          label: 'Get Credits',
+          onClick: () => {
+            window.location.href = '/app/subscription';
+          },
+        },
       });
       return false;
     }
 
     try {
+      // Deduct from profile ai_credits
       const newBalance = credits - cost;
-      const newTotalSpent = (userCredits.total_spent || 0) + cost;
 
-      // Update credits
       const { error: updateError } = await supabase
-        .from('credits')
+        .from('profiles')
         .update({ 
-          balance: newBalance,
-          total_spent: newTotalSpent,
-          updated_at: new Date().toISOString()
+          ai_credits: newBalance,
         })
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
@@ -142,51 +150,35 @@ export function useCredits() {
           user_id: user.id,
           amount: cost,
           type: 'spend',
-          reason: description || `Used ${toolType} tool`,
+          reason: reason || `Used ${toolType} tool`,
           balance_after: newBalance,
         });
 
-      toast.success(`Used ${cost} credits`);
       await fetchData();
       return true;
     } catch (error: any) {
       console.error('Error deducting credits:', error);
-      toast.error('Failed to deduct credits');
+      toast.error('Failed to deduct credits. Please try again.');
       return false;
     }
   };
 
-  const addCredits = async (amount: number, reason: string): Promise<boolean> => {
-    if (!user || !userCredits) return false;
+  const addCredits = async (amount: number, reason: string = 'Manual addition'): Promise<boolean> => {
+    if (!user?.id) return false;
 
     try {
-      const newBalance = credits + amount;
-      const newTotalEarned = (userCredits.total_earned || 0) + amount;
+      // Use the database function for adding credits
+      const { error } = await supabase.rpc('add_credits', {
+        p_user_id: user.id,
+        p_amount: amount,
+        p_transaction_type: 'manual',
+        p_description: reason,
+      });
 
-      // Update credits
-      const { error: updateError } = await supabase
-        .from('credits')
-        .update({ 
-          balance: newBalance,
-          total_earned: newTotalEarned,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Log transaction
-      await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: user.id,
-          amount: amount,
-          type: 'earn',
-          reason: reason,
-          balance_after: newBalance,
-        });
+      if (error) throw error;
 
       await fetchData();
+      toast.success(`Added ${amount} credits!`);
       return true;
     } catch (error: any) {
       console.error('Error adding credits:', error);
