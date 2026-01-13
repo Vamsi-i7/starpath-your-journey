@@ -50,14 +50,13 @@ CREATE INDEX IF NOT EXISTS idx_activity_feed_user_created
   ON public.activity_feed(user_id, created_at DESC);
 
 -- 7. Library items - AI tools performance
-CREATE INDEX IF NOT EXISTS idx_library_items_user_created 
-  ON public.library_items(user_id, created_at DESC) 
-  WHERE NOT EXISTS (SELECT 1 FROM public.library_items);
-
 -- Handle the case where library_items table doesn't exist yet
 DO $$ 
 BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'library_items') THEN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'library_items') THEN
+    CREATE INDEX IF NOT EXISTS idx_library_items_user_created 
+      ON public.library_items(user_id, created_at DESC);
+    
     CREATE INDEX IF NOT EXISTS idx_library_items_user_type 
       ON public.library_items(user_id, content_type);
   END IF;
@@ -84,13 +83,29 @@ END $$;
 -- 10. Notifications - Real-time features
 DO $$ 
 BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'notifications') THEN
+  IF EXISTS (
+    SELECT 1 
+    FROM information_schema.tables t
+    JOIN information_schema.columns c ON t.table_name = c.table_name
+    WHERE t.table_schema = 'public' 
+      AND t.table_name = 'notifications'
+      AND c.column_name = 'is_read'
+  ) THEN
     CREATE INDEX IF NOT EXISTS idx_notifications_user_created 
       ON public.notifications(user_id, created_at DESC);
     
     CREATE INDEX IF NOT EXISTS idx_notifications_user_unread 
       ON public.notifications(user_id, is_read) 
       WHERE is_read = false;
+  ELSIF EXISTS (
+    SELECT 1 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+      AND table_name = 'notifications'
+  ) THEN
+    -- Create index without is_read filter if column doesn't exist
+    CREATE INDEX IF NOT EXISTS idx_notifications_user_created 
+      ON public.notifications(user_id, created_at DESC);
   END IF;
 END $$;
 
