@@ -28,20 +28,28 @@ export function AppTopbar({ title }: AppTopbarProps) {
   };
 
   return (
-    <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border/30 bg-card/50 backdrop-blur-xl">
-      <h1 
-        className="text-lg sm:text-2xl font-bold text-foreground pl-10 lg:pl-0"
-        style={{ fontFamily: 'var(--font-display)' }}
-      >
-        {title}
-      </h1>
+    <header className="sticky top-0 z-50 h-16 sm:h-18 flex items-center justify-between px-4 sm:px-8 border-b border-border/20 bg-background/80 backdrop-blur-2xl shadow-sm">
+      <div className="flex items-center gap-3 pl-10 lg:pl-0">
+        <div className="hidden sm:flex w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent items-center justify-center text-white font-bold shadow-lg">
+          C
+        </div>
+        <div>
+          <h1 
+            className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {title}
+          </h1>
+          <p className="text-xs text-muted-foreground hidden sm:block">Track. Achieve. Succeed.</p>
+        </div>
+      </div>
 
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
-            placeholder="Search..." 
-            className="w-64 pl-10 bg-background/50 border-border/50"
+            placeholder="Search anything..." 
+            className="w-72 h-11 pl-11 pr-4 bg-card/50 border-border/30 rounded-full hover:border-primary/30 focus:border-primary/50 transition-all"
           />
         </div>
 
@@ -49,25 +57,33 @@ export function AppTopbar({ title }: AppTopbarProps) {
           variant="ghost" 
           size="icon" 
           onClick={toggleTheme}
-          className="text-muted-foreground hover:text-foreground w-9 h-9 sm:w-10 sm:h-10"
+          className="relative text-muted-foreground hover:text-foreground hover:bg-card/80 w-10 h-10 sm:w-11 sm:h-11 rounded-full transition-all"
         >
-          {theme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
+          {theme === 'dark' ? (
+            <Sun className="w-5 h-5 transition-transform hover:rotate-45" />
+          ) : (
+            <Moon className="w-5 h-5 transition-transform hover:-rotate-12" />
+          )}
         </Button>
 
         <NotificationDropdown />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 p-1.5 sm:p-2 rounded-xl hover:bg-card/50 transition-colors">
-              <Avatar className="w-8 h-8 sm:w-9 sm:h-9 border-2 border-primary/30">
+            <button className="flex items-center gap-3 p-1 pr-3 sm:pr-4 rounded-full hover:bg-card/80 transition-all border border-border/30 hover:border-primary/30">
+              <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-primary/20 ring-2 ring-background">
                 <AvatarImage 
                   src={profile?.avatar_url || undefined} 
                   alt={profile?.username || 'User'} 
                 />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground font-bold text-xs sm:text-sm">
+                <AvatarFallback className="bg-gradient-to-br from-primary via-primary/90 to-accent text-primary-foreground font-bold text-sm">
                   {profile?.username?.charAt(0)?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
+              <div className="hidden sm:block text-left">
+                <div className="text-sm font-semibold text-foreground">{profile?.username || 'User'}</div>
+                <div className="text-xs text-muted-foreground">View profile</div>
+              </div>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

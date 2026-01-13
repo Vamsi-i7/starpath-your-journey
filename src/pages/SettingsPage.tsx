@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle, Palette, Check, BarChart3, Mail, Package, RefreshCw, ExternalLink, Shield } from 'lucide-react';
+import { Moon, Sun, Bell, Lock, Trash2, Loader2, HelpCircle, Palette, Check, BarChart3, Mail, Package, RefreshCw, ExternalLink, Shield, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
 import { validatePassword } from '@/lib/passwordValidation';
@@ -309,13 +309,30 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background/95 pb-20">
       <AppTopbar title="Settings" />
       
       <AnalyticsGuide open={showAnalyticsGuide} onClose={() => setShowAnalyticsGuide(false)} />
-      <div className="p-6 max-w-4xl mx-auto space-y-6">
-        <div className="p-6 rounded-2xl bg-card border border-border/30">
-          <h3 className="font-semibold text-foreground mb-4">Profile</h3>
+      
+      {/* Page Header */}
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+          <p className="text-muted-foreground">Manage your account preferences and customize your experience</p>
+        </div>
+      </div>
+      
+      <div className="px-6 max-w-4xl mx-auto space-y-6">
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-foreground">Profile Information</h3>
+              <p className="text-xs text-muted-foreground">Update your personal details</p>
+            </div>
+          </div>
           <div className="space-y-4">
             <div>
               <Label>Name</Label>
@@ -359,8 +376,16 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="p-6 rounded-2xl bg-card border border-border/30">
-          <h3 className="font-semibold text-foreground mb-4">Appearance</h3>
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+              <Palette className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-foreground">Appearance</h3>
+              <p className="text-xs text-muted-foreground">Customize theme and colors</p>
+            </div>
+          </div>
           <div className="space-y-6">
             {/* Theme Toggle */}
             <div className="flex items-center justify-between">
@@ -407,8 +432,16 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="p-6 rounded-2xl bg-card border border-border/30">
-          <h3 className="font-semibold text-foreground mb-4">Notifications</h3>
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-foreground">Notifications</h3>
+              <p className="text-xs text-muted-foreground">Manage notification preferences</p>
+            </div>
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Bell className="w-5 h-5 text-primary" />
@@ -425,8 +458,16 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="p-6 rounded-2xl bg-card border border-border/30">
-          <h3 className="font-semibold text-foreground mb-4">Help</h3>
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+              <HelpCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-foreground">Help & Tutorials</h3>
+              <p className="text-xs text-muted-foreground">Get started with guides</p>
+            </div>
+          </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
@@ -453,28 +494,42 @@ const SettingsPage = () => {
 
         {/* Admin Access - Only visible to admin users */}
         {userIsAdmin && (
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 border-2 border-primary/30">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-primary/20 rounded-lg">
-                <Shield className="w-5 h-5 text-primary" />
+          <div className="relative p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-primary/10 border-2 border-primary/30 overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-foreground flex items-center gap-2">
+                    Developer / Admin Access
+                    <span className="px-2 py-0.5 text-xs font-semibold bg-primary/20 text-primary rounded-full">ADMIN</span>
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Full system control panel</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-foreground">Developer / Admin Access</h3>
-                <p className="text-xs text-muted-foreground">Administrative control panel</p>
-              </div>
+              <Button 
+                onClick={() => navigate('/app/admin/verify')}
+                className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 gap-2 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <Shield className="w-5 h-5" />
+                Access Admin Dashboard
+              </Button>
             </div>
-            <Button 
-              onClick={() => navigate('/app/admin/verify')}
-              className="w-full bg-primary hover:bg-primary/90 gap-2"
-            >
-              <Shield className="w-4 h-4" />
-              Access Admin Dashboard
-            </Button>
           </div>
         )}
 
-        <div className="p-6 rounded-2xl bg-card border border-border/30">
-          <h3 className="font-semibold text-foreground mb-4">Support & Policies</h3>
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+              <Mail className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-foreground">Support & Policies</h3>
+              <p className="text-xs text-muted-foreground">Contact us and view policies</p>
+            </div>
+          </div>
           <div className="space-y-3">
             <Button 
               variant="outline" 
@@ -523,8 +578,16 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="p-6 rounded-2xl bg-card border border-border/30">
-          <h3 className="font-semibold text-foreground mb-4">Security</h3>
+        <div className="p-6 sm:p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-foreground">Security</h3>
+              <p className="text-xs text-muted-foreground">Manage your password</p>
+            </div>
+          </div>
           <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">

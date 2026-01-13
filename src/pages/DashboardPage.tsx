@@ -33,74 +33,107 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-background via-background to-background/95">
       <WelcomeTutorial />
       <AppTopbar title="Dashboard" />
       
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-          <SessionTimer />
-          
-          <StatsCards 
-            totalHabits={habits.length}
-            completedToday={completedToday}
-            totalXp={profile ? profile.level * 500 + profile.xp : 0}
-          />
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-[1600px] mx-auto">
+          {/* Welcome Section */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                Welcome back, {profile?.username || 'Champion'}! 👋
+              </h1>
+              <p className="text-muted-foreground mt-1">Let's make today count. Track your progress and achieve your goals.</p>
+            </div>
+            <SessionTimer />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          </div>
+          
+          {/* Stats Overview */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 rounded-3xl blur-3xl -z-10" />
+            <StatsCards 
+              totalHabits={habits.length}
+              completedToday={completedToday}
+              totalXp={profile ? profile.level * 500 + profile.xp : 0}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
               {/* Daily Challenges */}
               <SectionErrorBoundary compact fallbackMessage="Daily challenges unavailable">
-                <DailyChallengesCard />
+                <div className="group hover:scale-[1.01] transition-transform duration-300">
+                  <DailyChallengesCard />
+                </div>
               </SectionErrorBoundary>
 
               {/* Today's Habits */}
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h2 className="text-lg sm:text-xl font-semibold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-                    Today's Habits
-                  </h2>
+              <div className="space-y-4 sm:space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2" style={{ fontFamily: 'var(--font-display)' }}>
+                      <span className="text-2xl">📋</span>
+                      Today's Habits
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">Complete your daily goals</p>
+                  </div>
                   <TodayProgress completed={completedToday} total={habits.length} />
                 </div>
                 
-                <p className="text-xs text-muted-foreground sm:hidden">
-                  Swipe right on a habit to mark complete
+                <p className="text-xs text-muted-foreground sm:hidden bg-card/50 p-3 rounded-lg border border-border/30">
+                  💡 Tip: Swipe right on a habit to mark it complete
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                   {habits.map((habit) => (
-                    <HabitCard 
-                      key={habit.id} 
-                      habit={habit} 
-                      onToggle={() => toggleHabitCompletion(habit.id)}
-                      onDelete={() => deleteHabit(habit.id)}
-                      today={today}
-                    />
+                    <div key={habit.id} className="group hover:scale-[1.02] transition-transform duration-200">
+                      <HabitCard 
+                        habit={habit} 
+                        onToggle={() => toggleHabitCompletion(habit.id)}
+                        onDelete={() => deleteHabit(habit.id)}
+                        today={today}
+                      />
+                    </div>
                   ))}
                 </div>
 
                 {habits.length === 0 && (
-                  <div className="text-center py-8 sm:py-12 rounded-2xl border border-dashed border-border/50">
-                    <p className="text-sm sm:text-base text-muted-foreground">No habits yet. Create your first habit!</p>
+                  <div className="text-center py-12 sm:py-16 rounded-3xl border-2 border-dashed border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+                    <div className="text-5xl mb-4">🎯</div>
+                    <p className="text-base sm:text-lg font-semibold text-foreground mb-2">No habits yet</p>
+                    <p className="text-sm text-muted-foreground">Start building better habits today!</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="lg:col-span-1 space-y-4">
+            <div className="lg:col-span-1 space-y-5 lg:sticky lg:top-24 lg:self-start">
               <SectionErrorBoundary compact fallbackMessage="Session history unavailable">
-                <SessionHistoryCard />
+                <div className="hover:scale-[1.01] transition-transform duration-200">
+                  <SessionHistoryCard />
+                </div>
               </SectionErrorBoundary>
               <SectionErrorBoundary compact fallbackMessage="AI insights unavailable">
-                <AIAffirmationCard />
+                <div className="hover:scale-[1.01] transition-transform duration-200">
+                  <AIAffirmationCard />
+                </div>
               </SectionErrorBoundary>
               <SectionErrorBoundary compact fallbackMessage="Stats unavailable">
-                <GamificationPanel />
+                <div className="hover:scale-[1.01] transition-transform duration-200">
+                  <GamificationPanel />
+                </div>
               </SectionErrorBoundary>
               <SectionErrorBoundary compact fallbackMessage="AI suggestions unavailable">
-                <AIHabitSuggestionsCard />
+                <div className="hover:scale-[1.01] transition-transform duration-200">
+                  <AIHabitSuggestionsCard />
+                </div>
               </SectionErrorBoundary>
               <SectionErrorBoundary compact fallbackMessage="Achievements unavailable">
-                <RecentAchievementsCard />
+                <div className="hover:scale-[1.01] transition-transform duration-200">
+                  <RecentAchievementsCard />
+                </div>
               </SectionErrorBoundary>
             </div>
           </div>

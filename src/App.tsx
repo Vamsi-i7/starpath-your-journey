@@ -42,6 +42,7 @@ const CancellationRefundPage = lazy(() => import("./pages/CancellationRefundPage
 const AdminCreditsPage = lazy(() => import("./pages/AdminCreditsPage"));
 const AdminVerifyPage = lazy(() => import("./pages/AdminVerifyPage"));
 const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
+const AdminTestPage = lazy(() => import("./pages/AdminTestPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -102,6 +103,14 @@ const router = createBrowserRouter(
     {
       path: "/cancellation-refund",
       element: <Suspense fallback={<PageLoader />}><CancellationRefundPage /></Suspense>,
+    },
+    {
+      path: "/app/admin/test",
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<PageLoader />}><AdminTestPage /></Suspense>
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/app/admin/verify",
