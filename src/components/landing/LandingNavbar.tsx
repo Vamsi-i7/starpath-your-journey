@@ -1,29 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Moon, Sun, Palette, Check } from 'lucide-react';
-import { useAuth, AccentColor } from '@/contexts/AuthContext';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Menu, X, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import clawzerLogo from '@/assets/clawzer-logo.png';
 
-const ACCENT_COLORS: { id: AccentColor; name: string; color: string }[] = [
-  { id: 'default', name: 'Purple', color: 'hsl(250 85% 60%)' },
-  { id: 'blue', name: 'Blue', color: 'hsl(220 90% 56%)' },
-  { id: 'violet', name: 'Violet', color: 'hsl(270 80% 60%)' },
-  { id: 'emerald', name: 'Emerald', color: 'hsl(160 84% 39%)' },
-  { id: 'rose', name: 'Rose', color: 'hsl(350 89% 60%)' },
-  { id: 'amber', name: 'Amber', color: 'hsl(38 92% 50%)' },
-];
-
 export function LandingNavbar() {
-  const { theme, toggleTheme, accent, setAccent } = useAuth();
+  const { theme, setTheme, resolvedColorMode } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Quick toggle between light/dark themes
+  const toggleTheme = () => {
+    if (resolvedColorMode === 'dark') {
+      setTheme('aurora-light');
+    } else {
+      setTheme('cosmic-focus');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,49 +70,14 @@ export function LandingNavbar() {
             <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
               How it Works
             </a>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground hover:bg-card/30"
-                >
-                  <Palette className="w-5 h-5" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-3 bg-popover border-border" align="center">
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Accent Color</p>
-                  <div className="flex gap-2">
-                    {ACCENT_COLORS.map((color) => (
-                      <button
-                        key={color.id}
-                        onClick={() => setAccent(color.id)}
-                        className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200 border-2",
-                          accent === color.id 
-                            ? "border-foreground scale-110" 
-                            : "border-transparent hover:scale-105"
-                        )}
-                        style={{ backgroundColor: color.color }}
-                        title={color.name}
-                      >
-                        {accent === color.id && (
-                          <Check className="w-3.5 h-3.5 text-white" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
             <Button 
               variant="ghost" 
               size="icon"
               onClick={toggleTheme}
               className="text-muted-foreground hover:text-foreground hover:bg-card/30"
+              title={resolvedColorMode === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {resolvedColorMode === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
             <Link to="/login">
               <Button variant="ghost" className="text-foreground hover:bg-card/30">
@@ -176,39 +136,14 @@ export function LandingNavbar() {
           </nav>
 
           <div className="mt-6 pt-6 border-t border-border/30 space-y-4">
-            {/* Accent Color Picker */}
-            <div className="p-4 rounded-xl bg-muted/50">
-              <p className="text-xs font-medium text-muted-foreground mb-3">Accent Color</p>
-              <div className="flex gap-2 flex-wrap justify-center">
-                {ACCENT_COLORS.map((color) => (
-                  <button
-                    key={color.id}
-                    onClick={() => setAccent(color.id)}
-                    className={cn(
-                      "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border-2",
-                      accent === color.id 
-                        ? "border-foreground scale-110" 
-                        : "border-transparent hover:scale-105"
-                    )}
-                    style={{ backgroundColor: color.color }}
-                    title={color.name}
-                  >
-                    {accent === color.id && (
-                      <Check className="w-4 h-4 text-white" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Theme Toggle */}
             <Button 
               variant="outline" 
               onClick={toggleTheme}
               className="w-full gap-2"
             >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              {resolvedColorMode === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {resolvedColorMode === 'dark' ? 'Light Mode' : 'Dark Mode'}
             </Button>
           </div>
 
