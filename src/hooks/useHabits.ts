@@ -241,10 +241,19 @@ export function useHabits() {
   };
 
   const toggleHabitCompletion = async (habitId: string) => {
-    if (!user || !profile) return;
+    if (!user) {
+      console.error('toggleHabitCompletion: No user found');
+      return;
+    }
 
     const habit = habits.find(h => h.id === habitId);
-    if (!habit) return;
+    if (!habit) {
+      console.error('toggleHabitCompletion: Habit not found:', habitId);
+      return;
+    }
+
+    // Get current profile, but don't require it for basic toggle
+    const currentProfile = profile;
 
     const today = getTodayString();
     const isCompleted = habit.completedDates.includes(today);
@@ -275,9 +284,16 @@ export function useHabits() {
         .update({ streak: newStreak })
         .eq('id', habitId);
 
-      // Decrease XP
-      const newXp = Math.max(0, (profile.xp || 0) - habit.xp_reward);
-      await updateProfile({ xp: newXp });
+      // Decrease XP if profile exists
+      if (currentProfile) {
+        const newXp = Math.max(0, (currentProfile.xp || 0) - habit.xp_reward);
+        await updateProfile({ xp: newXp });
+      }
+      
+      toast({
+        title: 'Habit unmarked',
+        description: `"${habit.name}" completion removed`,
+      });
 
     } else {
       // Add completion
@@ -312,40 +328,48 @@ export function useHabits() {
         })
         .eq('id', habitId);
 
-      // Add XP and check for level up
-      let newXp = (profile.xp || 0) + habit.xp_reward;
-      let newTotalXp = (profile.total_xp || 0) + habit.xp_reward;
-      let newLevel = profile.level || 1;
-      const xpPerLevel = 500;
+      // Add XP and check for level up (only if profile exists)
+      if (currentProfile) {
+        let newXp = (currentProfile.xp || 0) + habit.xp_reward;
+        let newTotalXp = (currentProfile.total_xp || 0) + habit.xp_reward;
+        let newLevel = currentProfile.level || 1;
+        const xpPerLevel = 500;
 
-      while (newXp >= xpPerLevel) {
-        newXp -= xpPerLevel;
-        newLevel++;
-      }
+        while (newXp >= xpPerLevel) {
+          newXp -= xpPerLevel;
+          newLevel++;
+        }
 
-      // Calculate total consecutive streak days
-      const totalStreakDays = await calculateTotalConsecutiveStreakDays();
+        // Calculate total consecutive streak days
+        const totalStreakDays = await calculateTotalConsecutiveStreakDays();
 
-      // Update longest streak if this is a new record
-      const newLongestStreak = Math.max(profile.longest_streak || 0, newStreak);
+        // Update longest streak if this is a new record
+        const newLongestStreak = Math.max(currentProfile.longest_streak || 0, newStreak);
 
-      await updateProfile({ 
-        xp: newXp, 
-        total_xp: newTotalXp,
-        level: newLevel,
-        streak: totalStreakDays,
-        longest_streak: newLongestStreak,
-        last_activity_date: today,
-      });
-
-      // Level up celebration
-      if (newLevel > (profile.level || 1)) {
-        triggerCelebrationBurst();
-        toast({
-          title: `🚀 Level Up! You're now Level ${newLevel}`,
-          description: `+${habit.xp_reward} XP earned`,
+        await updateProfile({ 
+          xp: newXp, 
+          total_xp: newTotalXp,
+          level: newLevel,
+          streak: totalStreakDays,
+          longest_streak: newLongestStreak,
+          last_activity_date: today,
         });
+
+        // Level up celebration
+        if (newLevel > (currentProfile.level || 1)) {
+          triggerCelebrationBurst();
+          toast({
+            title: `🚀 Level Up! You're now Level ${newLevel}`,
+            description: `+${habit.xp_reward} XP earned`,
+          });
+        } else {
+          toast({
+            title: '🎉 Habit completed!',
+            description: `+${habit.xp_reward} XP earned`,
+          });
+        }
       } else {
+        // Show basic success toast if no profile
         toast({
           title: '🎉 Habit completed!',
           description: `+${habit.xp_reward} XP earned`,
