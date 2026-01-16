@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import { 
   Bell, Lock, Trash2, Loader2, HelpCircle, Palette, 
   BarChart3, Mail, Package, RefreshCw, ExternalLink, Shield, User, 
-  Eye, EyeOff, Globe, KeyRound, AlertTriangle
+  Eye, EyeOff, Globe, KeyRound, AlertTriangle, LogOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
@@ -522,6 +522,55 @@ const SettingsPage = () => {
                 </Button>
               </div>
             )}
+            
+            {/* Sign Out Section */}
+            <div className="p-6 rounded-2xl bg-card/50 border border-border/20 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                  <LogOut className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">Sign Out</h3>
+                  <p className="text-xs text-muted-foreground">Sign out from your account on this device</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-muted/30 border border-border/20">
+                <div>
+                  <p className="text-sm text-foreground font-medium">Signed in as</p>
+                  <p className="text-sm text-muted-foreground">{profile?.email || user?.email}</p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="gap-2 border-muted-foreground/30 hover:bg-muted hover:border-muted-foreground/50">
+                      <LogOut className="w-4 h-4" /> Sign Out
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <LogOut className="w-5 h-5" /> Sign out of StarPath?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        You'll need to sign in again to access your habits, goals, and progress. Your data will be safely stored.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={async () => {
+                          await signOut();
+                          navigate('/');
+                        }}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        Sign Out
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
           </TabsContent>
           
           {/* PREFERENCES TAB */}
