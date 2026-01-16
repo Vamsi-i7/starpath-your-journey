@@ -355,7 +355,7 @@ function AnnotatedText({ text, issues }: { text: string; issues: GrammarIssue[] 
           {paragraph.split('\n').map((line, lIndex) => {
             // Check if any issue text is in this line
             let hasIssue = false;
-            let highlightedLine = line;
+            const highlightedLine = line;
             
             issues.forEach(issue => {
               if (line.toLowerCase().includes(issue.text.toLowerCase())) {

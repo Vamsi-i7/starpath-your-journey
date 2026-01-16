@@ -1,0 +1,84 @@
+/* Theme: Zen Garden
+ * Philosophy: Nature-inspired calm for mental wellness
+ * Emotional Tone: Peaceful, grounded, refreshing, mindful
+ * Target User: Wellness-focused users, meditation habit trackers, stress-conscious
+ */
+
+[data-theme="zen-garden"] {
+  /* Core colors - Soft nature palette */
+  --background: 150 15% 8%;
+  --foreground: 140 10% 92%;
+
+  --card: 150 12% 12%;
+  --card-foreground: 140 10% 92%;
+
+  --popover: 150 12% 14%;
+  --popover-foreground: 140 10% 92%;
+
+  --primary: 150 50% 45%;
+  --primary-foreground: 150 30% 98%;
+
+  --secondary: 150 10% 17%;
+  --secondary-foreground: 140 10% 88%;
+
+  --muted: 150 10% 20%;
+  --muted-foreground: 140 8% 55%;
+
+  --accent: 40 45% 55%;
+  --accent-foreground: 40 30% 10%;
+
+  --destructive: 0 60% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 150 10% 18%;
+  --input: 150 10% 18%;
+  --ring: 150 50% 45%;
+
+  /* StarPath Tokens - Nature inspired */
+  --star: 45 70% 60%;
+  --star-glow: 45 80% 70%;
+  --constellation: 150 50% 55%;
+  --xp: 120 55% 50%;
+  --streak: 30 65% 55%;
+  --heart: 0 50% 55%;
+  --level: 180 45% 50%;
+
+  /* Theme-specific gradients - Organic flow */
+  --gradient-cosmic: linear-gradient(135deg, hsl(150 50% 45%) 0%, hsl(120 45% 40%) 50%, hsl(180 40% 45%) 100%);
+  --gradient-starfield: linear-gradient(180deg, hsl(150 15% 6%) 0%, hsl(140 18% 10%) 50%, hsl(160 15% 8%) 100%);
+  --gradient-card: linear-gradient(135deg, hsl(150 12% 14% / 0.9) 0%, hsl(150 12% 12% / 0.7) 100%);
+  --gradient-glass: linear-gradient(135deg, hsl(140 30% 100% / 0.08) 0%, hsl(140 30% 100% / 0.02) 100%);
+
+  /* Theme-specific shadows - Soft natural */
+  --shadow-glow: 0 0 35px hsl(150 50% 45% / 0.25);
+  --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.3);
+  --shadow-elevated: 0 8px 40px hsl(0 0% 0% / 0.4);
+
+  /* Sidebar */
+  --sidebar-background: 150 12% 10%;
+  --sidebar-foreground: 140 10% 92%;
+  --sidebar-primary: 150 50% 45%;
+  --sidebar-primary-foreground: 150 30% 98%;
+  --sidebar-accent: 40 45% 55%;
+  --sidebar-accent-foreground: 40 30% 10%;
+  --sidebar-border: 150 10% 15%;
+  --sidebar-ring: 150 50% 45%;
+
+  /* Chart colors - Earth tones */
+  --chart-1: 150 50% 50%;
+  --chart-2: 120 45% 45%;
+  --chart-3: 40 45% 55%;
+  --chart-4: 180 40% 50%;
+  --chart-5: 30 50% 50%;
+
+  /* Theme behavior tokens */
+  --theme-glow-intensity: 0.25;
+  --theme-blur-amount: 14px;
+  --theme-surface-opacity: 0.12;
+  --theme-border-opacity: 0.15;
+}
+
+/* Zen Garden specific - softer transitions */
+[data-theme="zen-garden"] * {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}

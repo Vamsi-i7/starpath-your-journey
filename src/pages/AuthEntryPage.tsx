@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/safeClient";
 import { Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 
@@ -56,7 +56,7 @@ export default function AuthEntryPage() {
 
       if (exists) {
         // User exists - route to sign-in with pre-filled email
-        console.log('User exists, routing to sign-in');
+        // User exists, route to sign-in
         navigate('/login', { 
           state: { 
             email: trimmedEmail,
@@ -65,7 +65,7 @@ export default function AuthEntryPage() {
         });
       } else {
         // User doesn't exist - route to sign-up with pre-filled email
-        console.log('New user, routing to sign-up');
+        // New user, route to sign-up
         navigate('/signup', { 
           state: { 
             email: trimmedEmail 

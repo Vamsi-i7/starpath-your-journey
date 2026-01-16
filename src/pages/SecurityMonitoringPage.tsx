@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, Activity, AlertTriangle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { errorTracker } from "@/lib/errorTracking";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/safeClient";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function SecurityMonitoringPage() {

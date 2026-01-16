@@ -88,9 +88,9 @@ export function MindMapCreator({ content, topic }: MindMapCreatorProps) {
     });
     nodeStack.push({ id: centralId, level: 0 });
 
-    let currentLevel = 0;
-    let nodesAtLevel: { [level: number]: number } = { 0: 0 };
-    let angleOffset: { [level: number]: number } = { 0: 0 };
+    const currentLevel = 0;
+    const nodesAtLevel: { [level: number]: number } = { 0: 0 };
+    const angleOffset: { [level: number]: number } = { 0: 0 };
 
     lines.forEach((line) => {
       // Match headers

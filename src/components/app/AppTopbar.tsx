@@ -1,17 +1,16 @@
-import { Search, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { NotificationDropdown } from './NotificationDropdown';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface AppTopbarProps {
@@ -19,13 +18,19 @@ interface AppTopbarProps {
 }
 
 export function AppTopbar({ title }: AppTopbarProps) {
-  const { profile, theme, toggleTheme, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { profile } = useAuth();
+  const { theme, setTheme, resolvedColorMode } = useTheme();
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
+  // Quick toggle between light/dark themes
+  const toggleTheme = () => {
+    if (resolvedColorMode === 'dark') {
+      setTheme('aurora-light');
+    } else {
+      setTheme('cosmic-focus');
+    }
   };
+
+
 
   return (
     <header className="sticky top-0 z-50 h-16 sm:h-18 flex items-center justify-between px-4 sm:px-8 border-b border-border/20 bg-background/80 backdrop-blur-2xl shadow-sm">
@@ -45,21 +50,14 @@ export function AppTopbar({ title }: AppTopbarProps) {
       </div>
 
       <div className="flex items-center gap-3 sm:gap-4">
-        <div className="relative hidden md:block">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search anything..." 
-            className="w-72 h-11 pl-11 pr-4 bg-card/50 border-border/30 rounded-full hover:border-primary/30 focus:border-primary/50 transition-all"
-          />
-        </div>
-
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={toggleTheme}
           className="relative text-muted-foreground hover:text-foreground hover:bg-card/80 w-10 h-10 sm:w-11 sm:h-11 rounded-full transition-all"
+          title={resolvedColorMode === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
         >
-          {theme === 'dark' ? (
+          {resolvedColorMode === 'dark' ? (
             <Sun className="w-5 h-5 transition-transform hover:rotate-45" />
           ) : (
             <Moon className="w-5 h-5 transition-transform hover:-rotate-12" />
@@ -99,10 +97,6 @@ export function AppTopbar({ title }: AppTopbarProps) {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/app/settings">Settings</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-              Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

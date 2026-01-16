@@ -6,7 +6,6 @@ import {
   Star, 
   BarChart3, 
   MessageCircle, 
-  Users, 
   Settings, 
   LogOut,
   ChevronLeft,
@@ -23,7 +22,6 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import clawzerLogo from '@/assets/clawzer-logo.png';
-import { usePendingFriendRequests } from '@/hooks/usePendingFriendRequests';
 import { useSidebar } from '@/contexts/SidebarContext';
 
 interface AppSidebarProps {
@@ -38,8 +36,6 @@ const navItems = [
   { icon: Star, label: 'Constellation', path: '/app/constellation' },
   { icon: Award, label: 'Achievements', path: '/app/achievements' },
   { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
-  { icon: MessageCircle, label: 'Chats', path: '/app/chats' },
-  { icon: Users, label: 'Friends', path: '/app/friends', hasBadge: true },
   { icon: Sparkles, label: 'AI Tools', path: '/app/ai-tools' },
   { icon: MessageCircle, label: 'AI Mentor', path: '/app/ai-mentor', isPremium: true },
   { icon: Library, label: 'Library', path: '/app/library' },
@@ -51,7 +47,6 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
-  const pendingRequestsCount = usePendingFriendRequests();
 
   const handleLogout = async () => {
     await signOut();
@@ -103,7 +98,6 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
 
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const showBadge = item.hasBadge && pendingRequestsCount > 0;
           const isPremium = item.isPremium;
           const hasPremiumAccess = profile?.subscription_tier === 'premium' || profile?.subscription_tier === 'lifetime';
           
@@ -142,11 +136,6 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
                           ? "text-primary-foreground" 
                           : ""
                     )} />
-                    {showBadge && (isCollapsed && !isMobileOpen) && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full px-1">
-                        {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
-                      </span>
-                    )}
                   </div>
                   {(!isCollapsed || isMobileOpen) && (
                     <span className="font-medium flex-1">{item.label}</span>
@@ -156,11 +145,6 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
                   )}
                   {isPremium && hasPremiumAccess && (!isCollapsed || isMobileOpen) && (
                     <Crown className={cn("w-4 h-4", isActive ? "text-primary-foreground" : "text-purple-500")} />
-                  )}
-                  {(!isCollapsed || isMobileOpen) && showBadge && (
-                    <span className="text-xs bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded-full">
-                      {pendingRequestsCount}
-                    </span>
                   )}
                 </>
               )}

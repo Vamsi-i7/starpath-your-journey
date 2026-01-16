@@ -1,0 +1,79 @@
+/* Theme: Solar Drive
+ * Philosophy: Energetic and motivational for habit momentum
+ * Emotional Tone: Energizing, warm, encouraging, dynamic
+ * Target User: Morning routines, fitness habits, motivation seekers
+ */
+
+[data-theme="solar-drive"] {
+  /* Core colors - Warm sunrise palette */
+  --background: 30 20% 6%;
+  --foreground: 40 15% 95%;
+
+  --card: 30 15% 11%;
+  --card-foreground: 40 15% 95%;
+
+  --popover: 30 15% 13%;
+  --popover-foreground: 40 15% 95%;
+
+  --primary: 35 95% 55%;
+  --primary-foreground: 30 30% 8%;
+
+  --secondary: 30 15% 16%;
+  --secondary-foreground: 40 15% 90%;
+
+  --muted: 30 15% 20%;
+  --muted-foreground: 40 10% 55%;
+
+  --accent: 15 90% 55%;
+  --accent-foreground: 15 30% 98%;
+
+  --destructive: 0 80% 55%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 30 15% 18%;
+  --input: 30 15% 18%;
+  --ring: 35 95% 55%;
+
+  /* StarPath Tokens - Warm energetic */
+  --star: 45 100% 60%;
+  --star-glow: 45 100% 70%;
+  --constellation: 35 95% 60%;
+  --xp: 140 70% 50%;
+  --streak: 25 100% 55%;
+  --heart: 350 85% 60%;
+  --level: 15 90% 55%;
+
+  /* Theme-specific gradients - Sunrise warmth */
+  --gradient-cosmic: linear-gradient(135deg, hsl(35 95% 55%) 0%, hsl(15 90% 55%) 50%, hsl(350 85% 55%) 100%);
+  --gradient-starfield: linear-gradient(180deg, hsl(30 20% 5%) 0%, hsl(25 25% 10%) 50%, hsl(20 20% 8%) 100%);
+  --gradient-card: linear-gradient(135deg, hsl(30 15% 14% / 0.9) 0%, hsl(30 15% 11% / 0.7) 100%);
+  --gradient-glass: linear-gradient(135deg, hsl(40 30% 100% / 0.1) 0%, hsl(40 30% 100% / 0.03) 100%);
+
+  /* Theme-specific shadows - Warm glow */
+  --shadow-glow: 0 0 45px hsl(35 95% 55% / 0.4);
+  --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.35);
+  --shadow-elevated: 0 8px 48px hsl(0 0% 0% / 0.45);
+
+  /* Sidebar */
+  --sidebar-background: 30 15% 9%;
+  --sidebar-foreground: 40 15% 95%;
+  --sidebar-primary: 35 95% 55%;
+  --sidebar-primary-foreground: 30 30% 8%;
+  --sidebar-accent: 15 90% 55%;
+  --sidebar-accent-foreground: 15 30% 98%;
+  --sidebar-border: 30 15% 15%;
+  --sidebar-ring: 35 95% 55%;
+
+  /* Chart colors - Warm palette */
+  --chart-1: 35 95% 55%;
+  --chart-2: 15 90% 55%;
+  --chart-3: 140 70% 50%;
+  --chart-4: 45 100% 60%;
+  --chart-5: 350 85% 60%;
+
+  /* Theme behavior tokens */
+  --theme-glow-intensity: 0.45;
+  --theme-blur-amount: 16px;
+  --theme-surface-opacity: 0.15;
+  --theme-border-opacity: 0.15;
+}

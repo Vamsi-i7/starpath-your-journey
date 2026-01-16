@@ -3,19 +3,36 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getCorsHeaders } from "../_shared/corsHeaders.ts";
+import { checkRateLimit, createRateLimitResponse } from "../_shared/rateLimiter.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// Rate limit: 10 requests per minute to prevent enumeration attacks
+const RATE_LIMIT_CONFIG = {
+  maxRequests: 10,
+  windowMs: 60 * 1000,
+  message: "Too many requests. Please wait before trying again.",
+};
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    // Rate limit by IP to prevent email enumeration
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+    const rateLimitResult = checkRateLimit(clientIP, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      return createRateLimitResponse(
+        rateLimitResult.error || "Rate limit exceeded",
+        rateLimitResult.resetTime,
+        corsHeaders
+      );
+    }
+
     // Get email from request
     const { email } = await req.json()
 
@@ -24,6 +41,21 @@ serve(async (req) => {
         JSON.stringify({ 
           exists: false, 
           error: 'Email is required' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      )
+    }
+
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return new Response(
+        JSON.stringify({ 
+          exists: false, 
+          error: 'Invalid email format' 
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -47,8 +79,12 @@ serve(async (req) => {
       }
     )
 
-    // Check if user exists in auth.users table
-    const { data: users, error } = await supabaseAdmin.auth.admin.listUsers()
+    // Check if user exists in profiles table (more efficient than listing all users)
+    const { data: profile, error } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
 
     if (error) {
       console.error('Error checking user existence:', error)
@@ -64,33 +100,10 @@ serve(async (req) => {
       )
     }
 
-    // Find user by normalized email
-    const userExists = users.users.some(
-      user => user.email?.toLowerCase().trim() === normalizedEmail
-    )
-
-    // Get additional user info if exists (for routing decisions)
-    let userInfo = null
-    if (userExists) {
-      const foundUser = users.users.find(
-        user => user.email?.toLowerCase().trim() === normalizedEmail
-      )
-      
-      if (foundUser) {
-        userInfo = {
-          id: foundUser.id,
-          emailConfirmed: !!foundUser.email_confirmed_at,
-          provider: foundUser.app_metadata?.provider || 'email',
-          lastSignIn: foundUser.last_sign_in_at
-        }
-      }
-    }
-
-    // Return result
+    // Return ONLY whether the user exists - no additional info to prevent enumeration
     return new Response(
       JSON.stringify({ 
-        exists: userExists,
-        userInfo: userExists ? userInfo : null
+        exists: !!profile
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

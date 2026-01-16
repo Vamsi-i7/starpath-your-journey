@@ -23,32 +23,32 @@ export function useKeyboardShortcuts() {
     {
       key: 'h',
       description: 'Go to Dashboard (Home)',
-      action: () => navigate('/dashboard'),
+      action: () => navigate('/app'),
     },
     {
       key: 'g',
       description: 'Go to Goals',
-      action: () => navigate('/goals'),
+      action: () => navigate('/app/goals'),
     },
     {
       key: 't',
       description: 'Go to Habits (Tracker)',
-      action: () => navigate('/habits'),
+      action: () => navigate('/app/habits'),
     },
     {
       key: 'a',
       description: 'Go to AI Tools',
-      action: () => navigate('/ai-tools'),
+      action: () => navigate('/app/ai-tools'),
     },
     {
       key: 'p',
       description: 'Go to Profile',
-      action: () => navigate('/profile'),
+      action: () => navigate('/app/profile'),
     },
     {
       key: 's',
       description: 'Go to Settings',
-      action: () => navigate('/settings'),
+      action: () => navigate('/app/settings'),
     },
     {
       key: 'n',
@@ -114,21 +114,25 @@ export function useKeyboardShortcuts() {
   return { shortcuts };
 }
 
-// Hook to display keyboard shortcuts
+// Hook to display keyboard shortcuts - triggers a custom event that can be handled by UI
 export function useShowKeyboardShortcuts() {
   useEffect(() => {
     const handleShow = () => {
-      // You can implement a modal or toast here
-      console.log('Keyboard Shortcuts:');
-      console.log('h - Go to Dashboard');
-      console.log('g - Go to Goals');
-      console.log('t - Go to Habits');
-      console.log('a - Go to AI Tools');
-      console.log('p - Go to Profile');
-      console.log('s - Go to Settings');
-      console.log('Ctrl+N - New Habit');
-      console.log('Ctrl+K - Command Palette');
-      console.log('? - Show this help');
+      // Dispatch event that can be caught by a modal/toast component
+      const shortcuts = [
+        { key: 'h', description: 'Go to Dashboard' },
+        { key: 'g', description: 'Go to Goals' },
+        { key: 't', description: 'Go to Habits' },
+        { key: 'a', description: 'Go to AI Tools' },
+        { key: 'p', description: 'Go to Profile' },
+        { key: 's', description: 'Go to Settings' },
+        { key: 'Ctrl+N', description: 'New Habit' },
+        { key: 'Ctrl+K', description: 'Command Palette' },
+        { key: '?', description: 'Show this help' },
+      ];
+      
+      // Emit event with shortcuts data for UI components to handle
+      window.dispatchEvent(new CustomEvent('displayShortcuts', { detail: shortcuts }));
     };
 
     window.addEventListener('showKeyboardShortcuts', handleShow);

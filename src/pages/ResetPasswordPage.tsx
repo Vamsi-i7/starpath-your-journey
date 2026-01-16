@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Lock, Eye, EyeOff, CheckCircle2, Loader2 } from 'lucide-react';
 import { ParallaxBackground } from '@/components/landing/ParallaxBackground';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/safeClient';
@@ -15,23 +15,58 @@ const ResetPasswordPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isValidating, setIsValidating] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have a valid session from the password reset link
-    const checkSession = async () => {
+    // Handle the password reset flow properly
+    const handlePasswordReset = async () => {
+      setIsValidating(true);
+      
+      // Listen for the PASSWORD_RECOVERY event which fires when user clicks reset link
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          // User has a valid recovery token, they can now reset their password
+          setIsValidating(false);
+        } else if (event === 'SIGNED_IN' && session) {
+          // User signed in via recovery link
+          setIsValidating(false);
+        }
+      });
+
+      // Also check if there's already a session (user may have already clicked the link)
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      if (session) {
+        setIsValidating(false);
+      } else {
+        // Give a moment for the auth state change to fire
+        setTimeout(() => {
+          setIsValidating(false);
+        }, 2000);
+      }
+
+      // Check URL for error parameters (e.g., expired link)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const error = hashParams.get('error');
+      const errorDescription = hashParams.get('error_description');
+      
+      if (error) {
         toast({
           title: 'Invalid or expired link',
-          description: 'Please request a new password reset link',
+          description: errorDescription || 'Please request a new password reset link',
           variant: 'destructive',
         });
         navigate('/forgot-password');
+        return;
       }
+
+      return () => {
+        subscription.unsubscribe();
+      };
     };
-    checkSession();
+    
+    handlePasswordReset();
   }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +119,19 @@ const ResetPasswordPage = () => {
     setIsSuccess(true);
     setIsLoading(false);
   };
+
+  // Show loading state while validating the reset token
+  if (isValidating) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center p-6 dark">
+        <ParallaxBackground />
+        <div className="relative z-10 text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
+          <p className="text-lg text-muted-foreground">Validating reset link...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-6 dark">

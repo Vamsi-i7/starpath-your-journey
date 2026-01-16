@@ -22,3 +22,30 @@ export const validatePassword = (password: string): { valid: boolean; message: s
   
   return { valid: true, message: '' };
 };
+
+export const getPasswordStrength = (password: string): { score: number; label: string } => {
+  let score = 0;
+  
+  // Length checks
+  if (password.length >= 8) score += 1;
+  if (password.length >= 12) score += 1;
+  
+  // Character variety checks
+  if (/[A-Z]/.test(password)) score += 0.5;
+  if (/[a-z]/.test(password)) score += 0.5;
+  if (/[0-9]/.test(password)) score += 0.5;
+  if (/[^A-Za-z0-9]/.test(password)) score += 0.5;
+  
+  // Penalty for common patterns
+  const commonPatterns = ['123', 'abc', 'qwerty', 'password'];
+  if (commonPatterns.some(p => password.toLowerCase().includes(p))) {
+    score = Math.max(0, score - 1);
+  }
+  
+  // Normalize to 0-4 scale
+  score = Math.min(4, Math.round(score));
+  
+  const labels = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong'];
+  
+  return { score, label: labels[score] };
+};

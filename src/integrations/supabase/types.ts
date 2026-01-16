@@ -590,6 +590,26 @@ export type Database = {
           total_habits_completed: number
           created_at: string
           updated_at: string
+          // Added missing columns
+          ai_credits: number
+          is_admin: boolean
+          subscription_tier: string | null
+          last_daily_credit: string | null
+          account_status: string
+          disabled_at: string | null
+          disabled_reason: string | null
+          total_credits_purchased: number
+          credits_used_this_month: number
+          location: string | null
+          website: string | null
+          social_links: Json | null
+          privacy_settings: Json | null
+          is_premium: boolean
+          premium_tier: string | null
+          premium_since: string | null
+          total_goals_completed: number
+          member_since: string | null
+          last_active: string | null
         }
         Insert: {
           id: string
@@ -613,6 +633,26 @@ export type Database = {
           total_habits_completed?: number
           created_at?: string
           updated_at?: string
+          // Added missing columns
+          ai_credits?: number
+          is_admin?: boolean
+          subscription_tier?: string | null
+          last_daily_credit?: string | null
+          account_status?: string
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          total_credits_purchased?: number
+          credits_used_this_month?: number
+          location?: string | null
+          website?: string | null
+          social_links?: Json | null
+          privacy_settings?: Json | null
+          is_premium?: boolean
+          premium_tier?: string | null
+          premium_since?: string | null
+          total_goals_completed?: number
+          member_since?: string | null
+          last_active?: string | null
         }
         Update: {
           id?: string
@@ -636,6 +676,26 @@ export type Database = {
           total_habits_completed?: number
           created_at?: string
           updated_at?: string
+          // Added missing columns
+          ai_credits?: number
+          is_admin?: boolean
+          subscription_tier?: string | null
+          last_daily_credit?: string | null
+          account_status?: string
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          total_credits_purchased?: number
+          credits_used_this_month?: number
+          location?: string | null
+          website?: string | null
+          social_links?: Json | null
+          privacy_settings?: Json | null
+          is_premium?: boolean
+          premium_tier?: string | null
+          premium_since?: string | null
+          total_goals_completed?: number
+          member_since?: string | null
+          last_active?: string | null
         }
         Relationships: []
       }

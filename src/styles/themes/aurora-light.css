@@ -1,0 +1,79 @@
+/* Theme: Aurora Light
+ * Philosophy: Clean, breathable workspace for extended daily use
+ * Emotional Tone: Fresh, productive, professional, approachable
+ * Target User: All-day users, professionals, those preferring light interfaces
+ */
+
+[data-theme="aurora-light"] {
+  /* Core colors - Clean, warm whites */
+  --background: 220 20% 97%;
+  --foreground: 230 25% 10%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 230 25% 10%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 230 25% 10%;
+
+  --primary: 250 85% 60%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 220 15% 92%;
+  --secondary-foreground: 230 25% 20%;
+
+  --muted: 220 15% 88%;
+  --muted-foreground: 220 10% 40%;
+
+  --accent: 280 80% 60%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 220 15% 85%;
+  --input: 220 15% 85%;
+  --ring: 250 85% 60%;
+
+  /* StarPath Tokens - Light mode */
+  --star: 45 90% 50%;
+  --star-glow: 45 95% 60%;
+  --constellation: 250 85% 55%;
+  --xp: 160 70% 40%;
+  --streak: 35 90% 50%;
+  --heart: 350 80% 55%;
+  --level: 280 75% 55%;
+
+  /* Theme-specific gradients */
+  --gradient-cosmic: linear-gradient(135deg, hsl(250 85% 60%) 0%, hsl(280 80% 60%) 50%, hsl(320 75% 55%) 100%);
+  --gradient-starfield: linear-gradient(180deg, hsl(220 20% 97%) 0%, hsl(230 25% 94%) 50%, hsl(240 20% 92%) 100%);
+  --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.95) 0%, hsl(0 0% 100% / 0.85) 100%);
+  --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.6) 0%, hsl(0 0% 100% / 0.3) 100%);
+
+  /* Theme-specific shadows */
+  --shadow-glow: 0 0 30px hsl(250 85% 60% / 0.2);
+  --shadow-card: 0 4px 20px hsl(230 25% 10% / 0.06);
+  --shadow-elevated: 0 8px 40px hsl(230 25% 10% / 0.1);
+
+  /* Sidebar */
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 230 25% 10%;
+  --sidebar-primary: 250 85% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 280 80% 60%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 220 15% 88%;
+  --sidebar-ring: 250 85% 60%;
+
+  /* Chart colors */
+  --chart-1: 250 85% 60%;
+  --chart-2: 280 80% 60%;
+  --chart-3: 160 70% 40%;
+  --chart-4: 35 90% 50%;
+  --chart-5: 350 80% 55%;
+
+  /* Theme behavior tokens */
+  --theme-glow-intensity: 0.2;
+  --theme-blur-amount: 12px;
+  --theme-surface-opacity: 0.95;
+  --theme-border-opacity: 0.3;
+}

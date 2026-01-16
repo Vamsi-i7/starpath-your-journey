@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
 import { AppLayout } from "./components/app/AppLayout";
@@ -24,8 +25,7 @@ const HabitsPage = lazy(() => import("./pages/HabitsPage"));
 const GoalsPage = lazy(() => import("./pages/GoalsPage"));
 const ConstellationPage = lazy(() => import("./pages/ConstellationPage"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
-const ChatsPage = lazy(() => import("./pages/ChatsPage"));
-const FriendsPage = lazy(() => import("./pages/FriendsPage"));
+// Social features removed
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const AchievementsPage = lazy(() => import("./pages/AchievementsPage"));
@@ -153,8 +153,6 @@ const router = createBrowserRouter(
         { path: "goals", element: <Suspense fallback={<PageLoader />}><GoalsPage /></Suspense> },
         { path: "constellation", element: <Suspense fallback={<PageLoader />}><ConstellationPage /></Suspense> },
         { path: "analytics", element: <Suspense fallback={<PageLoader />}><AnalyticsPage /></Suspense> },
-        { path: "chats", element: <Suspense fallback={<PageLoader />}><ChatsPage /></Suspense> },
-        { path: "friends", element: <Suspense fallback={<PageLoader />}><FriendsPage /></Suspense> },
         { path: "settings", element: <Suspense fallback={<PageLoader />}><SettingsPage /></Suspense> },
         { path: "profile", element: <Suspense fallback={<PageLoader />}><ProfilePage /></Suspense> },
         { path: "achievements", element: <Suspense fallback={<PageLoader />}><AchievementsPage /></Suspense> },
@@ -187,13 +185,15 @@ const router = createBrowserRouter(
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <RouterProvider router={router} />
-        </TooltipProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <RouterProvider router={router} />
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </ErrorBoundary>
 );

@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { corsHeaders } from '../_shared/corsHeaders.ts';
+import { getCorsHeaders, handleCorsPreFlight } from '../_shared/corsHeaders.ts';
+import { checkRateLimit, createRateLimitResponse } from '../_shared/rateLimiter.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'clawzer96@gmail.com';
@@ -8,13 +9,33 @@ const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'StarPath <noreply@starpath.app
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Rate limit: 5 contact submissions per hour
+const RATE_LIMIT_CONFIG = {
+  maxRequests: 5,
+  windowMs: 60 * 60 * 1000,
+  message: "Too many contact submissions. Please try again later.",
+};
+
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return handleCorsPreFlight(req);
   }
 
   try {
+    // Rate limit by IP to prevent spam
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+    const rateLimitResult = checkRateLimit(clientIP, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      return createRateLimitResponse(
+        rateLimitResult.error || "Rate limit exceeded",
+        rateLimitResult.resetTime,
+        corsHeaders
+      );
+    }
+
     const { name, email, subject, message, userId } = await req.json();
 
     // Validate input

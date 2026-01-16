@@ -11,7 +11,7 @@ import { validatePasswordStrength, getPasswordStrengthColor, getPasswordStrength
 import { logError } from '@/lib/errorLogger';
 import { getDisplayErrorMessage } from '@/lib/errorMessages';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/safeClient';
 
 const SignupPage = () => {
   const location = useLocation();

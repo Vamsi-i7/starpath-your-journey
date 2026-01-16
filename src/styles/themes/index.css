@@ -1,0 +1,39 @@
+/* StarPath Theme System - Main Entry Point */
+@import './base.css';
+@import './cosmic-focus.css';
+@import './aurora-light.css';
+@import './neo-glass.css';
+@import './solar-drive.css';
+@import './monochrome-pro.css';
+@import './zen-garden.css';
+
+/* Theme transition for smooth switching - GPU accelerated */
+html {
+  transition: background-color var(--duration-normal) var(--ease-default),
+              color var(--duration-normal) var(--ease-default);
+}
+
+/* Ensure theme applies to all elements */
+[data-theme] {
+  color-scheme: light dark;
+}
+
+[data-theme="aurora-light"] {
+  color-scheme: light;
+}
+
+[data-theme="cosmic-focus"],
+[data-theme="neo-glass"],
+[data-theme="solar-drive"],
+[data-theme="monochrome-pro"],
+[data-theme="zen-garden"] {
+  color-scheme: dark;
+}
+
+/* Performance: GPU acceleration for theme-aware elements */
+.glass,
+[class*="bg-card"],
+[class*="bg-background"] {
+  will-change: background-color;
+  backface-visibility: hidden;
+}
