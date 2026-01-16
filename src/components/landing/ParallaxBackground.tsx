@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface Star {
   id: number;
@@ -13,7 +13,7 @@ interface Star {
 export function ParallaxBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const { theme } = useAuth();
+  const { resolvedColorMode } = useTheme();
   const [stars] = useState<Star[]>(() => 
     Array.from({ length: 100 }, (_, i) => ({
       id: i,
@@ -38,7 +38,7 @@ export function ParallaxBackground() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const isDark = theme === 'dark';
+  const isDark = resolvedColorMode === 'dark';
 
   return (
     <div 

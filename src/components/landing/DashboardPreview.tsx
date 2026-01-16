@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { 
   LayoutDashboard, 
   Target, 
@@ -13,7 +13,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export function DashboardPreview() {
-  const { theme } = useAuth();
+  const { resolvedColorMode } = useTheme();
 
   const mockHabits = [
     { name: 'Morning Meditation', icon: '🧘', completed: true, streak: 12 },
