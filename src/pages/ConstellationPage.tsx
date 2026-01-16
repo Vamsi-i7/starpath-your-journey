@@ -6,7 +6,7 @@ import { Loader2, Star, Zap, Heart, TrendingUp, Flag, Target } from 'lucide-reac
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type NodeType = 'habit' | 'goal';
-type NodeShape = 'circle' | 'diamond' | 'square' | 'hexagon';
+type NodeShape = 'circle' | 'diamond' | 'star' | 'hexagon';
 
 interface StarNode {
   id: string;
@@ -95,7 +95,7 @@ const ConstellationPage = () => {
     const radius = 150 + (goal.progress * 0.5) + Math.cos(index * 2) * 40;
     const isCompleted = goal.status === 'completed';
     
-    // Different shapes based on goal type
+    // Different shapes based on goal type - using star shapes for all goals
     const shapeMap: Record<string, NodeShape> = {
       short_term: 'diamond',
       long_term: 'hexagon',
@@ -119,7 +119,7 @@ const ConstellationPage = () => {
       isCompleted,
       color: colorMap[goal.status] || colorMap.active,
       type: 'goal' as NodeType,
-      shape: shapeMap[goal.goal_type] || 'square',
+      shape: shapeMap[goal.goal_type] || 'star', // Use star shape as default instead of square
       progress: goal.progress,
     };
   });
@@ -156,8 +156,30 @@ const ConstellationPage = () => {
         ctx.lineTo(x - size, y);
         ctx.closePath();
         break;
-      case 'square':
-        ctx.rect(x - size * 0.7, y - size * 0.7, size * 1.4, size * 1.4);
+      case 'star':
+        // Draw a 5-pointed star
+        const spikes = 5;
+        const outerRadius = size;
+        const innerRadius = size * 0.5;
+        let rot = Math.PI / 2 * 3;
+        const step = Math.PI / spikes;
+        
+        ctx.moveTo(x, y - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+          // Outer point
+          let px = x + Math.cos(rot) * outerRadius;
+          let py = y + Math.sin(rot) * outerRadius;
+          ctx.lineTo(px, py);
+          rot += step;
+          
+          // Inner point
+          px = x + Math.cos(rot) * innerRadius;
+          py = y + Math.sin(rot) * innerRadius;
+          ctx.lineTo(px, py);
+          rot += step;
+        }
+        ctx.lineTo(x, y - outerRadius);
+        ctx.closePath();
         break;
       case 'hexagon':
         for (let i = 0; i < 6; i++) {

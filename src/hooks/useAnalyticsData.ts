@@ -92,9 +92,13 @@ export const useAnalyticsData = () => {
     const currentYearStart = startOfYear(now);
     const previousYearStart = subYears(currentYearStart, 1);
     
+    // Use tomorrow's date as end to ensure today's completions are included
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
     return {
       start: format(previousYearStart, 'yyyy-MM-dd'),
-      end: format(now, 'yyyy-MM-dd'),
+      end: format(tomorrow, 'yyyy-MM-dd'),
     };
   }, []);
 
@@ -156,18 +160,28 @@ export const useAnalyticsData = () => {
         console.error('Error fetching tasks:', tasksError);
       }
 
+      console.log('Analytics data fetched:', {
+        habitCompletions: completionsData?.length || 0,
+        sessions: sessionsData?.length || 0,
+        goals: goalsData?.length || 0,
+        tasks: tasksData?.length || 0,
+      });
+      
       setHabitCompletions(completionsData || []);
       setSessions(sessionsData || []);
       setGoals(goalsData || []);
       setTasks(tasksData || []);
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Error fetching analytics data:', error);
-      }
+      console.error('Error fetching analytics data:', error);
     } finally {
       setLoading(false);
     }
   }, [user, dateRange]);
+  
+  // Refetch function for manual refresh
+  const refetchAnalytics = useCallback(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   useEffect(() => {
     if (!user) {
