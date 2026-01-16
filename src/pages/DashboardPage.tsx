@@ -15,7 +15,7 @@ import { SectionErrorBoundary } from '@/components/ui/section-error-boundary';
 import { useHabits } from '@/hooks/useHabits';
 import { useTimeBasedXP } from '@/hooks/useTimeBasedXP';
 import { Loader2 } from 'lucide-react';
-import { memo, useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 
 const DashboardPage = () => {
   const { habits, isLoading, getTodayString, toggleHabitCompletion, deleteHabit } = useHabits();
@@ -33,14 +33,16 @@ const DashboardPage = () => {
     [profile?.level, profile?.xp]
   );
   
-  // Memoize callbacks to prevent unnecessary re-renders
-  const handleToggleHabit = useCallback((habitId: string) => {
+  // Direct handlers - no useCallback to avoid stale closures
+  const handleToggleHabit = (habitId: string) => {
+    console.log('Dashboard: Toggling habit:', habitId);
     toggleHabitCompletion(habitId);
-  }, [toggleHabitCompletion]);
+  };
   
-  const handleDeleteHabit = useCallback((habitId: string) => {
+  const handleDeleteHabit = (habitId: string) => {
+    console.log('Dashboard: Deleting habit:', habitId);
     deleteHabit(habitId);
-  }, [deleteHabit]);
+  };
 
   if (isLoading) {
     return (

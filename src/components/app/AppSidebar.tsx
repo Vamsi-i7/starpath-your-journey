@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Target, 
@@ -7,7 +7,6 @@ import {
   BarChart3, 
   MessageCircle, 
   Settings, 
-  LogOut,
   ChevronLeft,
   ChevronRight,
   User,
@@ -45,13 +44,7 @@ const navItems = [
 export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarProps) {
   const { isCollapsed, toggleCollapse } = useSidebar();
   const location = useLocation();
-  const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
-  };
+  const { profile } = useAuth();
 
   const handleNavClick = () => {
     // Close mobile menu when navigating
@@ -181,17 +174,6 @@ export function AppSidebar({ isMobileOpen = false, onMobileClose }: AppSidebarPr
           <Settings className="w-5 h-5 flex-shrink-0" />
           {(!isCollapsed || isMobileOpen) && <span className="font-medium">Settings</span>}
         </NavLink>
-
-        <button
-          onClick={() => {
-            handleLogout();
-            handleNavClick();
-          }}
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
-        >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
-          {(!isCollapsed || isMobileOpen) && <span className="font-medium">Logout</span>}
-        </button>
 
         {profile && (
           <div className={cn(

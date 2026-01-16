@@ -241,16 +241,32 @@ export function useHabits() {
   };
 
   const toggleHabitCompletion = async (habitId: string) => {
+    console.log('useHabits.toggleHabitCompletion called with habitId:', habitId);
+    console.log('Current user:', user?.id);
+    console.log('Current habits count:', habits.length);
+    
     if (!user) {
       console.error('toggleHabitCompletion: No user found');
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to track habits',
+        variant: 'destructive',
+      });
       return;
     }
 
     const habit = habits.find(h => h.id === habitId);
     if (!habit) {
       console.error('toggleHabitCompletion: Habit not found:', habitId);
+      toast({
+        title: 'Error',
+        description: 'Habit not found. Please refresh the page.',
+        variant: 'destructive',
+      });
       return;
     }
+
+    console.log('Found habit:', habit.name, 'isCompleted today:', habit.completedDates.includes(getTodayString()));
 
     // Get current profile, but don't require it for basic toggle
     const currentProfile = profile;
@@ -260,6 +276,7 @@ export function useHabits() {
 
     if (isCompleted) {
       // Remove completion
+      console.log('Removing completion for habit:', habitId, 'date:', today);
       const { error } = await supabase
         .from('habit_completions')
         .delete()
@@ -268,6 +285,7 @@ export function useHabits() {
         .lte('completed_at', `${today}T23:59:59`);
 
       if (error) {
+        console.error('Error removing completion:', error);
         logError('Habit Completion Remove', error);
         toast({
           title: 'Error',
@@ -276,6 +294,7 @@ export function useHabits() {
         });
         return;
       }
+      console.log('Successfully removed completion');
 
       // Update habit streak
       const newStreak = Math.max(0, habit.streak - 1);
@@ -297,6 +316,7 @@ export function useHabits() {
 
     } else {
       // Add completion
+      console.log('Adding completion for habit:', habitId, 'user:', user.id);
       const { error } = await supabase
         .from('habit_completions')
         .insert({
@@ -307,6 +327,7 @@ export function useHabits() {
         });
 
       if (error) {
+        console.error('Error adding completion:', error);
         logError('Habit Completion Add', error);
         toast({
           title: 'Error',
@@ -315,6 +336,7 @@ export function useHabits() {
         });
         return;
       }
+      console.log('Successfully added completion');
 
       // Update habit streak and total completions
       const newStreak = habit.streak + 1;
