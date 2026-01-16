@@ -29,8 +29,46 @@ export function QuizGenerator({ questions, topic, onRetake, onNewQuiz }: QuizGen
   const [timeLeft, setTimeLeft] = useState(30); // 30 seconds per question
   const [timerActive, setTimerActive] = useState(true);
 
-  // Safety check for empty questions array
-  if (!questions || questions.length === 0) {
+  const hasQuestions = questions && questions.length > 0;
+  const currentQuestion = hasQuestions ? questions[currentQuestionIndex] : null;
+  const progress = hasQuestions ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+
+  // Timer effect - must be called unconditionally (before any returns)
+  useEffect(() => {
+    if (!hasQuestions || !timerActive || quizCompleted || showResult) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Auto-advance to next question when time runs out
+          setCurrentQuestionIndex((idx) => {
+            if (idx >= questions.length - 1) {
+              setQuizCompleted(true);
+              return idx;
+            }
+            setSelectedAnswer(null);
+            setShowResult(false);
+            setTimerActive(true);
+            return idx + 1;
+          });
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [hasQuestions, timerActive, currentQuestionIndex, quizCompleted, showResult, questions?.length]);
+
+  // Reset timer when question changes - must be called unconditionally
+  useEffect(() => {
+    if (hasQuestions) {
+      setTimeLeft(30);
+    }
+  }, [currentQuestionIndex, hasQuestions]);
+
+  // Safety check for empty questions array - after hooks
+  if (!hasQuestions) {
     return (
       <Card className="p-8 text-center">
         <CardContent>
@@ -41,10 +79,7 @@ export function QuizGenerator({ questions, topic, onRetake, onNewQuiz }: QuizGen
     );
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  
-  // Safety check for current question
+  // Safety check for current question - after hooks
   if (!currentQuestion) {
     return (
       <Card className="p-8 text-center">
@@ -55,28 +90,6 @@ export function QuizGenerator({ questions, topic, onRetake, onNewQuiz }: QuizGen
       </Card>
     );
   }
-
-  // Timer effect
-  useEffect(() => {
-    if (!timerActive || quizCompleted || showResult) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleNextQuestion();
-          return 30;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timerActive, currentQuestionIndex, quizCompleted, showResult]);
-
-  // Reset timer when question changes
-  useEffect(() => {
-    setTimeLeft(30);
-  }, [currentQuestionIndex]);
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (showResult) return;

@@ -81,7 +81,7 @@ export function useFriendRequestsRealtime(onNewRequest?: () => void) {
 }
 
 // Subscribe to notifications
-export function useNotificationsRealtime(onNewNotification?: (notification: any) => void) {
+export function useNotificationsRealtime(onNewNotification?: (notification: Record<string, unknown>) => void) {
   const { user } = useAuth();
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
@@ -128,6 +128,8 @@ export function usePresenceTracking(enabled: boolean = true) {
 }
 
 // Master hook to enable all realtime features
+// Note: All hooks are always called to comply with React's rules of hooks
+// The enabled flag inside each hook controls whether they actually subscribe
 export function useRealtimeSync(options?: {
   habits?: boolean;
   goals?: boolean;
@@ -143,10 +145,90 @@ export function useRealtimeSync(options?: {
     presence = false, // Disabled by default to save resources
   } = options || {};
 
-  // Enable individual subscriptions based on options
-  if (habits) useHabitsRealtime();
-  if (goals) useGoalsRealtime();
-  if (friendRequests) useFriendRequestsRealtime();
-  if (notifications) useNotificationsRealtime();
-  if (presence) usePresenceTracking(true);
+  // Always call hooks unconditionally - pass enabled flag to control behavior
+  useHabitsRealtimeWithFlag(habits);
+  useGoalsRealtimeWithFlag(goals);
+  useFriendRequestsRealtimeWithFlag(friendRequests);
+  useNotificationsRealtimeWithFlag(notifications);
+  usePresenceTracking(presence);
+}
+
+// Internal hooks with enabled flag
+function useHabitsRealtimeWithFlag(enabled: boolean) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (!user || !enabled) return;
+
+    unsubscribeRef.current = subscribeToHabits(user.id, (payload) => {
+      console.log('Habits change:', payload);
+      invalidateQueries.habits();
+      invalidateQueries.analytics();
+    });
+
+    return () => {
+      unsubscribeRef.current?.();
+    };
+  }, [user, queryClient, enabled]);
+}
+
+function useGoalsRealtimeWithFlag(enabled: boolean) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (!user || !enabled) return;
+
+    unsubscribeRef.current = subscribeToGoals(user.id, (payload) => {
+      console.log('Goals change:', payload);
+      invalidateQueries.goals();
+      invalidateQueries.analytics();
+    });
+
+    return () => {
+      unsubscribeRef.current?.();
+    };
+  }, [user, queryClient, enabled]);
+}
+
+function useFriendRequestsRealtimeWithFlag(enabled: boolean, onNewRequest?: () => void) {
+  const { user } = useAuth();
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (!user || !enabled) return;
+
+    unsubscribeRef.current = subscribeToFriendRequests(user.id, (payload) => {
+      console.log('New friend request:', payload);
+      invalidateQueries.friends();
+      onNewRequest?.();
+    });
+
+    return () => {
+      unsubscribeRef.current?.();
+    };
+  }, [user, onNewRequest, enabled]);
+}
+
+function useNotificationsRealtimeWithFlag(enabled: boolean, onNewNotification?: (notification: Record<string, unknown>) => void) {
+  const { user } = useAuth();
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (!user || !enabled) return;
+
+    unsubscribeRef.current = subscribeToNotifications(user.id, (payload) => {
+      console.log('New notification:', payload);
+      if (payload.eventType === 'INSERT' && payload.new) {
+        onNewNotification?.(payload.new as Record<string, unknown>);
+      }
+    });
+
+    return () => {
+      unsubscribeRef.current?.();
+    };
+  }, [user, onNewNotification, enabled]);
 }
