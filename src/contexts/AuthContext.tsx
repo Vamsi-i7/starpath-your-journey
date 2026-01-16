@@ -187,6 +187,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, username: string) => {
     const redirectUrl = `${window.location.origin}/auth/callback`;
     
+    console.log('SignUp: Starting registration for', email);
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -199,7 +201,73 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
-    return { data, error: error as Error | null };
+    if (error) {
+      console.error('SignUp: Auth error', error);
+      return { data, error: error as Error | null };
+    }
+
+    console.log('SignUp: Auth user created', data.user?.id);
+
+    // If user was created, ensure profile exists (fallback if trigger fails)
+    if (data.user) {
+      try {
+        // Wait a moment for the trigger to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check if profile was created by trigger
+        const { data: existingProfile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        
+        console.log('SignUp: Profile check', { existingProfile, fetchError });
+        
+        // If profile doesn't exist, create it manually (fallback)
+        if (!existingProfile && !fetchError) {
+          console.log('SignUp: Creating profile manually (trigger may have failed)');
+          
+          // Generate a unique user code
+          const userCode = 'SP' + data.user.id.replace(/-/g, '').substring(0, 8).toUpperCase();
+          
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: email,
+              username: username,
+              full_name: username,
+              user_code: userCode,
+              level: 1,
+              xp: 0,
+              total_xp: 0,
+              streak: 0,
+              longest_streak: 0,
+              hearts: 5,
+              max_hearts: 5,
+              total_habits_completed: 0,
+              ai_credits: 50,
+              is_admin: false,
+              is_public: true,
+              notification_enabled: true,
+              theme: 'dark',
+              account_status: 'active',
+            });
+          
+          if (insertError) {
+            console.error('SignUp: Manual profile creation failed', insertError);
+            // Don't return error - the user can still verify email
+          } else {
+            console.log('SignUp: Profile created successfully');
+          }
+        }
+      } catch (profileError) {
+        console.error('SignUp: Profile creation error', profileError);
+        // Don't fail signup if profile creation fails - user can still verify
+      }
+    }
+
+    return { data, error: null };
   };
 
   const signIn = async (emailOrUserCode: string, password: string) => {
